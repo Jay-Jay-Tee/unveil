@@ -1,0 +1,9 @@
+shap
+scikit-learn
+numpy
+pandas
+scipy
+fastapi
+uvicorn
+requests
+matplotlib
