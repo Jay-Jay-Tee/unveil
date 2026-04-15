@@ -1,0 +1,37 @@
+{
+  "version": "1.0.0",
+  "generated_by": "gemini-column-classifier",
+  "dataset": "<dataset_name>",
+  "columns": {
+    "protected": [
+      { "name": "age", "proxies": [] },
+      { "name": "race", "proxies": [] },
+      { "name": "gender", "proxies": [] },
+      { "name": "native-country", "proxies": [] }
+    ],
+    "outcome": [
+      { "name": "income", "proxies": [] }
+    ],
+    "ambiguous": [
+      { "name": "marital-status", "proxies": ["gender"] },
+      { "name": "occupation", "proxies": ["gender", "race"] },
+      { "name": "relationship", "proxies": ["gender"] }
+    ],
+    "neutral": [
+      { "name": "education", "proxies": [] },
+      { "name": "education-num", "proxies": [] },
+      { "name": "hours-per-week", "proxies": [] },
+      { "name": "capital-gain", "proxies": [] },
+      { "name": "capital-loss", "proxies": [] },
+      { "name": "workclass", "proxies": [] },
+      { "name": "fnlwgt", "proxies": [] }
+    ],
+    "other-columns": [
+      {
+        "name": "<column_name>",
+        "type": "<PROTECTED|NEUTRAL|OUTCOME|AMBIGUOUS>",
+        "proxies": ["<related_column_name>"]
+      }
+    ]
+  }
+}

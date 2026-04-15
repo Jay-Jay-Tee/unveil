@@ -1,0 +1,21 @@
+{
+  "version": "1.0.0",
+  "generated_by": "proxy-detector",
+  "dataset": "<dataset_name>",
+  "proxy_columns": [
+    { "column": "relationship", "proxies_for": "gender", "cramers_v": 0.0, "mutual_information": 0.0, "verdict": "PROXY" },
+    { "column": "marital-status", "proxies_for": "gender", "cramers_v": 0.0, "mutual_information": 0.0, "verdict": "PROXY" },
+    { "column": "occupation", "proxies_for": "gender", "cramers_v": 0.0, "mutual_information": 0.0, "verdict": "WEAK_PROXY" },
+    { "column": "occupation", "proxies_for": "race", "cramers_v": 0.0, "mutual_information": 0.0, "verdict": "WEAK_PROXY" },
+    { "column": "native-country", "proxies_for": "race", "cramers_v": 0.0, "mutual_information": 0.0, "verdict": "WEAK_PROXY" }
+  ],
+  "other-columns": [
+    {
+      "column": "<column_name>",
+      "proxies_for": "<protected_column_name>",
+      "cramers_v": "<float>",
+      "mutual_information": "<float>",
+      "verdict": "<PROXY|WEAK_PROXY|NONE>"
+    }
+  ]
+}
