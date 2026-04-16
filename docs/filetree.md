@@ -16,19 +16,16 @@ unbiased-ai/
 │   ├── bias_report.json           # M2 → M4: disparate impact, parity gaps, slices
 │   └── model_bias_report.json     # M3 → M4: probe scores, SHAP rankings, p-values
 │
-├── backend/
-│   ├── part_a/                    # Dataset Bias Auditor (Member 1 + Member 2)
-│   │   ├── ingestor.py            # M1: CSV/JSON/XLSX → pandas DataFrame
-│   │   ├── gemini_classifier.py   # M1: Gemini column classification prompt
-│   │   ├── proxy_detection.py     # M1: Cramér's V + mutual information
-│   │   ├── counterfactual_engine.py  # M2: row cloning + outcome shift measurement
-│   │   ├── slice_eval.py          # M2: FPR/FNR/positive rate per protected group
-│   │   └── stats.py               # M2: disparate impact ratio, parity gap, chi-squared
-│   │
-│   └── part_b/                    # Model Behavior Analyzer (Member 3)
-│       ├── probe_generator.py     # M3: synthetic persona pairs + black-box probing
-│       ├── shap_explainer.py      # M3: TreeExplainer + KernelExplainer + cross-ref
-│       └── model_loader.py        # M3: pickle / ONNX loader + HTTP endpoint adapter
+├── backend/ 
+│   ├── ingestor.py            # M1: CSV/JSON/XLSX → pandas DataFrame
+│   ├── gemini_classifier.py   # M1: Gemini column classification prompt
+│   ├── proxy_detection.py     # M1: Cramér's V + mutual information
+│   ├── counterfactual_engine.py  # M2: row cloning + outcome shift measurement
+│   ├── slice_eval.py          # M2: FPR/FNR/positive rate per protected group
+│   ├── stats.py               # M2: disparate impact ratio, parity gap, chi-squared
+│   ├── probe_generator.py     # M3: synthetic persona pairs + black-box probing
+│   ├── shap_explainer.py      # M3: TreeExplainer + KernelExplainer + cross-ref
+│   └── model_loader.py        # M3: pickle / ONNX loader + HTTP endpoint adapter
 │
 ├── frontend/                      # React app (Member 4)
 │   ├── public/
