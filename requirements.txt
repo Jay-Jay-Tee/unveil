@@ -7,3 +7,5 @@ fastapi
 uvicorn
 requests
 matplotlib
+openpyxl
+google-generativeai

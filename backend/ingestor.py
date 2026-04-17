@@ -339,7 +339,7 @@ def summarize(result: dict) -> None:
     print(f"  Shape   : {result['row_count']} rows × {result['column_count']} columns")
     print(f"  Path    : {result['source_path']}")
     if result["warnings"]:
-        print(f"\n  ⚠  Warnings:")
+        print("\n  ⚠  Warnings:")
         for w in result["warnings"]:
             print(f"     • {w}")
     print(f"\n  {'Column':<25} {'dtype':<12} {'kind':<12} {'nulls':>6} {'unique':>7}")
