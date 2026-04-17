@@ -1,0 +1,37 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #0D0F14;
+  --color-bg-card: rgba(255, 255, 255, 0.05);
+  --color-border-subtle: rgba(255, 255, 255, 0.08);
+  --color-accent: #4D9EFF;
+  --color-biased: #FF4040;
+  --color-ambiguous: #F5A623;
+  --color-clean: #2ECC8F;
+  --font-heading: 'DM Serif Display', serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+}
+
+body {
+  font-family: 'IBM Plex Mono', monospace;
+  background-color: var(--color-bg);
+  position: relative;
+  margin: 0;
+}
+
+/* Subtle noise texture overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
+#root {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+}
