@@ -141,7 +141,12 @@ def evaluate_slices(
             "prediction_column": prediction_column,
             "reference_group": None,
             "reference_positive_rate": 0.0,
+            "reference_fpr": 0.0,
+            "reference_fnr": 0.0,
             "slice_gap_max": 0.0,
+            "positive_rate_gap_max": 0.0,
+            "fpr_gap_max": 0.0,
+            "fnr_gap_max": 0.0,
             "gap_flagged": False,
             "slice_results": [],
             "what_if_tool": None,
@@ -157,7 +162,12 @@ def evaluate_slices(
             "prediction_column": prediction_column,
             "reference_group": None,
             "reference_positive_rate": 0.0,
+            "reference_fpr": 0.0,
+            "reference_fnr": 0.0,
             "slice_gap_max": 0.0,
+            "positive_rate_gap_max": 0.0,
+            "fpr_gap_max": 0.0,
+            "fnr_gap_max": 0.0,
             "gap_flagged": False,
             "slice_results": [],
             "what_if_tool": None,
@@ -187,6 +197,12 @@ def evaluate_slices(
                 "fn": int(counts["fn"]),
                 "gap_flagged": False,
                 "gap_from_reference": 0.0,
+                "positive_rate_gap_from_reference": 0.0,
+                "fpr_gap_from_reference": 0.0,
+                "fnr_gap_from_reference": 0.0,
+                "positive_rate_gap_flagged": False,
+                "fpr_gap_flagged": False,
+                "fnr_gap_flagged": False,
             }
         )
 
@@ -198,13 +214,39 @@ def evaluate_slices(
         (entry["positive_rate"] for entry in results if entry["group"] == reference_group),
         results[0]["positive_rate"],
     )
+    reference_fpr = next(
+        (entry["fpr"] for entry in results if entry["group"] == reference_group),
+        results[0]["fpr"],
+    )
+    reference_fnr = next(
+        (entry["fnr"] for entry in results if entry["group"] == reference_group),
+        results[0]["fnr"],
+    )
 
     for entry in results:
-        gap = float(entry["positive_rate"] - reference_rate)
-        entry["gap_from_reference"] = round(gap, 6)
-        entry["gap_flagged"] = abs(gap) > FLAG_THRESHOLD
+        positive_gap = float(entry["positive_rate"] - reference_rate)
+        fpr_gap = float(entry["fpr"] - reference_fpr)
+        fnr_gap = float(entry["fnr"] - reference_fnr)
 
-    slice_gap_max = max((abs(entry["gap_from_reference"]) for entry in results), default=0.0)
+        entry["gap_from_reference"] = round(positive_gap, 6)
+        entry["positive_rate_gap_from_reference"] = round(positive_gap, 6)
+        entry["fpr_gap_from_reference"] = round(fpr_gap, 6)
+        entry["fnr_gap_from_reference"] = round(fnr_gap, 6)
+
+        entry["positive_rate_gap_flagged"] = abs(positive_gap) > FLAG_THRESHOLD
+        entry["fpr_gap_flagged"] = abs(fpr_gap) > FLAG_THRESHOLD
+        entry["fnr_gap_flagged"] = abs(fnr_gap) > FLAG_THRESHOLD
+
+        entry["gap_flagged"] = (
+            entry["positive_rate_gap_flagged"]
+            or entry["fpr_gap_flagged"]
+            or entry["fnr_gap_flagged"]
+        )
+
+    positive_rate_gap_max = max((abs(entry["positive_rate_gap_from_reference"]) for entry in results), default=0.0)
+    fpr_gap_max = max((abs(entry["fpr_gap_from_reference"]) for entry in results), default=0.0)
+    fnr_gap_max = max((abs(entry["fnr_gap_from_reference"]) for entry in results), default=0.0)
+    slice_gap_max = max(positive_rate_gap_max, fpr_gap_max, fnr_gap_max)
 
     what_if_tool = (
         build_wit_payload(
@@ -225,8 +267,17 @@ def evaluate_slices(
         "prediction_column": prediction_column,
         "reference_group": reference_group,
         "reference_positive_rate": round(float(reference_rate), 6),
+        "reference_fpr": round(float(reference_fpr), 6),
+        "reference_fnr": round(float(reference_fnr), 6),
         "slice_gap_max": round(float(slice_gap_max), 6),
-        "gap_flagged": bool(slice_gap_max > FLAG_THRESHOLD),
+        "positive_rate_gap_max": round(float(positive_rate_gap_max), 6),
+        "fpr_gap_max": round(float(fpr_gap_max), 6),
+        "fnr_gap_max": round(float(fnr_gap_max), 6),
+        "gap_flagged": bool(
+            positive_rate_gap_max > FLAG_THRESHOLD
+            or fpr_gap_max > FLAG_THRESHOLD
+            or fnr_gap_max > FLAG_THRESHOLD
+        ),
         "slice_results": results,
         "what_if_tool": what_if_tool,
     }

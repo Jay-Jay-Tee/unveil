@@ -66,7 +66,44 @@ class SliceEvalTests(unittest.TestCase):
         self.assertAlmostEqual(groups["A"]["positive_rate"], 1.0)
         self.assertAlmostEqual(groups["B"]["positive_rate"], 0.0)
         self.assertTrue(result["gap_flagged"])
+        self.assertGreater(result["fpr_gap_max"], 0.10)
+        self.assertGreater(result["fnr_gap_max"], 0.10)
+        self.assertTrue(groups["B"]["fpr_gap_flagged"] or groups["B"]["fnr_gap_flagged"])
         self.assertIn("what_if_tool", result)
+
+    def test_slice_gap_threshold_strictly_greater_than_10pp(self):
+        df = pd.DataFrame(
+            [
+                {"group": "A", "label": 1, "pred": 1},
+                {"group": "A", "label": 1, "pred": 1},
+                {"group": "A", "label": 1, "pred": 1},
+                {"group": "A", "label": 1, "pred": 1},
+                {"group": "A", "label": 1, "pred": 1},
+                {"group": "A", "label": 0, "pred": 0},
+                {"group": "A", "label": 0, "pred": 0},
+                {"group": "A", "label": 0, "pred": 0},
+                {"group": "A", "label": 0, "pred": 0},
+                {"group": "A", "label": 0, "pred": 0},
+                {"group": "B", "label": 1, "pred": 1},
+                {"group": "B", "label": 1, "pred": 1},
+                {"group": "B", "label": 1, "pred": 1},
+                {"group": "B", "label": 1, "pred": 1},
+                {"group": "B", "label": 0, "pred": 0},
+                {"group": "B", "label": 0, "pred": 0},
+                {"group": "B", "label": 0, "pred": 0},
+                {"group": "B", "label": 0, "pred": 0},
+                {"group": "B", "label": 0, "pred": 0},
+                {"group": "B", "label": 0, "pred": 0},
+            ]
+        )
+
+        result = evaluate_slices(df, "group", "label", "pred", positive_label=1, reference_group="A")
+        groups = {entry["group"]: entry for entry in result["slice_results"]}
+
+        self.assertAlmostEqual(groups["A"]["positive_rate"], 0.5)
+        self.assertAlmostEqual(groups["B"]["positive_rate"], 0.4)
+        self.assertAlmostEqual(result["positive_rate_gap_max"], 0.1)
+        self.assertFalse(groups["B"]["positive_rate_gap_flagged"])
 
 
 class StatsTests(unittest.TestCase):

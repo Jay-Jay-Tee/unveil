@@ -124,8 +124,14 @@ def summarize_column_metrics(slice_result: dict) -> dict:
         "p_value": round(float(p_value), 6),
         "verdict": verdict,
         "slice_gap_max": round(float(slice_result.get("slice_gap_max", 0.0)), 6),
+        "positive_rate_gap_max": round(float(slice_result.get("positive_rate_gap_max", 0.0)), 6),
+        "fpr_gap_max": round(float(slice_result.get("fpr_gap_max", 0.0)), 6),
+        "fnr_gap_max": round(float(slice_result.get("fnr_gap_max", 0.0)), 6),
         "gap_flagged": bool(slice_result.get("gap_flagged", False)),
         "reference_group": reference_group,
+        "reference_positive_rate": round(float(slice_result.get("reference_positive_rate", 0.0)), 6),
+        "reference_fpr": round(float(slice_result.get("reference_fpr", 0.0)), 6),
+        "reference_fnr": round(float(slice_result.get("reference_fnr", 0.0)), 6),
         "slices": [
             {
                 "group": _python_value(entry.get("group")),
@@ -134,7 +140,15 @@ def summarize_column_metrics(slice_result: dict) -> dict:
                 "fnr": round(float(entry.get("fnr", 0.0)), 6),
                 "count": int(entry.get("count", 0)),
                 "gap_from_reference": round(float(entry.get("gap_from_reference", 0.0)), 6),
+                "positive_rate_gap_from_reference": round(
+                    float(entry.get("positive_rate_gap_from_reference", entry.get("gap_from_reference", 0.0))), 6
+                ),
+                "fpr_gap_from_reference": round(float(entry.get("fpr_gap_from_reference", 0.0)), 6),
+                "fnr_gap_from_reference": round(float(entry.get("fnr_gap_from_reference", 0.0)), 6),
                 "gap_flagged": bool(entry.get("gap_flagged", False)),
+                "positive_rate_gap_flagged": bool(entry.get("positive_rate_gap_flagged", False)),
+                "fpr_gap_flagged": bool(entry.get("fpr_gap_flagged", False)),
+                "fnr_gap_flagged": bool(entry.get("fnr_gap_flagged", False)),
             }
             for entry in slice_results
         ],
