@@ -1,3 +1,5 @@
+// mockData.js — matches real M1/M2/M3 JSON output schemas exactly
+
 export const mockSchemaMap = {
   columns: [
     { name: 'age', type: 'NEUTRAL', proxies: ['relationship'] },
@@ -70,6 +72,11 @@ export const mockBiasReport = {
   ],
 };
 
+// Matches real M3 model_bias_report.json output schema exactly:
+// attribute_results[].shap_rank (int, not string)
+// shap_summary[].mean_abs_shap (not "importance")
+// shap_summary[].is_proxy / is_protected (booleans)
+// shap_summary[].proxy_for built from cross-referencing proxy_flags
 export const mockModelBiasReport = {
   attribute_results: [
     { name: 'sex', mean_diff: 0.18, p_value: 0.0001, shap_rank: 3, verdict: 'BIASED' },
@@ -77,16 +84,18 @@ export const mockModelBiasReport = {
     { name: 'occupation', mean_diff: 0.07, p_value: 0.038, shap_rank: 5, verdict: 'AMBIGUOUS' },
     { name: 'native-country', mean_diff: 0.02, p_value: 0.21, shap_rank: 11, verdict: 'CLEAN' },
   ],
+  // mean_abs_shap is the real field name from shap_explainer.py
+  // proxy_for is derived here for display (M4 builds this from proxy_flags.json)
   shap_summary: [
-    { feature: 'relationship', importance: 0.31, is_proxy: true, proxy_for: ['sex'] },
-    { feature: 'capital-gain', importance: 0.27, is_proxy: false, proxy_for: [] },
-    { feature: 'education-num', importance: 0.19, is_proxy: false, proxy_for: [] },
-    { feature: 'age', importance: 0.14, is_proxy: false, proxy_for: [] },
-    { feature: 'occupation', importance: 0.11, is_proxy: true, proxy_for: ['sex'] },
-    { feature: 'hours-per-week', importance: 0.09, is_proxy: false, proxy_for: [] },
-    { feature: 'sex', importance: 0.07, is_proxy: false, proxy_for: [] },
-    { feature: 'capital-loss', importance: 0.06, is_proxy: false, proxy_for: [] },
-    { feature: 'marital-status', importance: 0.05, is_proxy: false, proxy_for: [] },
-    { feature: 'race', importance: 0.04, is_proxy: false, proxy_for: [] },
+    { feature: 'relationship', mean_abs_shap: 0.31, shap_rank: 1, is_protected: false, is_proxy: true, proxy_for: ['sex'] },
+    { feature: 'capital-gain',  mean_abs_shap: 0.27, shap_rank: 2, is_protected: false, is_proxy: false, proxy_for: [] },
+    { feature: 'sex',           mean_abs_shap: 0.22, shap_rank: 3, is_protected: true,  is_proxy: false, proxy_for: [] },
+    { feature: 'education-num', mean_abs_shap: 0.19, shap_rank: 4, is_protected: false, is_proxy: false, proxy_for: [] },
+    { feature: 'occupation',    mean_abs_shap: 0.11, shap_rank: 5, is_protected: false, is_proxy: true,  proxy_for: ['sex'] },
+    { feature: 'age',           mean_abs_shap: 0.09, shap_rank: 6, is_protected: false, is_proxy: false, proxy_for: [] },
+    { feature: 'race',          mean_abs_shap: 0.08, shap_rank: 7, is_protected: true,  is_proxy: false, proxy_for: [] },
+    { feature: 'hours-per-week',mean_abs_shap: 0.07, shap_rank: 8, is_protected: false, is_proxy: false, proxy_for: [] },
+    { feature: 'capital-loss',  mean_abs_shap: 0.06, shap_rank: 9, is_protected: false, is_proxy: false, proxy_for: [] },
+    { feature: 'marital-status',mean_abs_shap: 0.05, shap_rank: 10, is_protected: false, is_proxy: false, proxy_for: [] },
   ],
 };

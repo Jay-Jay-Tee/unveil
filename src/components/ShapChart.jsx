@@ -22,7 +22,7 @@ function CustomTooltip({ active, payload }) {
       <div className="flex items-center gap-2 text-xs">
         <span className="text-gray-400">SHAP Importance:</span>
         <span className="font-[family-name:var(--font-mono)] font-semibold text-white">
-          {d.importance.toFixed(3)}
+          {d.mean_abs_shap.toFixed(3)}
         </span>
       </div>
       {d.is_proxy && (
@@ -44,7 +44,7 @@ export default function ShapChart({ shapSummary }) {
   if (!shapSummary?.length) return null;
 
   // Sort descending by importance
-  const data = [...shapSummary].sort((a, b) => b.importance - a.importance);
+  const data = [...shapSummary].sort((a, b) => b.mean_abs_shap - a.mean_abs_shap);
 
   const proxyCount = data.filter((d) => d.is_proxy).length;
 
@@ -117,7 +117,7 @@ export default function ShapChart({ shapSummary }) {
             cursor={{ fill: 'rgba(255,255,255,0.03)' }}
           />
 
-          <Bar dataKey="importance" radius={[0, 4, 4, 0]} maxBarSize={18}>
+          <Bar dataKey="mean_abs_shap" radius={[0, 4, 4, 0]} maxBarSize={18}>
             {data.map((entry, i) => (
               <Cell
                 key={i}

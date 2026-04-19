@@ -6,16 +6,16 @@
     "protected": [
       { "name": "age", "type": "PROTECTED", "proxies": [] },
       { "name": "race", "type": "PROTECTED", "proxies": [] },
-      { "name": "gender", "type": "PROTECTED", "proxies": [] },
+      { "name": "sex", "type": "PROTECTED", "proxies": [] },
       { "name": "native-country", "type": "PROTECTED", "proxies": [] }
     ],
     "outcome": [
       { "name": "income", "type": "OUTCOME", "proxies": [] }
     ],
     "ambiguous": [
-      { "name": "marital-status", "type": "AMBIGUOUS", "proxies": ["gender"] },
-      { "name": "occupation", "type": "AMBIGUOUS", "proxies": ["gender", "race"] },
-      { "name": "relationship", "type": "AMBIGUOUS", "proxies": ["gender"] }
+      { "name": "marital-status", "type": "AMBIGUOUS", "proxies": ["sex"] },
+      { "name": "occupation", "type": "AMBIGUOUS", "proxies": ["sex", "race"] },
+      { "name": "relationship", "type": "AMBIGUOUS", "proxies": ["sex"] }
     ],
     "neutral": [
       { "name": "education", "type": "NEUTRAL", "proxies": [] },

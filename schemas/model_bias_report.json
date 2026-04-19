@@ -1,0 +1,33 @@
+{
+  "attribute_results": [
+    {
+      "name": "age",
+      "mean_diff": 0.2004,
+      "p_value": 0.0,
+      "shap_rank": null,
+      "verdict": "BIASED"
+    },
+    {
+      "name": "race",
+      "mean_diff": 0.2331,
+      "p_value": 0.0,
+      "shap_rank": null,
+      "verdict": "BIASED"
+    },
+    {
+      "name": "sex",
+      "mean_diff": 0.2439,
+      "p_value": 0.0,
+      "shap_rank": null,
+      "verdict": "BIASED"
+    },
+    {
+      "name": "native-country",
+      "mean_diff": 0.232,
+      "p_value": 0.0,
+      "shap_rank": null,
+      "verdict": "BIASED"
+    }
+  ],
+  "shap_summary": []
+}

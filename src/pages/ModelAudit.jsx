@@ -153,7 +153,7 @@ export default function ModelAudit() {
                     </div>
                     <p className="text-sm text-gray-400 leading-relaxed">
                       This feature has a SHAP importance of{' '}
-                      <span className="font-[family-name:var(--font-mono)] font-semibold text-white">{pf.importance.toFixed(2)}</span>
+                      <span className="font-[family-name:var(--font-mono)] font-semibold text-white">{pf.mean_abs_shap?.toFixed(2) ?? "N/A"}</span>
                       {' '}and acts as a proxy for{' '}
                       {pf.proxy_for.map((p, j) => (
                         <span key={p}>

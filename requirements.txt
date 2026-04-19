@@ -9,3 +9,4 @@ requests
 matplotlib
 openpyxl
 google-generativeai
+python-multipart
