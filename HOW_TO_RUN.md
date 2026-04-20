@@ -19,7 +19,7 @@ cp .env.example .env
 ## Step 2 — Install Python dependencies
 
 ```bash
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 ```
 
 ---
@@ -31,7 +31,7 @@ pip install -r requirements.txt
 export GEMINI_API_KEY=your_key_here      # Mac/Linux
 # $env:GEMINI_API_KEY = "your_key_here" # Windows PowerShell
 
-uvicorn backend.api:app --reload --port 8001
+python -m uvicorn backend.api:app --reload --port 8001
 ```
 
 You should see:

@@ -27,11 +27,13 @@ Runs black-box probe pairs and SHAP explainability on trained models to detect w
 | React 19 + Vite | Component framework and dev/build tooling |
 | React Router v7 | Client-side routing |
 | Tailwind CSS v4 | Utility-first styling |
-| Recharts | Slice evaluation and SHAP bar charts |
+| Recharts | Slice evaluation and SHAP bar charts (see note below) |
 | Framer Motion | Page transitions and animations |
 | PapaParse | CSV parsing in the browser |
 | SheetJS (xlsx) | XLSX/XLS parsing in the browser |
 | Firebase Hosting | Production deployment |
+
+> **Note on Google What-If Tool:** The original spec planned to embed the Google What-If Tool widget for slice visualization. After testing, the WIT widget requires TensorFlow.js and a specific model-serving format that conflicted with our FastAPI + React stack. We replaced it with a custom Recharts-based `SliceChart` component that provides equivalent FPR/FNR/positive-rate slice breakdowns, plus the ability to color-code flagged gaps above the 10pp threshold. This was a deliberate design decision, not an omission.
 
 ### Backend (M1–M3, Python)
 

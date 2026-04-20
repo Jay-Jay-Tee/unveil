@@ -1,12 +1,25 @@
-shap
-scikit-learn
+# UnbiasedAI backend dependencies
+# Install: pip install -r requirements.txt
+
+# Data processing
 numpy
 pandas
 scipy
+openpyxl
+
+# ML / bias analysis
+scikit-learn
+shap
+
+# API server
 fastapi
-uvicorn
+uvicorn[standard]
+python-multipart
+pydantic
+
+# Gemini / Google AI
+google-genai
+
+# Utilities
 requests
 matplotlib
-openpyxl
-google-genai
-python-multipart

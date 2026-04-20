@@ -38,6 +38,7 @@ sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "backend"))
 
 from backend.ingestor import ingest
+from backend.counterfactual_engine import run_counterfactuals
 from backend.gemini_classifier import classify
 from backend.proxy_detection import detect as detect_proxies
 from backend.stats import build_bias_report
@@ -51,15 +52,20 @@ app = FastAPI(
     version="1.0.0",
 )
 
+# Extra origins can be added via CORS_ORIGINS env var (comma-separated).
+# Useful when deploying backend to Cloud Run or any URL not in the default list.
+# e.g. export CORS_ORIGINS="https://my-cloudrun-url.run.app"
+_extra_origins = [o.strip() for o in os.environ.get("CORS_ORIGINS", "").split(",") if o.strip()]
+_allowed_origins = [
+    "http://localhost:5173",
+    "http://localhost:4173",
+    "https://unbiased-ai-demo.web.app",
+    "https://unbiased-ai-demo.firebaseapp.com",
+] + _extra_origins
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://localhost:4173",
-        "https://unbiased-ai-demo.web.app",
-        "https://unbiased-ai-demo.firebaseapp.com",
-        "*",  # remove in production if needed
-    ],
+    allow_origins=_allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -194,6 +200,32 @@ async def analyze_dataset(file: UploadFile = File(...)):
             output_path=os.path.join(schema_map_dir, "bias_report.json"),
             positive_label=_infer_positive_label(df[label_col]),
         )
+
+        # ── M2: counterfactual probing ────────────────────
+        protected_cols_for_cf = [
+            c["name"] for c in schema_map.get("columns", {}).get("protected", [])
+            if c["name"] in df.columns
+        ]
+        try:
+            counterfactual_results = run_counterfactuals(
+                df,
+                protected_cols_for_cf,
+                outcome_column=label_col,
+                positive_label=_infer_positive_label(df[label_col]),
+                proxy_flags=proxy_flags,
+                sample_size=250,
+            )
+            cf_lookup = {r["name"]: r for r in counterfactual_results}
+            for col_result in bias_report.get("column_results", []):
+                cf = cf_lookup.get(col_result["name"], {})
+                col_result["counterfactual"] = {
+                    "mean_shift": cf.get("mean_shift"),
+                    "mean_abs_shift": cf.get("mean_abs_shift"),
+                    "n_pairs": cf.get("n_pairs"),
+                    "status": cf.get("status"),
+                }
+        except Exception as cf_err:
+            print(f"  [counterfactual] Failed: {cf_err} — continuing without CF results")
 
         # ── flatten schema for frontend ───────────────────
         flat_columns = _flatten_schema_map(schema_map)
@@ -446,4 +478,4 @@ The legal threshold for disparate impact is 0.8. Any score below this fails the 
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("backend.api:app", host="0.0.0.0", port=8001, reload=True)
+    uvicorn.run("backend.api:app", host="0.0.0.0", port=8001, reload=True)  
