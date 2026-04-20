@@ -45,7 +45,7 @@ def _binary_series(series: pd.Series, positive_label: Any = 1) -> pd.Series:
             return (series.astype(float) >= float(positive_label)).astype(int)
         return (series.astype(float) >= 0.5).astype(int)
 
-    normalized = series.astype(str).str.strip().str.lower()
+    normalized = series.squeeze().astype(str).str.strip().str.lower()
     positive_tokens = {
         str(positive_label).strip().lower(),
         "1",

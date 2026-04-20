@@ -31,7 +31,7 @@ export default function Upload() {
     audit.setBackendOnline(online);
     setStatus('analyzing');
     setProgress(online
-      ? 'Running Gemini column classification…'
+      ? 'Running Gemini column classification… (this takes 15-30 seconds)'
       : 'Backend offline — loading pre-computed demo results…');
     try {
       const result = await analyzeDataset(file);
