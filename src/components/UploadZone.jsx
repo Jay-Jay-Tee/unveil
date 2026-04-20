@@ -4,7 +4,7 @@ import { parseFile } from '../lib/fileParser';
 
 const ACCEPT = '.csv,.json,.xlsx,.xls,.data,.txt';
 
-export default function UploadZone({ onParsed }) {
+export default function UploadZone({ onParsed, disabled = false }) {
   const [dragging, setDragging] = useState(false);
   const [file, setFile] = useState(null);
   const [rowCount, setRowCount] = useState(0);
@@ -65,7 +65,7 @@ export default function UploadZone({ onParsed }) {
         onDrop={onDrop}
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
-        onClick={() => !file && inputRef.current?.click()}
+        onClick={() => !file && !disabled && inputRef.current?.click()}
         animate={{
           borderColor: dragging ? '#4D9EFF' : 'rgba(77,158,255,0.3)',
           backgroundColor: dragging ? 'rgba(77,158,255,0.06)' : 'rgba(255,255,255,0.03)',
