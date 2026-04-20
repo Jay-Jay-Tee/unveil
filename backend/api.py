@@ -313,8 +313,14 @@ async def analyze_model(
         feature_df = df.drop(columns=[c for c in outcome_cols if c in df.columns], errors="ignore")
         sample_data = feature_df.sample(min(200, len(feature_df)), random_state=42).to_dict(orient="records")
 
-        # ── load model if provided ────────────────────────
+        # ── load model if provided, else fall back to demo model ────────────────
         import pickle
+        _DEMO_MODEL_PATH = ROOT / "backend" / "demo_model.pkl"
+        if model is None and _DEMO_MODEL_PATH.exists():
+            with open(_DEMO_MODEL_PATH, "rb") as f:
+                _loaded_model = pickle.load(f)
+            _loaded_X_background = feature_df.head(200)
+
         if model is not None:
             model_contents = await model.read()
             model_tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".pkl")
@@ -478,4 +484,4 @@ The legal threshold for disparate impact is 0.8. Any score below this fails the 
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("backend.api:app", host="0.0.0.0", port=8001, reload=True)  
+    uvicorn.run("backend.api:app", host="0.0.0.0", port=8001, reload=True)
