@@ -8,5 +8,5 @@ uvicorn
 requests
 matplotlib
 openpyxl
-google-generativeai
+google-genai
 python-multipart

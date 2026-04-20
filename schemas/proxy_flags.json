@@ -4,8 +4,8 @@
   "dataset": "<dataset_name>",
   "proxy_columns": [
     { "column": "relationship", "proxies_for": "gender", "cramers_v": 0.0, "mutual_information": 0.0, "verdict": "PROXY" },
-    { "column": "marital-status", "proxies_for": "gender", "cramers_v": 0.0, "mutual_information": 0.0, "verdict": "PROXY" },
-    { "column": "occupation", "proxies_for": "gender", "cramers_v": 0.0, "mutual_information": 0.0, "verdict": "WEAK_PROXY" },
+    { "column": "marital-status", "proxies_for": "sex", "cramers_v": 0.0, "mutual_information": 0.0, "verdict": "PROXY" },
+    { "column": "occupation", "proxies_for": "sex", "cramers_v": 0.0, "mutual_information": 0.0, "verdict": "WEAK_PROXY" },
     { "column": "occupation", "proxies_for": "race", "cramers_v": 0.0, "mutual_information": 0.0, "verdict": "WEAK_PROXY" },
     { "column": "native-country", "proxies_for": "race", "cramers_v": 0.0, "mutual_information": 0.0, "verdict": "WEAK_PROXY" }
   ],

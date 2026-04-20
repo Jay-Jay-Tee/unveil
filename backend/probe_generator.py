@@ -45,6 +45,7 @@ class ProbeGenerator:
         if self.model_fn is not None:
             return float(self.model_fn(features))
         else:
+            assert self.model_endpoint is not None
             resp = requests.post(self.model_endpoint, json={"features": features}, timeout=10)
             resp.raise_for_status()
             return float(resp.json()["probability"])
@@ -90,7 +91,7 @@ class ProbeGenerator:
 
         for col in protected_columns:
             # Collect all unique values this protected column takes in the sample data
-            unique_vals = list(set(row[col] for row in sample_data if col in row))
+            unique_vals = list({row[col] for row in sample_data if col in row})
 
             if len(unique_vals) < 2:
                 print(f"  [SKIP] '{col}' has fewer than 2 unique values in sample_data — cannot probe.")
@@ -111,10 +112,10 @@ class ProbeGenerator:
                 diffs = [f.result() for f in as_completed(futures)]
 
             # t-test: are the differences significantly different from 0?
-            t_stat, p_value = stats.ttest_1samp(diffs, 0)
+            _, p_value = stats.ttest_1samp(diffs, 0)
 
             mean_diff = float(np.mean(diffs))
-            p_val = float(p_value)
+            p_val = float(np.asarray(p_value).item())
 
             # Verdict logic:
             # BIASED    — statistically significant (p < 0.05) AND meaningful difference (mean_diff > 0.05)

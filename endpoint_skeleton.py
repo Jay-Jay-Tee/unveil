@@ -24,8 +24,8 @@ from pydantic import BaseModel
 
 # Add backend/ to path so we can import M3 modules
 sys.path.insert(0, str(Path(__file__).parent / "backend"))
-from probe_generator import ProbeGenerator
-from shap_explainer import SHAPExplainer
+from backend.probe_generator import ProbeGenerator
+from backend.shap_explainer import SHAPExplainer
 
 app = FastAPI(
     title="UnbiasedAI — M3 Model Analyzer",

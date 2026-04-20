@@ -30,7 +30,8 @@ Notes on AI Studio key:
 import os
 import json
 import re
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 from pathlib import Path
 
 
@@ -77,14 +78,11 @@ def classify(ingest_result: dict, output_path: str = "") -> dict:
             "  export GEMINI_API_KEY=your_key_here"
         )
 
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel(
-        model_name="gemini-1.5-flash",
-        system_instruction=_SYSTEM_INSTRUCTION,
-    )
+    # new
+    client = genai.Client(api_key=api_key)
 
     prompt = _build_prompt(ingest_result)
-    raw_response = _call_gemini(model, prompt)
+    raw_response = _call_gemini(client, prompt)
     schema_map = _parse_and_validate(raw_response, ingest_result)
 
     # ── write to disk ──
@@ -186,24 +184,19 @@ Rules:
 # Gemini call
 # ─────────────────────────────────────────────────────────────
 
-def _call_gemini(model, prompt: str) -> str:
-    """
-    Send the prompt to Gemini and return the raw text response.
-    Strips markdown code fences if Gemini adds them despite the system instruction.
-    """
-    response = model.generate_content(
-        prompt,
-        generation_config=genai.GenerationConfig(
-            temperature=0.0,        # deterministic — bias auditing needs consistency
+def _call_gemini(client, prompt: str) -> str:
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        config=types.GenerateContentConfig(
+            system_instruction=_SYSTEM_INSTRUCTION,
+            temperature=0.0,
             max_output_tokens=4096,
         ),
+        contents=prompt,
     )
     raw = response.text.strip()
-
-    # Strip ```json ... ``` fences if Gemini adds them anyway
     raw = re.sub(r"^```(?:json)?\s*", "", raw)
     raw = re.sub(r"\s*```$", "", raw.strip())
-
     return raw.strip()
 
 

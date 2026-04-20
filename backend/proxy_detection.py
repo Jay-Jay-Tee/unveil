@@ -64,7 +64,7 @@ SCHEMA_VERSION = "1.0.0"
 # Public entry point
 # ─────────────────────────────────────────────────────────────
 
-def detect(ingest_result: dict, schema_map: dict, output_path: str = None) -> dict:
+def detect(ingest_result: dict, schema_map: dict, output_path: str | None = None) -> dict:
     """
     Detect proxy columns relative to protected attributes.
 
