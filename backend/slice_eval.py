@@ -45,7 +45,7 @@ def _binary_series(series: pd.Series, positive_label: Any = 1) -> pd.Series:
             return (series.astype(float) >= float(positive_label)).astype(int)
         return (series.astype(float) >= 0.5).astype(int)
 
-    normalized = series.squeeze().astype(str).str.strip().str.lower()
+    normalized = series.astype(str).str.strip().str.lower()
     positive_tokens = {
         str(positive_label).strip().lower(),
         "1",
@@ -152,7 +152,9 @@ def evaluate_slices(
             "what_if_tool": None,
         }
 
-    working = df[[group_column, label_column, prediction_column]].copy()
+    # Deduplicate columns when label == prediction (avoids DataFrame-instead-of-Series bug)
+    cols = list(dict.fromkeys([group_column, label_column, prediction_column]))
+    working = df[cols].copy()
     working = working.dropna(subset=[group_column])
 
     if working.empty:
