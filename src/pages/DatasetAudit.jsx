@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import ColumnCard from '../components/ColumnCard';
 import SliceChart from '../components/SliceChart';
 import SeverityBadge from '../components/SeverityBadge';
+import Tooltip from '../components/Tooltip';
 import { useAudit } from '../lib/AuditContext';
 import { SEVERITY } from '../lib/constants';
 
@@ -20,7 +21,6 @@ export default function DatasetAudit() {
   const navigate = useNavigate();
   const { schemaMap, biasReport, isMock } = useAudit();
 
-  // Redirect to upload if no data
   if (!schemaMap || !biasReport) {
     return (
       <div className="min-h-screen pt-32 flex flex-col items-center gap-6 text-center px-6">
@@ -33,35 +33,52 @@ export default function DatasetAudit() {
     );
   }
 
-  const columns = buildColumns(schemaMap, biasReport);
-  const biasedCount    = columns.filter(c => c.bias?.verdict === 'BIASED').length;
+  const columns      = buildColumns(schemaMap, biasReport);
+  const biasedCount  = columns.filter(c => c.bias?.verdict === 'BIASED').length;
   const ambiguousCount = columns.filter(c => c.bias?.verdict === 'AMBIGUOUS').length;
-  const headerBg = biasedCount > 0 ? 'rgba(255,64,64,0.05)' : ambiguousCount > 0 ? 'rgba(245,166,35,0.05)' : 'rgba(46,204,143,0.05)';
+  const headerBg     = biasedCount > 0
+    ? 'rgba(255,64,64,0.05)'
+    : ambiguousCount > 0
+      ? 'rgba(245,166,35,0.05)'
+      : 'rgba(46,204,143,0.05)';
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="min-h-screen pt-24 px-6 pb-20">
       <div className="mx-auto max-w-6xl">
-        <div className="rounded-xl px-6 py-6 mb-8 transition-colors duration-500" style={{ backgroundColor: headerBg }}>
+
+        {/* Header */}
+        <div className="rounded-xl px-6 py-6 mb-4 transition-colors duration-500" style={{ backgroundColor: headerBg }}>
           <h1 className="font-[family-name:var(--font-heading)] text-4xl text-white mb-2">Dataset Audit</h1>
-          <p className="text-gray-400">Disparate impact analysis and slice evaluation across protected attributes.</p>
+          <p className="text-gray-400">Fairness analysis across demographic groups in your dataset.</p>
           {isMock && <p className="text-xs text-ambiguous mt-2">⚠ Demo data — start backend for live results</p>}
         </div>
 
+        {/* Hover hint */}
+        <p className="text-xs text-gray-600 mb-8 px-1">
+          💡 Hover over any badge, metric, or chart label to get a plain-English explanation.
+        </p>
+
+        {/* Summary stats */}
         <motion.div initial="hidden" animate="visible" className="grid grid-cols-3 gap-4 mb-10">
           {[
-            { label: 'Total Analyzed', value: columns.length, color: '#9CA3AF' },
-            { label: 'Biased',    value: biasedCount,    color: SEVERITY.BIASED.color },
-            { label: 'Ambiguous', value: ambiguousCount, color: SEVERITY.AMBIGUOUS.color },
+            { label: 'Total Analyzed', value: columns.length, color: '#9CA3AF', tooltip: 'The number of demographic columns we checked for unfair treatment.' },
+            { label: 'Biased',    value: biasedCount,    color: SEVERITY.BIASED.color,    tooltip: 'Columns where the model treats different groups significantly unequally — severe enough to fail the legal 80% threshold.' },
+            { label: 'Ambiguous', value: ambiguousCount, color: SEVERITY.AMBIGUOUS.color, tooltip: 'Columns showing some disparity, but not enough to be certain. These warrant further review.' },
           ].map((s, i) => (
             <motion.div key={s.label} variants={fadeUp} custom={i}>
-              <div className="rounded-xl border border-border-subtle bg-bg-card p-5 text-center">
-                <div className="font-mono text-3xl font-bold" style={{ color: s.color }}>{s.value}</div>
-                <div className="mt-1 text-xs text-gray-500 uppercase tracking-wider">{s.label}</div>
-              </div>
+              <Tooltip text={s.tooltip} position="bottom">
+                <div className="w-full rounded-xl border border-border-subtle bg-bg-card p-5 text-center cursor-help">
+                  <div className="font-mono text-3xl font-bold" style={{ color: s.color }}>{s.value}</div>
+                  <div className="mt-1 text-xs text-gray-500 uppercase tracking-wider flex items-center justify-center gap-1">
+                    {s.label} <span className="text-gray-700">?</span>
+                  </div>
+                </div>
+              </Tooltip>
             </motion.div>
           ))}
         </motion.div>
 
+        {/* Per-column results */}
         <div className="space-y-8">
           {columns.map((col, i) => (
             <motion.div key={col.name} initial="hidden" whileInView="visible"

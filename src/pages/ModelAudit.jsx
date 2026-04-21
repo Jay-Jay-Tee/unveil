@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ShapChart from '../components/ShapChart';
 import SeverityBadge from '../components/SeverityBadge';
+import Tooltip from '../components/Tooltip';
 import { useAudit } from '../lib/AuditContext';
 import { analyzeModel } from '../lib/api';
 import { SEVERITY } from '../lib/constants';
@@ -18,13 +19,12 @@ const fadeUp = {
 
 export default function ModelAudit() {
   const navigate = useNavigate();
-  const audit = useAudit();
+  const audit    = useAudit();
 
-  const [status, setStatus]     = useState('idle');   // idle | running | done | error
+  const [status,   setStatus]   = useState('idle');
   const [errorMsg, setErrorMsg] = useState('');
-  const [nProbes, setNProbes]   = useState(100);
+  const [nProbes,  setNProbes]  = useState(100);
 
-  // Auto-run if we have dataset data but no model results yet
   useEffect(() => {
     if (audit.schemaMap && audit.biasReport && !audit.modelBiasReport && status === 'idle') {
       runAnalysis();
@@ -48,7 +48,7 @@ export default function ModelAudit() {
       );
       audit.setModelBiasReport({
         attribute_results: result.attributeResults,
-        shap_summary: result.shapSummary,
+        shap_summary:      result.shapSummary,
       });
       audit.setIsMock(audit.isMock || result.isMock);
       setStatus('done');
@@ -58,13 +58,12 @@ export default function ModelAudit() {
     }
   }
 
-  const modelReport = audit.modelBiasReport;
+  const modelReport      = audit.modelBiasReport;
   const attributeResults = modelReport?.attribute_results || [];
   const shapSummary      = modelReport?.shap_summary || [];
-
-  const sorted      = [...attributeResults].sort((a, b) => (SEVERITY_ORDER[a.verdict] ?? 3) - (SEVERITY_ORDER[b.verdict] ?? 3));
-  const biasedCount = sorted.filter(a => a.verdict === 'BIASED').length;
-  const proxyCount  = shapSummary.filter(s => s.is_proxy).length;
+  const sorted           = [...attributeResults].sort((a, b) => (SEVERITY_ORDER[a.verdict] ?? 3) - (SEVERITY_ORDER[b.verdict] ?? 3));
+  const biasedCount      = sorted.filter(a => a.verdict === 'BIASED').length;
+  const proxyCount       = shapSummary.filter(s => s.is_proxy).length;
 
   if (!audit.schemaMap && status === 'idle') {
     return (
@@ -81,12 +80,19 @@ export default function ModelAudit() {
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="min-h-screen pt-24 px-6 pb-20">
       <div className="mx-auto max-w-6xl">
-        <div className="rounded-xl px-6 py-6 mb-8 transition-colors duration-500"
+
+        {/* Header */}
+        <div className="rounded-xl px-6 py-6 mb-4 transition-colors duration-500"
           style={{ backgroundColor: biasedCount > 0 ? 'rgba(255,64,64,0.05)' : 'rgba(46,204,143,0.05)' }}>
           <h1 className="font-[family-name:var(--font-heading)] text-4xl text-white mb-2">Model Audit</h1>
-          <p className="text-gray-400">SHAP analysis and counterfactual probing results for model behavior.</p>
+          <p className="text-gray-400">Testing how the trained model behaves across different demographic groups.</p>
           {audit.isMock && <p className="text-xs text-ambiguous mt-2">⚠ Demo data — start backend for live probe results</p>}
         </div>
+
+        {/* Hover hint */}
+        <p className="text-xs text-gray-600 mb-8 px-1">
+          💡 Hover over any badge, metric, or chart label to get a plain-English explanation.
+        </p>
 
         {/* Running / error states */}
         <AnimatePresence>
@@ -95,7 +101,7 @@ export default function ModelAudit() {
               className="mb-8 flex items-center gap-3 rounded-xl border border-accent/30 bg-accent/5 px-5 py-4">
               <Spinner />
               <span className="text-sm text-accent">
-                Running {nProbes} counterfactual probes per protected attribute…
+                Running {nProbes} test pairs per protected attribute…
               </span>
             </motion.div>
           )}
@@ -112,28 +118,31 @@ export default function ModelAudit() {
           )}
         </AnimatePresence>
 
-        {/* Re-run controls */}
+        {/* Controls */}
         {status !== 'running' && (
           <div className="mb-8 flex items-center gap-4 flex-wrap">
-            <label className="text-xs text-gray-400">
-              Probes per attribute:
-              <select value={nProbes} onChange={e => setNProbes(Number(e.target.value))}
-                className="ml-2 rounded-lg bg-bg-card border border-border-subtle px-2 py-1 text-xs text-white">
-                <option value={50}>50 (fast)</option>
-                <option value={100}>100 (default)</option>
-                <option value={200}>200 (thorough)</option>
-              </select>
-            </label>
+            <Tooltip text="More probes = more accurate results, but takes longer to run. 100 is a good balance." position="bottom">
+              <label className="text-xs text-gray-400 cursor-help">
+                Test pairs per attribute:
+                <select value={nProbes} onChange={e => setNProbes(Number(e.target.value))}
+                  className="ml-2 rounded-lg bg-bg-card border border-border-subtle px-2 py-1 text-xs text-white">
+                  <option value={50}>50 (fast)</option>
+                  <option value={100}>100 (default)</option>
+                  <option value={200}>200 (thorough)</option>
+                </select>
+              </label>
+            </Tooltip>
             <button onClick={runAnalysis}
               className="rounded-xl border border-accent/40 px-4 py-2 text-xs font-semibold text-accent hover:bg-accent/10 transition">
               ↺ Re-run Analysis
             </button>
-            {/* Optional model upload */}
-            <label className="cursor-pointer rounded-xl border border-border-subtle px-4 py-2 text-xs font-semibold text-gray-400 hover:bg-white/5 transition">
-              Upload Model (.pkl)
-              <input type="file" accept=".pkl" className="hidden"
-                onChange={e => { audit.setModelFile(e.target.files[0] || null); }}/>
-            </label>
+            <Tooltip text="Optional — upload a trained model file to get deeper feature attribution analysis alongside the probe results." position="bottom">
+              <label className="cursor-pointer rounded-xl border border-border-subtle px-4 py-2 text-xs font-semibold text-gray-400 hover:bg-white/5 transition">
+                Upload Model (.pkl)
+                <input type="file" accept=".pkl" className="hidden"
+                  onChange={e => { audit.setModelFile(e.target.files[0] || null); }} />
+              </label>
+            </Tooltip>
             {audit.modelFile && <span className="text-xs text-clean">✓ {audit.modelFile.name}</span>}
           </div>
         )}
@@ -143,15 +152,19 @@ export default function ModelAudit() {
           <>
             <motion.div initial="hidden" animate="visible" className="grid grid-cols-3 gap-4 mb-10">
               {[
-                { label: 'Attributes Tested', value: sorted.length,  color: '#9CA3AF' },
-                { label: 'Biased',            value: biasedCount,    color: SEVERITY.BIASED.color },
-                { label: 'Proxy Features',    value: proxyCount,     color: SEVERITY.AMBIGUOUS.color },
+                { label: 'Attributes Tested', value: sorted.length,  color: '#9CA3AF',             tooltip: 'The number of protected demographic attributes the model was tested against.' },
+                { label: 'Biased',            value: biasedCount,    color: SEVERITY.BIASED.color,  tooltip: 'Attributes where the model gives significantly different outcomes based on that demographic — statistically confirmed, not random.' },
+                { label: 'Proxy Features',    value: proxyCount,     color: SEVERITY.AMBIGUOUS.color, tooltip: 'Features the model relies on heavily that happen to be correlated with a protected attribute. These are indirect discrimination risks.' },
               ].map((s, i) => (
                 <motion.div key={s.label} variants={fadeUp} custom={i}>
-                  <div className="rounded-xl border border-border-subtle bg-bg-card p-5 text-center">
-                    <div className="font-mono text-3xl font-bold" style={{ color: s.color }}>{s.value}</div>
-                    <div className="mt-1 text-xs text-gray-500 uppercase tracking-wider">{s.label}</div>
-                  </div>
+                  <Tooltip text={s.tooltip} position="bottom">
+                    <div className="w-full rounded-xl border border-border-subtle bg-bg-card p-5 text-center cursor-help">
+                      <div className="font-mono text-3xl font-bold" style={{ color: s.color }}>{s.value}</div>
+                      <div className="mt-1 text-xs text-gray-500 uppercase tracking-wider flex items-center justify-center gap-1">
+                        {s.label} <span className="text-gray-700">?</span>
+                      </div>
+                    </div>
+                  </Tooltip>
                 </motion.div>
               ))}
             </motion.div>
@@ -162,9 +175,14 @@ export default function ModelAudit() {
               </motion.div>
             )}
 
-            <h2 className="font-[family-name:var(--font-heading)] text-2xl text-white mb-6">
-              Counterfactual Probing Results
-            </h2>
+            <Tooltip text="We created pairs of identical people who differ only in one protected attribute (e.g. same income, job, age — but different race), then measured how differently the model treated them. A large difference means the model is sensitive to that attribute." position="right">
+              <h2 className="font-[family-name:var(--font-heading)] text-2xl text-white mb-2 cursor-help inline-flex items-center gap-2">
+                Counterfactual Probe Results
+                <span className="text-gray-600 text-base font-normal">?</span>
+              </h2>
+            </Tooltip>
+            <p className="text-xs text-gray-600 mb-6">How much did changing only the protected attribute shift the model's decision?</p>
+
             <div className="grid gap-4 sm:grid-cols-2">
               {sorted.map((attr, i) => (
                 <motion.div key={attr.name} initial="hidden" whileInView="visible"
@@ -175,9 +193,21 @@ export default function ModelAudit() {
                     <SeverityBadge verdict={attr.verdict} />
                   </div>
                   <div className="grid grid-cols-3 gap-3">
-                    <MetricPill label="Mean Diff" value={attr.mean_diff != null ? attr.mean_diff.toFixed(3) : 'N/A'} />
-                    <MetricPill label="p-value"   value={attr.p_value != null ? (attr.p_value < 0.001 ? '<0.001' : attr.p_value.toFixed(3)) : 'N/A'} />
-                    <MetricPill label="SHAP Rank" value={attr.shap_rank != null ? `#${attr.shap_rank}` : 'N/A'} />
+                    <MetricPill
+                      label="Mean Diff"
+                      value={attr.mean_diff != null ? attr.mean_diff.toFixed(3) : 'N/A'}
+                      tooltip="Average difference in the model's output score when only this attribute was changed. 0.20 means the model's score shifted by 20 points on average just because of this attribute."
+                    />
+                    <MetricPill
+                      label="p-value"
+                      value={attr.p_value != null ? (attr.p_value < 0.001 ? '<0.001' : attr.p_value.toFixed(3)) : 'N/A'}
+                      tooltip="Confidence that the difference is real and not random. Below 0.05 means we're 95%+ sure the model is genuinely treating this group differently."
+                    />
+                    <MetricPill
+                      label="Influence Rank"
+                      value={attr.shap_rank != null ? `#${attr.shap_rank}` : 'N/A'}
+                      tooltip="This attribute's rank by how much it influenced the model's decisions overall. #1 means it was the single most influential feature."
+                    />
                   </div>
                 </motion.div>
               ))}
@@ -186,7 +216,10 @@ export default function ModelAudit() {
             {/* Proxy callouts */}
             {shapSummary.filter(s => s.is_proxy).length > 0 && (
               <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} className="mt-10">
-                <h2 className="font-[family-name:var(--font-heading)] text-2xl text-white mb-6">Proxy Risk Analysis</h2>
+                <h2 className="font-[family-name:var(--font-heading)] text-2xl text-white mb-2">Indirect Discrimination Risks</h2>
+                <p className="text-xs text-gray-600 mb-6">
+                  These features aren't protected attributes, but the model uses them heavily — and they're statistically linked to protected groups. Removing race or sex from the data won't stop the model from using these as substitutes.
+                </p>
                 <div className="space-y-4">
                   {shapSummary.filter(s => s.is_proxy).map((pf, i) => (
                     <motion.div key={pf.feature} initial="hidden" whileInView="visible"
@@ -194,20 +227,33 @@ export default function ModelAudit() {
                       className="flex items-start gap-4 rounded-xl border border-ambiguous/20 bg-ambiguous/5 p-5">
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-ambiguous/10">
                         <svg className="h-5 w-5 text-ambiguous" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
                         </svg>
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-1">
                           <span className="font-mono text-sm font-semibold text-white">{pf.feature}</span>
-                          <span className="rounded-full bg-ambiguous/10 px-2.5 py-0.5 text-[10px] font-semibold text-ambiguous uppercase tracking-wider">Proxy</span>
+                          <Tooltip text="This column is not a protected attribute, but it's strongly correlated with one. The model is likely using it as a stand-in to make decisions that would otherwise be illegal." position="right">
+                            <span className="rounded-full bg-ambiguous/10 px-2.5 py-0.5 text-[10px] font-semibold text-ambiguous uppercase tracking-wider cursor-help">
+                              Indirect Risk
+                            </span>
+                          </Tooltip>
                         </div>
                         <p className="text-sm text-gray-400 leading-relaxed">
-                          SHAP importance <span className="font-mono font-semibold text-white">{pf.mean_abs_shap?.toFixed(2) ?? 'N/A'}</span> — acts as proxy for{' '}
+                          Influence score{' '}
+                          <Tooltip text="How much this feature moved the model's decisions on average. Higher = more influential." position="top">
+                            <span className="font-mono font-semibold text-white cursor-help">
+                              {pf.mean_abs_shap?.toFixed(2) ?? 'N/A'}
+                            </span>
+                          </Tooltip>
+                          {' '}— acts as a stand-in for{' '}
                           {(pf.proxy_for || []).map((p, j, arr) => (
-                            <span key={p}><span className="font-semibold text-ambiguous">{p}</span>{j < arr.length - 1 && ', '}</span>
+                            <span key={p}>
+                              <span className="font-semibold text-ambiguous">{p}</span>
+                              {j < arr.length - 1 && ', '}
+                            </span>
                           ))}.
-                          The model may use this feature to discriminate indirectly even if protected attributes are excluded from training.
+                          {' '}The model may use this to discriminate indirectly even if protected attributes are excluded from training.
                         </p>
                       </div>
                     </motion.div>
@@ -229,20 +275,24 @@ export default function ModelAudit() {
   );
 }
 
-function MetricPill({ label, value }) {
+function MetricPill({ label, value, tooltip }) {
   return (
-    <div className="rounded-lg bg-white/[0.03] px-3 py-2 text-center">
-      <div className="font-mono text-sm font-semibold text-white">{value}</div>
-      <div className="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5">{label}</div>
-    </div>
+    <Tooltip text={tooltip} position="bottom">
+      <div className="w-full rounded-lg bg-white/[0.03] px-3 py-2 text-center cursor-help">
+        <div className="font-mono text-sm font-semibold text-white">{value}</div>
+        <div className="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5 flex items-center justify-center gap-1">
+          {label} <span className="text-gray-700">?</span>
+        </div>
+      </div>
+    </Tooltip>
   );
 }
 
 function Spinner() {
   return (
     <svg className="h-4 w-4 animate-spin text-accent" viewBox="0 0 24 24" fill="none">
-      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/>
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
     </svg>
   );
 }

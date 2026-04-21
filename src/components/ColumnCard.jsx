@@ -4,6 +4,7 @@ import BiasGauge from './BiasGauge';
 import SeverityBadge from './SeverityBadge';
 import ProxyAlert from './ProxyAlert';
 import SliceChart from './SliceChart';
+import Tooltip from './Tooltip';
 
 export default function ColumnCard({
   name,
@@ -37,16 +38,13 @@ export default function ColumnCard({
             <h3 className="font-[family-name:var(--font-mono)] text-sm font-semibold text-white truncate">
               {name}
             </h3>
-            {/* Expand chevron */}
             {hasSlices && (
               <motion.svg
                 animate={{ rotate: expanded ? 180 : 0 }}
                 transition={{ duration: 0.25 }}
                 className="h-4 w-4 shrink-0 text-gray-500"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
+                fill="none" viewBox="0 0 24 24"
+                stroke="currentColor" strokeWidth={2}
               >
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
               </motion.svg>
@@ -68,22 +66,27 @@ export default function ColumnCard({
         {/* Metric pills */}
         {hasMetrics && (
           <div className="grid grid-cols-2 gap-2 mb-2">
-            <MetricPill label="Parity Gap" value={parityGap?.toFixed(2)} />
-            <MetricPill label="p-value" value={pValue < 0.001 ? '<0.001' : pValue?.toFixed(3)} />
+            <MetricPill
+              label="Parity Gap"
+              value={parityGap?.toFixed(2)}
+              tooltip="The difference in approval/positive rates between the best-off and worst-off group. A gap over 10% (0.10) means one group is being treated noticeably differently from another."
+            />
+            <MetricPill
+              label="p-value"
+              value={pValue < 0.001 ? '<0.001' : pValue?.toFixed(3)}
+              tooltip="A statistical measure of how likely this gap is due to chance. Below 0.05 means the disparity is almost certainly real, not random noise — the smaller the number, the more confident we are."
+            />
           </div>
         )}
 
-        {/* No-metrics placeholder */}
         {!hasMetrics && (
           <div className="flex flex-1 items-center justify-center py-6 text-xs text-gray-600">
             No bias metrics for this column
           </div>
         )}
 
-        {/* Proxy warning */}
         <ProxyAlert proxies={proxies} />
 
-        {/* Expand hint */}
         {hasSlices && !expanded && (
           <p className="mt-3 text-center text-[10px] text-gray-600 uppercase tracking-wider">
             Click to view slice breakdown
@@ -112,13 +115,18 @@ export default function ColumnCard({
   );
 }
 
-function MetricPill({ label, value }) {
+function MetricPill({ label, value, tooltip }) {
   return (
-    <div className="rounded-lg bg-white/[0.03] px-3 py-2 text-center">
-      <div className="font-[family-name:var(--font-mono)] text-sm font-semibold text-white">
-        {value ?? '—'}
+    <Tooltip text={tooltip} position="bottom">
+      <div className="w-full rounded-lg bg-white/[0.03] px-3 py-2 text-center">
+        <div className="font-[family-name:var(--font-mono)] text-sm font-semibold text-white">
+          {value ?? '—'}
+        </div>
+        <div className="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5 flex items-center justify-center gap-1">
+          {label}
+          <span className="text-gray-600">?</span>
+        </div>
       </div>
-      <div className="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5">{label}</div>
-    </div>
+    </Tooltip>
   );
 }
