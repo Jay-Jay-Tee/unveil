@@ -3,6 +3,10 @@
 # PowerShell Version for Windows
 # ============================================
 # This script starts both frontend and backend
+
+# Fix Python Unicode encoding on Windows
+$env:PYTHONUTF8 = "1"
+$env:PYTHONIOENCODING = "utf-8"
 # Press Ctrl+C to stop all processes
 
 Write-Host ""

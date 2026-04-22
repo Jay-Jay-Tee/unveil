@@ -1,3 +1,7 @@
+import sys, io
+if sys.stdout.encoding and sys.stdout.encoding.lower() != 'utf-8':
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+
 """
 UnbiasedAI — backend/api.py
 FastAPI server that wires together M1, M2, M3 into a single HTTP API
