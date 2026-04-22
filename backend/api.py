@@ -26,6 +26,9 @@ import traceback
 from pathlib import Path
 from typing import Any, Optional
 
+import dotenv
+dotenv.load_dotenv()  # Load environment variables from .env file
+
 import numpy as np
 import pandas as pd
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile

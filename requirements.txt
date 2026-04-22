@@ -19,6 +19,7 @@ pydantic
 
 # Gemini / Google AI
 google-genai
+python-dotenv
 
 # Utilities
 requests
