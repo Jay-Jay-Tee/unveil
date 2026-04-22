@@ -11,18 +11,17 @@ import Glossary from './pages/Glossary';
 
 export default function App() {
   const location = useLocation();
-
   return (
     <AuditProvider>
       <Navbar />
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
-          <Route path="/"               element={<Landing />} />
-          <Route path="/upload"         element={<Upload />} />
-          <Route path="/audit/dataset"  element={<DatasetAudit />} />
-          <Route path="/audit/model"    element={<ModelAudit />} />
-          <Route path="/report"         element={<Report />} />
-          <Route path="/glossary"       element={<Glossary />} />
+          <Route path="/"              element={<Landing />} />
+          <Route path="/upload"        element={<Upload />} />
+          <Route path="/audit/dataset" element={<DatasetAudit />} />
+          <Route path="/audit/model"   element={<ModelAudit />} />
+          <Route path="/report"        element={<Report />} />
+          <Route path="/glossary"      element={<Glossary />} />
         </Routes>
       </AnimatePresence>
     </AuditProvider>

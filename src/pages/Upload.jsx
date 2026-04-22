@@ -2,38 +2,49 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import UploadZone from '../components/UploadZone';
-import WalkthroughModal from '../components/WalkthroughModal';
 import { useAudit } from '../lib/AuditContext';
 import { analyzeDataset, checkBackendHealth } from '../lib/api';
-import { SEVERITY } from '../lib/constants';
-
-const SEVERITY_ORDER = { BIASED: 0, AMBIGUOUS: 1, CLEAN: 2 };
 
 const fadeUp = {
-  hidden: { opacity: 0, y: 24 },
-  visible: (i = 0) => ({
-    opacity: 1, y: 0,
-    transition: { delay: i * 0.06, duration: 0.5, ease: [0.22, 1, 0.36, 1] },
-  }),
+  hidden: { opacity: 0, y: 20 },
+  visible: (i = 0) => ({ opacity: 1, y: 0, transition: { delay: i * 0.08, duration: 0.5, ease: [0.22, 1, 0.36, 1] } }),
 };
+
+const TYPE_LABEL  = { PROTECTED: 'Protected', OUTCOME: 'Outcome', AMBIGUOUS: 'Ambiguous', NEUTRAL: 'Neutral' };
+const TYPE_COLOR  = { PROTECTED: 'var(--color-biased)', OUTCOME: 'var(--color-green)', AMBIGUOUS: 'var(--color-ambiguous)', NEUTRAL: 'var(--color-ink-muted)' };
+const TYPE_BG     = { PROTECTED: 'var(--color-red-light)', OUTCOME: 'var(--color-green-light)', AMBIGUOUS: '#FFF4E6', NEUTRAL: 'var(--color-bg-warm)' };
+const VERDICT_COLOR= { BIASED: 'var(--color-biased)', AMBIGUOUS: 'var(--color-ambiguous)', CLEAN: 'var(--color-clean)' };
+const VERDICT_BG  = { BIASED: 'var(--color-red-light)', AMBIGUOUS: '#FFF4E6', CLEAN: 'var(--color-green-light)' };
+
+function buildColumns(schemaMap, biasReport) {
+  if (!schemaMap || !biasReport) return [];
+  const biasMap = {};
+  for (const col of (biasReport.column_results || [])) biasMap[col.name] = col;
+  return (schemaMap.columns || [])
+    .map(col => ({ ...col, bias: biasMap[col.name] || null }))
+    .sort((a, b) => {
+      const va = a.bias ? ({ BIASED: 0, AMBIGUOUS: 1, CLEAN: 2 }[a.bias.verdict] ?? 3) : 4;
+      const vb = b.bias ? ({ BIASED: 0, AMBIGUOUS: 1, CLEAN: 2 }[b.bias.verdict] ?? 3) : 4;
+      return va - vb;
+    });
+}
 
 export default function Upload() {
   const navigate = useNavigate();
   const audit = useAudit();
-  const [status, setStatus]   = useState('idle');
+  const [status, setStatus] = useState('idle');
   const [errorMsg, setErrorMsg] = useState('');
   const [progress, setProgress] = useState('');
-  const [showWalkthrough, setShowWalkthrough] = useState(false);
 
   async function handleParsed({ file }) {
     audit.setDatasetFile(file);
     setStatus('checking');
-    setProgress('Checking backend connection…');
+    setProgress('Checking backend…');
     const online = await checkBackendHealth();
     audit.setBackendOnline(online);
     setStatus('analyzing');
     setProgress(online
-      ? 'Running Gemini column classification… (this takes 15-30 seconds)'
+      ? 'Running Gemini column classification… (15–30 seconds)'
       : 'Backend offline — loading pre-computed demo results…');
     try {
       const result = await analyzeDataset(file);
@@ -55,149 +66,153 @@ export default function Upload() {
   const cleanCount     = columns.filter(c => c.bias?.verdict === 'CLEAN').length;
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="min-h-screen pt-28 px-6 pb-20 bg-gradient-to-br from-white via-accent/2 to-secondary/2">
-      <WalkthroughModal onComplete={() => setShowWalkthrough(false)} />
-      
-      <div className="mx-auto max-w-6xl">
-        <div className="mb-12">
-          <h1 className="font-[family-name:var(--font-heading)] text-6xl text-text-primary mb-4 font-bold">Upload Dataset</h1>
-          <p className="text-lg text-text-secondary max-w-2xl leading-relaxed">
-            Drag and drop your CSV, JSON, or XLSX file. We'll analyze it for bias patterns, disparate impact, and compliance issues.
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-h-screen pt-20 pb-20 px-6">
+      <div className="mx-auto max-w-5xl">
+
+        {/* Header */}
+        <div className="py-12 border-b-2 mb-12" style={{ borderColor: 'var(--color-border)' }}>
+          <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: 'var(--color-ink-muted)', fontFamily: 'var(--font-mono)' }}>
+            Step 01
+          </p>
+          <h1 className="text-5xl md:text-6xl font-black tracking-tight leading-tight mb-4" style={{ fontFamily: 'var(--font-sans)', color: 'var(--color-ink)' }}>
+            Upload<br />
+            <span style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', fontWeight: 400, color: 'var(--color-amber-dark)' }}>your dataset.</span>
+          </h1>
+          <p className="text-base max-w-lg" style={{ color: 'var(--color-ink-mid)' }}>
+            CSV, JSON, or XLSX. Gemini classifies each column — Protected, Outcome, Ambiguous, or Neutral.
           </p>
         </div>
 
         <UploadZone onParsed={handleParsed} disabled={status === 'analyzing'} />
 
+        {/* Status messages */}
         <AnimatePresence>
           {(status === 'checking' || status === 'analyzing') && (
             <motion.div key="prog" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-              className="mt-8 flex items-center gap-4 rounded-2xl border-2 border-accent bg-gradient-to-r from-accent/10 to-orange-100 px-6 py-5">
-              <Spinner /><span className="text-base font-medium text-accent">{progress}</span>
+              className="mt-6 flex items-center gap-3 px-5 py-4 rounded-xl border-2"
+              style={{ borderColor: 'var(--color-amber)', background: 'var(--color-amber-light)' }}>
+              <Spinner />
+              <span className="text-sm font-semibold" style={{ color: 'var(--color-amber-dark)', fontFamily: 'var(--font-mono)' }}>{progress}</span>
             </motion.div>
           )}
           {status === 'error' && (
             <motion.div key="err" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-              className="mt-8 rounded-2xl border-2 border-biased bg-gradient-to-r from-biased/10 to-orange-100 px-6 py-5">
-              <p className="text-base font-bold text-biased">❌ Analysis failed</p>
-              <p className="text-sm text-text-secondary mt-2">{errorMsg}</p>
+              className="mt-6 px-5 py-4 rounded-xl border-2"
+              style={{ borderColor: 'var(--color-biased)', background: 'var(--color-red-light)' }}>
+              <p className="text-sm font-bold" style={{ color: 'var(--color-biased)' }}>Analysis failed</p>
+              <p className="text-sm mt-1" style={{ color: 'var(--color-ink-mid)' }}>{errorMsg}</p>
             </motion.div>
           )}
           {audit.isMock && status === 'done' && (
             <motion.div key="mock" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-              className="mt-8 rounded-2xl border-2 border-ambiguous bg-gradient-to-r from-ambiguous/10 to-yellow-100 px-6 py-4">
-              <p className="text-sm font-semibold text-text-primary">⚠️  Demo Mode Active</p>
-              <p className="text-sm text-text-secondary mt-2">
-                Backend is offline. Showing pre-computed UCI Adult demo results.
-                To run live analysis: <code className="bg-text-primary/5 px-2 py-1 rounded text-xs">uvicorn backend.api:app --port 8001</code>
+              className="mt-6 px-5 py-3 rounded-xl border-2"
+              style={{ borderColor: 'var(--color-ambiguous)', background: '#FFF4E6' }}>
+              <p className="text-xs font-bold" style={{ color: 'var(--color-ambiguous)', fontFamily: 'var(--font-mono)' }}>
+                ⚠ DEMO MODE — showing pre-computed UCI Adult dataset results.
+                Run <code style={{ background: 'rgba(0,0,0,0.07)', padding: '1px 5px', borderRadius: 3 }}>uvicorn backend.api:app --port 8001</code> for live analysis.
               </p>
             </motion.div>
           )}
         </AnimatePresence>
 
+        {/* Results */}
         <AnimatePresence>
           {status === 'done' && columns.length > 0 && (
-            <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.5 }}>
+            <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+
+              {/* Meta */}
               {audit.datasetMeta && (
-                <div className="mt-12 mb-8 flex flex-col sm:flex-row items-start sm:items-center gap-6 text-sm font-medium text-text-secondary">
-                  <div><span className="text-text-muted">Dataset:</span> <span className="text-text-primary font-mono font-bold">{audit.datasetMeta.datasetName}</span></div>
-                  <div><span className="text-text-muted">Rows:</span> <span className="text-text-primary font-mono font-bold">{String(audit.datasetMeta.rowCount).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</span></div>
-                  {!audit.isMock && <div className="text-clean font-bold">✓ Live Analysis</div>}
+                <div className="mt-10 mb-8 flex flex-wrap gap-6 text-sm py-5 border-y-2" style={{ borderColor: 'var(--color-border)' }}>
+                  <span><span style={{ color: 'var(--color-ink-muted)' }}>Dataset</span>{' '}
+                    <span className="font-bold" style={{ fontFamily: 'var(--font-mono)' }}>{audit.datasetMeta.datasetName}</span></span>
+                  <span><span style={{ color: 'var(--color-ink-muted)' }}>Rows</span>{' '}
+                    <span className="font-bold" style={{ fontFamily: 'var(--font-mono)' }}>{String(audit.datasetMeta.rowCount).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</span></span>
+                  {!audit.isMock && <span className="font-bold" style={{ color: 'var(--color-green)' }}>✓ Live Analysis</span>}
                 </div>
               )}
-              <div className="mb-10 grid grid-cols-2 gap-4 sm:grid-cols-4">
-                <StatCard label="Total Columns" value={columns.length} color="from-text-primary to-text-secondary" />
-                <StatCard label="Biased"     value={biasedCount}    color="from-accent to-orange-500" />
-                <StatCard label="Ambiguous"  value={ambiguousCount} color="from-ambiguous to-yellow-500" />
-                <StatCard label="Clean"      value={cleanCount}     color="from-secondary to-green-500" />
+
+              {/* Stat pills */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
+                {[
+                  { label: 'Total', value: columns.length, color: 'var(--color-ink)', bg: 'var(--color-bg-warm)' },
+                  { label: 'Biased', value: biasedCount, color: 'var(--color-biased)', bg: 'var(--color-red-light)' },
+                  { label: 'Ambiguous', value: ambiguousCount, color: 'var(--color-ambiguous)', bg: '#FFF4E6' },
+                  { label: 'Clean', value: cleanCount, color: 'var(--color-green)', bg: 'var(--color-green-light)' },
+                ].map(s => (
+                  <div key={s.label} className="rounded-xl p-5 text-center border-2 card-shadow" style={{ background: s.bg, borderColor: 'transparent' }}>
+                    <div className="text-3xl font-black" style={{ color: s.color, fontFamily: 'var(--font-mono)' }}>{s.value}</div>
+                    <div className="text-xs font-bold uppercase tracking-wider mt-1.5" style={{ color: s.color, opacity: 0.7 }}>{s.label}</div>
+                  </div>
+                ))}
               </div>
 
-              <div className="mt-14 mb-8">
-                <h2 className="font-[family-name:var(--font-heading)] text-4xl text-text-primary mb-8 font-bold">Column Classification</h2>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {columns.map((col, i) => (
-                    <motion.div key={col.name} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 + i * 0.05 }}>
-                      <ColCard col={col} />
-                    </motion.div>
-                  ))}
-                </div>
+              {/* Column grid */}
+              <h2 className="text-2xl font-black mb-6" style={{ color: 'var(--color-ink)' }}>Column Classification</h2>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {columns.map((col, i) => (
+                  <motion.div
+                    key={col.name}
+                    initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 + i * 0.04 }}
+                    className="rounded-xl p-5 border-2 card-shadow transition-all hover:-translate-y-0.5"
+                    style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
+                  >
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <span className="font-bold text-sm break-all leading-tight" style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-ink)' }}>{col.name}</span>
+                      <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md"
+                        style={{ color: TYPE_COLOR[col.type], background: TYPE_BG[col.type] }}>
+                        {TYPE_LABEL[col.type] || col.type}
+                      </span>
+                    </div>
+                    {col.bias && (
+                      <div className="flex items-center gap-2 pt-3 border-t" style={{ borderColor: 'var(--color-border)' }}>
+                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md"
+                          style={{ color: VERDICT_COLOR[col.bias.verdict], background: VERDICT_BG[col.bias.verdict] }}>
+                          {col.bias.verdict}
+                        </span>
+                        {col.bias.disparate_impact != null && (
+                          <span className="text-[11px] font-medium" style={{ color: 'var(--color-ink-muted)', fontFamily: 'var(--font-mono)' }}>
+                            DI: {col.bias.disparate_impact.toFixed(2)}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                    {col.proxies?.length > 0 && (
+                      <p className="mt-2 text-[11px]" style={{ color: 'var(--color-ambiguous)' }}>
+                        Proxy for: {col.proxies.join(', ')}
+                      </p>
+                    )}
+                  </motion.div>
+                ))}
               </div>
 
-              <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={columns.length} className="mt-14 flex flex-col sm:flex-row gap-4">
-                <button onClick={() => navigate('/audit/dataset')} className="group relative rounded-xl bg-gradient-to-r from-accent to-accent-dark px-8 py-4 text-sm font-bold text-white shadow-lg shadow-accent/30 transition-all hover:shadow-xl hover:shadow-accent/50 hover:-translate-y-1 active:translate-y-0">
-                  📊 Dataset Audit →
+              {/* CTA */}
+              <div className="mt-12 flex flex-wrap gap-4">
+                <button onClick={() => navigate('/audit/dataset')}
+                  className="px-8 py-4 text-sm font-bold rounded-lg transition-all hover:opacity-90"
+                  style={{ background: 'var(--color-ink)', color: '#fff' }}>
+                  View Dataset Audit →
                 </button>
-                <button onClick={() => navigate('/audit/model')} className="rounded-xl border-2 border-text-primary px-8 py-4 text-sm font-bold text-text-primary transition-all hover:border-accent hover:text-accent hover:bg-accent/5 active:-translate-y-0.5">
-                  🔍 Model Audit →
+                <button onClick={() => navigate('/audit/model')}
+                  className="px-8 py-4 text-sm font-bold rounded-lg border-2 transition-all hover:opacity-70"
+                  style={{ border: '2px solid var(--color-border-strong)', color: 'var(--color-ink)' }}>
+                  Skip to Model Audit →
                 </button>
-              </motion.div>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
-    </motion.div>
-  );
-}
-
-function buildColumns(schemaMap, biasReport) {
-  if (!schemaMap || !biasReport) return [];
-  const biasMap = {};
-  for (const col of (biasReport.column_results || [])) biasMap[col.name] = col;
-  return (schemaMap.columns || [])
-    .map(col => ({ ...col, bias: biasMap[col.name] || null }))
-    .sort((a, b) => {
-      const va = a.bias ? ({ BIASED: 0, AMBIGUOUS: 1, CLEAN: 2 }[a.bias.verdict] ?? 3) : 4;
-      const vb = b.bias ? ({ BIASED: 0, AMBIGUOUS: 1, CLEAN: 2 }[b.bias.verdict] ?? 3) : 4;
-      return va - vb;
-    });
-}
-
-const TYPE_COLORS    = { PROTECTED:'#FF6B5B', OUTCOME:'#1FCEC6', AMBIGUOUS:'#FFA500', NEUTRAL:'#999999' };
-const VERDICT_COLORS = { BIASED:'#FF6B5B', AMBIGUOUS:'#FFA500', CLEAN:'#00D99F' };
-
-function ColCard({ col }) {
-  const tc = TYPE_COLORS[col.type] || '#999999';
-  const vc = VERDICT_COLORS[col.bias?.verdict] || null;
-  return (
-    <motion.div
-      whileHover={{ scale: 1.02, y: -4 }}
-      className="rounded-2xl border-2 border-border-light bg-white p-6 flex flex-col gap-3 shadow-sm hover:shadow-lg transition-shadow cursor-pointer"
-    >
-      <div className="flex items-start justify-between gap-3">
-        <span className="font-mono text-sm font-bold text-text-primary break-all leading-tight">{col.name}</span>
-        <span className="shrink-0 rounded-lg px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider"
-          style={{ color: tc, backgroundColor: tc + '18' }}>{col.type}</span>
-      </div>
-      {col.bias && (
-        <div className="flex items-center gap-2 mt-2 pt-2 border-t border-border-light">
-          <span className="rounded-lg px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider"
-            style={{ color: vc, backgroundColor: vc + '18' }}>{col.bias.verdict}</span>
-          {col.bias.disparate_impact != null && (
-            <span className="text-[11px] text-text-muted font-mono bg-text-primary/5 px-2 py-1 rounded">DI: {col.bias.disparate_impact.toFixed(2)}</span>
-          )}
-        </div>
-      )}
-      {col.proxies?.length > 0 && <p className="text-[11px] text-text-muted italic">🔗 Proxy for: {col.proxies.join(', ')}</p>}
-    </motion.div>
-  );
-}
-
-function StatCard({ label, value, color }) {
-  return (
-    <motion.div
-      whileHover={{ scale: 1.05, y: -4 }}
-      className={`rounded-2xl border-2 border-border-light bg-gradient-to-br ${color} p-6 text-center shadow-sm hover:shadow-lg transition-shadow`}
-    >
-      <div className="font-mono text-3xl font-bold text-white drop-shadow-sm">{value}</div>
-      <div className="mt-2 text-xs text-white/80 uppercase tracking-wider font-bold">{label}</div>
     </motion.div>
   );
 }
 
 function Spinner() {
   return (
-    <svg className="h-4 w-4 animate-spin text-accent" viewBox="0 0 24 24" fill="none">
-      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/>
+    <svg className="h-4 w-4 shrink-0" style={{ color: 'var(--color-amber)' }} viewBox="0 0 24 24" fill="none">
+      <circle className="opacity-30" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3"/>
+      <path className="opacity-80" fill="currentColor" d="M4 12a8 8 0 018-8v3a5 5 0 00-5 5H4z">
+        <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="0.8s" repeatCount="indefinite"/>
+      </path>
     </svg>
   );
 }

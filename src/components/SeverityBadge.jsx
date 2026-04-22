@@ -1,44 +1,22 @@
-import { motion } from 'framer-motion';
-import { SEVERITY, COLUMN_TYPES } from '../lib/constants';
-import Tooltip from './Tooltip';
-
-const VERDICT_TOOLTIPS = {
-  BIASED:    'This attribute shows statistically significant unfair treatment. The gap in outcomes between groups is large enough to fail the legal 80% threshold.',
-  AMBIGUOUS: 'This attribute shows some disparity, but not enough to be certain. Worth monitoring — it may indicate mild bias.',
-  CLEAN:     'No significant disparity detected for this attribute. Outcome rates across groups are within acceptable range.',
+const TYPE_STYLE = {
+  PROTECTED: { bg: 'var(--color-red-light)', color: 'var(--color-biased)', label: 'Protected' },
+  OUTCOME:   { bg: 'var(--color-green-light)', color: 'var(--color-green)', label: 'Outcome' },
+  AMBIGUOUS: { bg: '#FFF4E6', color: 'var(--color-ambiguous)', label: 'Ambiguous' },
+  NEUTRAL:   { bg: 'var(--color-bg-warm)', color: 'var(--color-ink-muted)', label: 'Neutral' },
+};
+const VERDICT_STYLE = {
+  BIASED:    { bg: 'var(--color-red-light)', color: 'var(--color-biased)', label: 'Biased' },
+  AMBIGUOUS: { bg: '#FFF4E6', color: 'var(--color-ambiguous)', label: 'Ambiguous' },
+  CLEAN:     { bg: 'var(--color-green-light)', color: 'var(--color-green)', label: 'Clean' },
 };
 
-const TYPE_TOOLTIPS = {
-  PROTECTED:  'A legally or ethically protected demographic attribute (e.g. race, sex, age). Decisions should not vary based on this.',
-  NEUTRAL:    'A feature with no known link to any protected group. Considered safe to use in modelling.',
-  OUTCOME:    'The result the model is predicting (e.g. income level, loan approval). This is what we check for fairness.',
-  AMBIGUOUS:  'This column is not directly protected, but may be correlated with one — it could act as a hidden proxy for a protected attribute.',
-};
-
-export default function SeverityBadge({ verdict, type }) {
-  const config = type
-    ? COLUMN_TYPES[type] ?? { color: '#9CA3AF', label: type }
-    : SEVERITY[verdict] ?? { color: '#9CA3AF', bg: 'rgba(156,163,175,0.1)', label: verdict };
-
-  const bg = config.bg ?? `${config.color}15`;
-  const tooltipText = type ? TYPE_TOOLTIPS[type] : VERDICT_TOOLTIPS[verdict];
-
-  const badge = (
-    <motion.span
-      whileHover={{ scale: 1.05 }}
-      className="inline-flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-[11px] font-bold tracking-widest uppercase"
-      style={{ color: config.color, backgroundColor: bg }}
-    >
-      <span className="h-2 w-2 rounded-full" style={{ backgroundColor: config.color }} />
-      {config.label}
-    </motion.span>
-  );
-
-  if (!tooltipText) return badge;
-
+export default function SeverityBadge({ type, verdict }) {
+  const style = type ? TYPE_STYLE[type] : verdict ? VERDICT_STYLE[verdict] : null;
+  if (!style) return null;
   return (
-    <Tooltip text={tooltipText} position="bottom">
-      {badge}
-    </Tooltip>
+    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md"
+      style={{ background: style.bg, color: style.color }}>
+      {style.label}
+    </span>
   );
 }

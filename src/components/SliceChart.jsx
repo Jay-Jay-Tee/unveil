@@ -1,15 +1,11 @@
-import {
-  BarChart, Bar, XAxis, YAxis, Tooltip,
-  ReferenceLine, ResponsiveContainer, Cell,
-} from 'recharts';
-import Tooltip_ from './Tooltip';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ReferenceLine, ResponsiveContainer, Cell } from 'recharts';
 
 const FLAG_THRESHOLD = 0.10;
 
 const METRIC_COLORS = {
-  positive_rate: '#4D9EFF',
-  fpr:           '#F5A623',
-  fnr:           '#FF4040',
+  positive_rate: 'var(--color-ink)',
+  fpr:           'var(--color-ambiguous)',
+  fnr:           'var(--color-biased)',
 };
 
 const METRIC_LABELS = {
@@ -18,130 +14,74 @@ const METRIC_LABELS = {
   fnr:           'False Negative Rate',
 };
 
-const METRIC_TOOLTIPS = {
-  positive_rate: 'The share of people in this group who received a positive outcome (e.g. approved for a loan, predicted as high-income). A large gap between groups here is the main sign of bias.',
-  fpr:           'False Positive Rate — the fraction of people in this group who were wrongly given a positive outcome when they shouldn\'t have been. High FPR means the model is too lenient on this group.',
-  fnr:           'False Negative Rate — the fraction of people in this group who were wrongly denied a positive outcome when they deserved one. High FNR means the model is too harsh on this group.',
-};
-
 function CustomTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
-
   return (
-    <div className="rounded-lg border border-border-subtle bg-[#1A1C23] px-4 py-3 shadow-xl">
-      <p className="mb-2 text-xs font-semibold text-white">{label}</p>
-      {payload.map((entry) => (
-        <div key={entry.dataKey} className="flex items-center gap-2 text-xs mb-1">
-          <span className="h-2 w-2 rounded-full" style={{ backgroundColor: entry.color }} />
-          <span className="text-gray-400">{METRIC_LABELS[entry.dataKey]}:</span>
-          <span className="font-[family-name:var(--font-mono)] font-semibold text-white">
-            {entry.value.toFixed(3)}
-          </span>
-          {entry.dataKey !== 'positive_rate' && entry.value > FLAG_THRESHOLD && (
-            <span className="text-[10px] font-semibold text-biased">FLAGGED</span>
+    <div className="rounded-lg px-4 py-3 shadow-xl text-xs"
+      style={{ background: 'var(--color-ink)', color: 'rgba(255,255,255,0.85)', fontFamily: 'var(--font-sans)' }}>
+      <p className="font-bold mb-2" style={{ fontFamily: 'var(--font-mono)' }}>{label}</p>
+      {payload.map(entry => (
+        <div key={entry.dataKey} className="flex items-center gap-2 mb-1">
+          <span className="w-2 h-2 rounded-full" style={{ background: entry.color }} />
+          <span style={{ color: 'rgba(255,255,255,0.6)' }}>{METRIC_LABELS[entry.dataKey]}:</span>
+          <span className="font-bold" style={{ fontFamily: 'var(--font-mono)' }}>{entry.value.toFixed(3)}</span>
+          {entry.value > FLAG_THRESHOLD && entry.dataKey !== 'positive_rate' && (
+            <span className="font-bold" style={{ color: 'var(--color-biased)' }}>FLAGGED</span>
           )}
         </div>
       ))}
       {payload[0]?.payload?.count != null && (
-        <p className="mt-2 border-t border-white/5 pt-2 text-[10px] text-gray-500">
-          n = {payload[0].payload.count.toLocaleString()} people in this group
+        <p className="mt-2 pt-2 border-t text-[10px]" style={{ color: 'rgba(255,255,255,0.4)', borderColor: 'rgba(255,255,255,0.1)' }}>
+          n = {payload[0].payload.count.toLocaleString()} people
         </p>
       )}
     </div>
   );
 }
 
-function Legend() {
-  return (
-    <div className="flex justify-center gap-5 mt-2 mb-1 flex-wrap">
-      {Object.entries(METRIC_LABELS).map(([key, label]) => (
-        <Tooltip_ key={key} text={METRIC_TOOLTIPS[key]} position="top">
-          <div className="flex items-center gap-1.5 text-[11px] text-gray-400 cursor-help">
-            <span
-              className="inline-block h-2 w-2 rounded-full"
-              style={{ backgroundColor: METRIC_COLORS[key] }}
-            />
-            {label}
-            <span className="text-gray-600 text-[10px]">?</span>
-          </div>
-        </Tooltip_>
-      ))}
-    </div>
-  );
-}
-
 export default function SliceChart({ slices, columnName }) {
   if (!slices?.length) return null;
-
-  const data = slices.map((s) => ({
-    ...s,
-    fprFlagged: s.fpr > FLAG_THRESHOLD,
-    fnrFlagged: s.fnr > FLAG_THRESHOLD,
-  }));
+  const data = slices.map(s => ({ ...s, fprFlagged: s.fpr > FLAG_THRESHOLD, fnrFlagged: s.fnr > FLAG_THRESHOLD }));
 
   return (
-    <div className="rounded-xl border border-border-subtle bg-bg-card p-5">
+    <div className="rounded-xl border-2 p-5" style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}>
       {columnName && (
-        <h4 className="mb-1 font-[family-name:var(--font-mono)] text-sm font-semibold text-white">
-          {columnName}
-          <span className="ml-2 text-xs font-normal text-gray-500">— Group Comparison</span>
+        <h4 className="text-sm font-bold mb-1" style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-ink)' }}>
+          {columnName} <span className="font-normal text-xs" style={{ color: 'var(--color-ink-muted)' }}>— Group Comparison</span>
         </h4>
       )}
-      <p className="text-[11px] text-gray-600 mb-3">
-        Each bar shows how differently the model treats each group. Hover the legend labels to learn what each metric means.
+      <p className="text-[11px] mb-4" style={{ color: 'var(--color-ink-muted)' }}>
+        How differently each group is treated. Dashed line = 10% flag threshold.
       </p>
 
-      <Legend />
+      <div className="flex gap-4 mb-3 flex-wrap">
+        {Object.entries(METRIC_LABELS).map(([key, label]) => (
+          <div key={key} className="flex items-center gap-1.5 text-[11px]" style={{ color: 'var(--color-ink-muted)' }}>
+            <span className="w-2 h-2 rounded-full" style={{ background: METRIC_COLORS[key] }} />
+            {label}
+          </div>
+        ))}
+      </div>
 
-      <ResponsiveContainer width="100%" height={slices.length * 64 + 40}>
-        <BarChart
-          data={data}
-          layout="vertical"
-          margin={{ top: 8, right: 20, bottom: 8, left: 10 }}
-          barCategoryGap="20%"
-          barGap={2}
-        >
-          <XAxis
-            type="number" domain={[0, 1]} tickCount={6}
-            tick={{ fill: '#6B7280', fontSize: 10, fontFamily: 'var(--font-mono)' }}
-            axisLine={{ stroke: 'rgba(255,255,255,0.06)' }} tickLine={false}
-          />
-          <YAxis
-            type="category" dataKey="group" width={120}
-            tick={{ fill: '#9CA3AF', fontSize: 11, fontFamily: 'var(--font-mono)' }}
-            axisLine={false} tickLine={false}
-          />
-          <Tooltip
-            content={<CustomTooltip />}
-            cursor={{ fill: 'rgba(255,255,255,0.03)' }}
-            allowEscapeViewBox={{ x: false, y: false }}
-            wrapperStyle={{ zIndex: 10 }}
-          />
-          <ReferenceLine
-            x={FLAG_THRESHOLD}
-            stroke="#FF4040"
-            strokeDasharray="4 3"
-            strokeWidth={1}
-            label={{
-              value: '10% flag line',
-              position: 'top',
-              fill: '#FF4040',
-              fontSize: 9,
-              fontFamily: 'var(--font-mono)',
-            }}
-          />
-          <Bar dataKey="positive_rate" radius={[0, 3, 3, 0]} maxBarSize={14}>
-            {data.map((_, i) => <Cell key={i} fill={METRIC_COLORS.positive_rate} />)}
+      <ResponsiveContainer width="100%" height={slices.length * 60 + 40}>
+        <BarChart data={data} layout="vertical" margin={{ top: 8, right: 20, bottom: 8, left: 10 }} barCategoryGap="20%" barGap={2}>
+          <XAxis type="number" domain={[0, 1]} tickCount={6}
+            tick={{ fill: 'var(--color-ink-muted)', fontSize: 10, fontFamily: 'var(--font-mono)' }}
+            axisLine={{ stroke: 'var(--color-border)' }} tickLine={false} />
+          <YAxis type="category" dataKey="group" width={120}
+            tick={{ fill: 'var(--color-ink-mid)', fontSize: 11, fontFamily: 'var(--font-mono)' }}
+            axisLine={false} tickLine={false} />
+          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--color-bg-warm)' }} />
+          <ReferenceLine x={FLAG_THRESHOLD} stroke="var(--color-biased)" strokeDasharray="4 3" strokeWidth={1}
+            label={{ value: '10%', position: 'top', fill: 'var(--color-biased)', fontSize: 9, fontFamily: 'var(--font-mono)' }} />
+          <Bar dataKey="positive_rate" radius={[0, 3, 3, 0]} maxBarSize={13}>
+            {data.map((_, i) => <Cell key={i} fill="var(--color-ink)" fillOpacity={0.8} />)}
           </Bar>
-          <Bar dataKey="fpr" radius={[0, 3, 3, 0]} maxBarSize={14}>
-            {data.map((entry, i) => (
-              <Cell key={i} fill={METRIC_COLORS.fpr} fillOpacity={entry.fprFlagged ? 1 : 0.6} />
-            ))}
+          <Bar dataKey="fpr" radius={[0, 3, 3, 0]} maxBarSize={13}>
+            {data.map((entry, i) => <Cell key={i} fill="var(--color-ambiguous)" fillOpacity={entry.fprFlagged ? 1 : 0.5} />)}
           </Bar>
-          <Bar dataKey="fnr" radius={[0, 3, 3, 0]} maxBarSize={14}>
-            {data.map((entry, i) => (
-              <Cell key={i} fill={METRIC_COLORS.fnr} fillOpacity={entry.fnrFlagged ? 1 : 0.6} />
-            ))}
+          <Bar dataKey="fnr" radius={[0, 3, 3, 0]} maxBarSize={13}>
+            {data.map((entry, i) => <Cell key={i} fill="var(--color-biased)" fillOpacity={entry.fnrFlagged ? 1 : 0.5} />)}
           </Bar>
         </BarChart>
       </ResponsiveContainer>

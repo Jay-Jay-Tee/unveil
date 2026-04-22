@@ -1,225 +1,206 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import AnimatedCounter from '../components/AnimatedCounter';
-import ConfettiCanvas from '../components/ConfettiCanvas';
-
-const stats = [
-  { value: 78, label: 'of AI systems show measurable bias in hiring decisions', suffix: '%' },
-  { value: 80, label: 'is the legal Disparate Impact threshold (the 80% rule)', suffix: ' rule' },
-  { value: 3, label: 'higher false-negative rate for underrepresented groups', suffix: 'x' },
-];
-
-const features = [
-  {
-    title: 'Dataset Auditing',
-    description: 'Detect disparate impact and parity gaps across every protected attribute in your training data.',
-    icon: '📊',
-    color: 'from-accent to-orange-400',
-    bgColor: 'bg-accent/10',
-  },
-  {
-    title: 'Model Probing',
-    description: 'Counterfactual testing and SHAP analysis reveal what your model actually learned — including hidden proxies.',
-    icon: '🔍',
-    color: 'from-secondary to-teal-400',
-    bgColor: 'bg-secondary/10',
-  },
-  {
-    title: 'AI Compliance Report',
-    description: 'Gemini generates a plain-English audit report that any compliance officer can understand. No data science degree required.',
-    icon: '📋',
-    color: 'from-lime to-green-400',
-    bgColor: 'bg-lime/10',
-  },
-];
 
 const fadeUp = {
-  hidden: { opacity: 0, y: 30 },
+  hidden: { opacity: 0, y: 32 },
   visible: (i = 0) => ({
-    opacity: 1,
-    y: 0,
-    transition: { delay: i * 0.12, duration: 0.6, ease: [0.22, 1, 0.36, 1] },
+    opacity: 1, y: 0,
+    transition: { delay: i * 0.1, duration: 0.65, ease: [0.22, 1, 0.36, 1] },
   }),
 };
 
-export default function Landing() {
-  const [showConfetti, setShowConfetti] = useState(false);
+const STATS = [
+  { value: 78, suffix: '%', label: 'of AI hiring systems show measurable bias', color: 'var(--color-biased)' },
+  { value: 80, suffix: '%', label: 'legal disparate impact threshold (the 80% rule)', color: 'var(--color-amber)' },
+  { value: 3,  suffix: '×', label: 'higher denial rate for underrepresented groups', color: 'var(--color-ink)' },
+];
 
-  const handleCTAClick = () => {
-    setShowConfetti(true);
-    setTimeout(() => setShowConfetti(false), 3000);
-  };
+const METHODS = [
+  {
+    num: 'A',
+    title: 'Dataset Bias Auditor',
+    desc: 'Counterfactual probing, slice-based evaluation, proxy detection via mutual information, disparate impact ratios.',
+    tags: ['Counterfactual', 'Slice Eval', 'Proxy Detection'],
+  },
+  {
+    num: 'B',
+    title: 'Model Behavior Analyzer',
+    desc: 'Black-box synthetic probe pairs, SHAP TreeExplainer + KernelExplainer, t-test significance per attribute.',
+    tags: ['SHAP', 'Probing', 'T-Test'],
+  },
+];
+
+const STEPS = [
+  { n: '01', title: 'Upload', desc: 'CSV, JSON, or XLSX' },
+  { n: '02', title: 'Classify', desc: 'Gemini parses columns' },
+  { n: '03', title: 'Audit',   desc: '3-layer detection' },
+  { n: '04', title: 'Report',  desc: 'Plain-English output' },
+];
+
+export default function Landing() {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   return (
-    <div className="min-h-screen overflow-hidden">
-      {showConfetti && <ConfettiCanvas />}
-      {/* Hero */}
-      <section className="relative flex min-h-screen flex-col items-center justify-center px-6 pt-24 pb-12 text-center">
-        {/* Decorative blobs */}
-        <div className="pointer-events-none absolute top-20 right-20 h-72 w-72 rounded-full bg-accent/15 blur-3xl opacity-60" />
-        <div className="pointer-events-none absolute bottom-20 left-20 h-96 w-96 rounded-full bg-secondary/15 blur-3xl opacity-60" />
+    <div className="min-h-screen" style={{ background: 'var(--color-bg)' }}>
 
+      {/* ── HERO ─────────────────────────────────────────────── */}
+      <section className="relative min-h-screen flex flex-col justify-center pt-24 px-6 overflow-hidden">
+        {/* Big decorative number */}
+        <div className="pointer-events-none absolute right-[-2%] top-[8%] text-[28vw] font-black leading-none select-none"
+          style={{ color: 'var(--color-bg-warm)', fontFamily: 'var(--font-sans)', zIndex: 0 }}>
+          AI
+        </div>
+
+        {/* Floating badge */}
         <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={fadeUp}
-          className="relative mb-6 inline-flex items-center gap-2 rounded-full border border-border-light bg-accent/5 px-4 py-2 text-sm font-medium text-text-primary"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.2, duration: 0.7, ease: [0.22,1,0.36,1] }}
+          className="relative z-10 mb-8 inline-flex items-center gap-2.5 self-start"
         >
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75" />
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-accent" />
+          <span className="flex h-2 w-2 rounded-full animate-pulse-ring" style={{ background: 'var(--color-green)' }} />
+          <span className="text-xs font-semibold tracking-widest uppercase" style={{ color: 'var(--color-ink-mid)', fontFamily: 'var(--font-mono)' }}>
+            GDSC Hackathon · Responsible AI Track
           </span>
-          Bias detection for the AI age
         </motion.div>
 
-        <motion.h1
-          initial="hidden"
-          animate="visible"
-          custom={1}
-          variants={fadeUp}
-          className="font-[family-name:var(--font-heading)] text-6xl leading-tight tracking-tight text-text-primary md:text-7xl lg:text-8xl font-bold"
-        >
-          Algorithmic Bias
-          <br />
-          <motion.span
-            className="bg-gradient-to-r from-accent via-orange-500 to-secondary bg-clip-text text-transparent"
-            animate={{ backgroundPosition: ['0% center', '100% center', '0% center'] }}
-            transition={{ duration: 5, repeat: Infinity }}
+        <div className="relative z-10 max-w-5xl">
+          <motion.h1
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.8, ease: [0.22,1,0.36,1] }}
+            className="text-[clamp(3rem,8vw,7rem)] leading-[1.0] font-black tracking-tight"
+            style={{ fontFamily: 'var(--font-sans)', color: 'var(--color-ink)' }}
           >
-            Has Nowhere to Hide
-          </motion.span>
-        </motion.h1>
+            Algorithmic<br />
+            <span className="relative inline-block">
+              <span style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', fontWeight: 400, fontSize: '1.05em', color: 'var(--color-amber-dark)' }}>bias</span>
+              <motion.span
+                className="absolute bottom-2 left-0 h-1 rounded-full"
+                style={{ background: 'var(--color-amber)', originX: 0 }}
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: 1 }}
+                transition={{ delay: 1.0, duration: 0.8, ease: [0.22,1,0.36,1] }}
+              />
+            </span>{' '}
+            detected,<br />measured,<br />
+            <span style={{ color: 'var(--color-biased)' }}>fixed.</span>
+          </motion.h1>
 
-        <motion.p
-          initial="hidden"
-          animate="visible"
-          custom={2}
-          variants={fadeUp}
-          className="mx-auto mt-8 max-w-2xl text-lg leading-relaxed text-text-secondary"
-        >
-          Upload your dataset. UnbiasedAI runs disparate impact analysis, counterfactual probing,
-          and SHAP explainability — then generates a plain-English compliance report.
-          <span className="block mt-2 font-semibold text-accent">Three layers of coverage. Zero jargon.</span>
-        </motion.p>
-
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          custom={3}
-          variants={fadeUp}
-          className="mt-12 flex flex-col sm:flex-row items-center gap-4"
-        >
-          <Link
-            to="/upload"
-            onClick={handleCTAClick}
-            className="group relative inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-accent to-accent-dark px-8 py-4 text-sm font-bold text-white transition-all hover:shadow-xl hover:shadow-accent/40 hover:-translate-y-1 active:translate-y-0 hover:scale-105"
+          <motion.p
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6, duration: 0.7, ease: [0.22,1,0.36,1] }}
+            className="mt-8 text-lg leading-relaxed max-w-xl"
+            style={{ color: 'var(--color-ink-mid)' }}
           >
-            🚀 Start Auditing
-            <svg className="h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-            </svg>
-          </Link>
-          <Link
-            to="/upload"
-            className="inline-flex items-center gap-2 rounded-xl border-2 border-text-primary px-8 py-4 text-sm font-bold text-text-primary transition-all hover:border-accent hover:text-accent hover:bg-accent/5 active:-translate-y-0.5"
-          >
-            📹 Try Demo
-          </Link>
-        </motion.div>
+            Upload your dataset. Three-layer analysis — counterfactual probing,
+            slice evaluation, and SHAP explainability — surfaces bias in minutes.
+            Gemini generates the compliance report.
+          </motion.p>
 
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          custom={4}
-          variants={fadeUp}
-          className="mt-6"
-        >
-          <Link
-            to="/upload"
-            className="inline-flex items-center gap-2 text-sm font-medium text-text-secondary transition-all hover:text-accent hover:gap-3"
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.75, duration: 0.7, ease: [0.22,1,0.36,1] }}
+            className="mt-10 flex flex-wrap gap-4"
           >
-            <span>⬇️</span>
-            Try Demo — Upload adult.csv
-          </Link>
-        </motion.div>
+            <Link to="/upload"
+              className="group relative overflow-hidden inline-flex items-center gap-2 px-8 py-4 text-sm font-bold rounded-lg transition-all hover:opacity-90 active:scale-[0.98]"
+              style={{ background: 'var(--color-ink)', color: '#fff' }}
+            >
+              <span>Start Auditing</span>
+              <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+              </svg>
+            </Link>
+            <Link to="/upload"
+              className="inline-flex items-center gap-2 px-8 py-4 text-sm font-bold rounded-lg border-2 transition-all hover:opacity-70"
+              style={{ borderColor: 'var(--color-border-strong)', color: 'var(--color-ink)' }}
+            >
+              Try with UCI Adult
+            </Link>
+          </motion.div>
+        </div>
 
-        {/* Scroll indicator */}
+        {/* Scroll cue */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 1.5, duration: 1 }}
-          className="absolute bottom-8 flex flex-col items-center gap-3 text-xs font-medium text-text-muted"
+          transition={{ delay: 1.4 }}
+          className="absolute bottom-10 left-6 flex items-center gap-3 z-10"
         >
-          <span>Scroll for more</span>
-          <motion.div
-            animate={{ y: [0, 10, 0] }}
-            transition={{ repeat: Infinity, duration: 1.5 }}
-            className="text-lg"
-          >
-            ↓
-          </motion.div>
+          <div className="w-px h-10 opacity-30" style={{ background: 'var(--color-ink)' }} />
+          <span className="text-[10px] font-semibold tracking-widest uppercase" style={{ color: 'var(--color-ink-muted)', fontFamily: 'var(--font-mono)' }}>
+            Scroll
+          </span>
         </motion.div>
       </section>
 
-      {/* Stats strip */}
-      <section className="relative border-y border-border-light bg-gradient-to-r from-accent/5 to-secondary/5 py-20 px-6">
-        <div className="mx-auto grid max-w-5xl grid-cols-1 gap-8 md:grid-cols-3">
-          {stats.map((stat, i) => (
+      {/* ── STATS STRIP ─────────────────────────────────────── */}
+      <section className="border-y-2 py-16 px-6" style={{ borderColor: 'var(--color-border)', background: 'var(--color-bg-warm)' }}>
+        <div className="mx-auto max-w-5xl grid grid-cols-1 md:grid-cols-3 gap-8 md:divide-x" style={{ '--tw-divide-opacity': 1 }}>
+          {STATS.map((stat, i) => (
             <motion.div
               key={i}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: '-50px' }}
-              custom={i}
-              variants={fadeUp}
-              className="group rounded-xl bg-white/60 backdrop-blur p-6 transition-all hover:shadow-lg hover:bg-white hover:scale-105 cursor-pointer"
+              initial="hidden" whileInView="visible" viewport={{ once: true }} custom={i} variants={fadeUp}
+              className="flex flex-col items-start px-8 first:pl-0"
             >
-              <div className="font-[family-name:var(--font-mono)] text-4xl font-bold bg-gradient-to-r from-accent to-secondary bg-clip-text text-transparent">
-                <AnimatedCounter target={stat.value} duration={2.5} isMono={true} />{stat.suffix}
+              <div className="text-6xl font-black leading-none mb-3" style={{ fontFamily: 'var(--font-sans)', color: stat.color }}>
+                {mounted ? <><AnimatedCounter target={stat.value} duration={2} isMono={false} />{stat.suffix}</> : `${stat.value}${stat.suffix}`}
               </div>
-              <p className="mt-3 text-sm font-medium text-text-secondary leading-relaxed">{stat.label}</p>
+              <p className="text-sm leading-relaxed" style={{ color: 'var(--color-ink-mid)' }}>{stat.label}</p>
             </motion.div>
           ))}
         </div>
       </section>
 
-      {/* Features */}
+      {/* ── TWO SYSTEMS ─────────────────────────────────────── */}
       <section className="py-28 px-6">
         <div className="mx-auto max-w-5xl">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={fadeUp}
-            className="text-center mb-16"
-          >
-            <h2 className="font-[family-name:var(--font-heading)] text-5xl text-text-primary md:text-6xl font-bold mb-4">
-              Three Layers of Coverage
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} className="mb-16">
+            <p className="text-xs font-semibold tracking-widest uppercase mb-4" style={{ color: 'var(--color-ink-muted)', fontFamily: 'var(--font-mono)' }}>
+              Two-Part System
+            </p>
+            <h2 className="text-5xl md:text-6xl font-black tracking-tight leading-tight" style={{ fontFamily: 'var(--font-sans)', color: 'var(--color-ink)' }}>
+              Every attack surface<br />
+              <span style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', fontWeight: 400, color: 'var(--color-amber-dark)' }}>covered.</span>
             </h2>
-            <p className="text-text-secondary text-lg">Everything you need to ensure your AI is fair and compliant</p>
           </motion.div>
 
-          <div className="grid gap-6 md:grid-cols-3">
-            {features.map((feature, i) => (
+          <div className="grid md:grid-cols-2 gap-6">
+            {METHODS.map((m, i) => (
               <motion.div
                 key={i}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true, margin: '-30px' }}
-                custom={i}
-                variants={fadeUp}
-                className="group relative rounded-2xl border border-border-light bg-white p-8 transition-all hover:shadow-xl hover:-translate-y-2"
+                initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-40px' }} custom={i} variants={fadeUp}
+                className="relative rounded-2xl p-8 border-2 card-shadow overflow-hidden group transition-all hover:-translate-y-1 hover:card-shadow-lg"
+                style={{ background: i === 0 ? 'var(--color-ink)' : 'var(--color-bg-card)', borderColor: i === 0 ? 'var(--color-ink)' : 'var(--color-border)' }}
               >
-                {/* Gradient overlay on hover */}
-                <div className={`absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-br ${feature.color} blur-xl`} style={{opacity: 0}} />
-
+                <div className="absolute top-6 right-6 text-6xl font-black opacity-10 leading-none select-none" style={{ fontFamily: 'var(--font-sans)', color: i === 0 ? '#fff' : 'var(--color-ink)' }}>
+                  {m.num}
+                </div>
                 <div className="relative">
-                  <div className={`mb-4 inline-flex rounded-xl ${feature.bgColor} p-3 text-3xl`}>
-                    {feature.icon}
+                  <div className="inline-flex items-center gap-2 mb-5">
+                    <span className="text-xs font-bold px-2.5 py-1 rounded-md" style={{ background: i === 0 ? 'rgba(255,255,255,0.1)' : 'var(--color-amber-light)', color: i === 0 ? '#fff' : 'var(--color-amber-dark)', fontFamily: 'var(--font-mono)' }}>
+                      PART {m.num}
+                    </span>
                   </div>
-                  <h3 className="mb-2 text-lg font-bold text-text-primary">{feature.title}</h3>
-                  <p className="text-sm leading-relaxed text-text-secondary">{feature.description}</p>
+                  <h3 className="text-2xl font-bold mb-3 leading-tight" style={{ color: i === 0 ? '#fff' : 'var(--color-ink)' }}>
+                    {m.title}
+                  </h3>
+                  <p className="text-sm leading-relaxed mb-5" style={{ color: i === 0 ? 'rgba(255,255,255,0.65)' : 'var(--color-ink-mid)' }}>
+                    {m.desc}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {m.tags.map(tag => (
+                      <span key={tag} className="text-[11px] font-semibold px-2.5 py-1 rounded-md" style={{ background: i === 0 ? 'rgba(255,255,255,0.1)' : 'var(--color-bg-warm)', color: i === 0 ? 'rgba(255,255,255,0.8)' : 'var(--color-ink-mid)', fontFamily: 'var(--font-mono)' }}>
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               </motion.div>
             ))}
@@ -227,58 +208,33 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* How it works */}
-      <section className="border-y border-border-light bg-gradient-to-r from-secondary/5 to-lime/5 py-28 px-6">
+      {/* ── HOW IT WORKS ─────────────────────────────────────── */}
+      <section className="py-28 px-6 border-t-2" style={{ borderColor: 'var(--color-border)', background: 'var(--color-bg-warm)' }}>
         <div className="mx-auto max-w-5xl">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={fadeUp}
-            className="text-center mb-16"
-          >
-            <h2 className="font-[family-name:var(--font-heading)] text-5xl text-text-primary md:text-6xl font-bold mb-4">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} className="mb-16">
+            <p className="text-xs font-semibold tracking-widest uppercase mb-4" style={{ color: 'var(--color-ink-muted)', fontFamily: 'var(--font-mono)' }}>
               How It Works
+            </p>
+            <h2 className="text-5xl font-black tracking-tight" style={{ fontFamily: 'var(--font-sans)', color: 'var(--color-ink)' }}>
+              Four steps.<br />
+              <span style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', fontWeight: 400, color: 'var(--color-amber-dark)' }}>Instant clarity.</span>
             </h2>
-            <p className="text-text-secondary text-lg">Four simple steps to detect and report bias</p>
           </motion.div>
 
-          <div className="flex flex-col md:flex-row items-center justify-center gap-3 md:gap-0">
-            {[
-              { step: '1️⃣', title: 'Upload', desc: 'CSV, JSON, XLSX' },
-              { step: '2️⃣', title: 'Classify', desc: 'AI detection' },
-              { step: '3️⃣', title: 'Audit', desc: 'Analyze bias' },
-              { step: '4️⃣', title: 'Report', desc: 'Get insights' },
-            ].map((item, i) => (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {STEPS.map((s, i) => (
               <motion.div
                 key={i}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                custom={i}
-                variants={fadeUp}
-                className="flex items-center gap-3 md:gap-4"
+                initial="hidden" whileInView="visible" viewport={{ once: true }} custom={i} variants={fadeUp}
+                className="relative"
               >
-                <motion.div
-                  className="flex flex-col items-center rounded-2xl border-2 border-accent bg-gradient-to-br from-accent/10 to-orange-100 px-6 py-6 text-center min-w-[160px] shadow-md"
-                  whileHover={{ scale: 1.05, boxShadow: '0 20px 40px rgba(255, 107, 91, 0.3)' }}
-                >
-                  <span className="text-3xl mb-2">{item.step}</span>
-                  <span className="font-bold text-text-primary">{item.title}</span>
-                  <span className="text-xs text-text-secondary mt-1">{item.desc}</span>
-                </motion.div>
-                {i < 3 && (
-                  <motion.svg
-                    className="hidden h-6 w-6 text-accent md:block"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={3}
-                    animate={{ x: [0, 4, 0] }}
-                    transition={{ repeat: Infinity, duration: 1.5 }}
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                  </motion.svg>
+                <div className="text-[10px] font-bold tracking-widest mb-3" style={{ color: 'var(--color-amber)', fontFamily: 'var(--font-mono)' }}>
+                  {s.n}
+                </div>
+                <div className="text-2xl font-black mb-1" style={{ color: 'var(--color-ink)' }}>{s.title}</div>
+                <div className="text-sm" style={{ color: 'var(--color-ink-mid)' }}>{s.desc}</div>
+                {i < STEPS.length - 1 && (
+                  <div className="hidden md:block absolute right-0 top-8 w-px h-8 opacity-20" style={{ background: 'var(--color-ink)' }} />
                 )}
               </motion.div>
             ))}
@@ -286,43 +242,45 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-28 px-6 text-center">
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          variants={fadeUp}
-          className="mx-auto max-w-2xl"
-        >
-          <h2 className="font-[family-name:var(--font-heading)] text-5xl text-text-primary md:text-6xl font-bold mb-6">
-            Ready to audit your data?
-          </h2>
-          <p className="text-text-secondary text-lg mb-8 leading-relaxed">
-            Uncover hidden bias in your datasets and models before they cause real-world harm. Get started in seconds.
-          </p>
+      {/* ── CTA ─────────────────────────────────────────────── */}
+      <section className="py-28 px-6">
+        <div className="mx-auto max-w-5xl">
           <motion.div
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}
+            className="relative rounded-3xl p-12 md:p-16 overflow-hidden"
+            style={{ background: 'var(--color-ink)' }}
           >
-            <Link
-              to="/upload"
-              onClick={handleCTAClick}
-              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-accent to-accent-dark px-8 py-4 text-sm font-bold text-white shadow-lg shadow-accent/30 transition-all hover:shadow-xl hover:shadow-accent/50 hover:scale-105"
+            <div className="absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl opacity-10" style={{ background: 'var(--color-amber)', transform: 'translate(30%, -30%)' }} />
+            <p className="text-xs font-semibold tracking-widest uppercase mb-6" style={{ color: 'var(--color-amber)', fontFamily: 'var(--font-mono)' }}>
+              Ready to audit?
+            </p>
+            <h2 className="text-4xl md:text-5xl font-black tracking-tight leading-tight text-white mb-8">
+              Find bias before<br />
+              <span style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', fontWeight: 400, fontSize: '1.05em' }}>it finds you.</span>
+            </h2>
+            <Link to="/upload"
+              className="inline-flex items-center gap-2.5 px-8 py-4 text-sm font-bold rounded-lg transition-all hover:opacity-90"
+              style={{ background: 'var(--color-amber)', color: 'var(--color-ink)' }}
             >
-              Upload Dataset
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              Upload Dataset — it's free
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
               </svg>
             </Link>
           </motion.div>
-        </motion.div>
+        </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-border-light py-12 px-6 text-center text-sm text-text-muted">
-        <p className="font-medium">GDSC Hackathon 2026 · UnbiasedAI</p>
-        <p className="mt-2 text-xs">Making AI fair and trustworthy for everyone</p>
+      {/* ── FOOTER ───────────────────────────────────────────── */}
+      <footer className="border-t-2 py-8 px-6" style={{ borderColor: 'var(--color-border)' }}>
+        <div className="mx-auto max-w-5xl flex flex-col sm:flex-row items-center justify-between gap-4">
+          <span className="text-xs font-semibold" style={{ color: 'var(--color-ink-muted)', fontFamily: 'var(--font-mono)' }}>
+            GDSC Hackathon 2026 — UnbiasedAI
+          </span>
+          <span className="text-xs" style={{ color: 'var(--color-ink-faint)' }}>
+            Making AI fair for everyone
+          </span>
+        </div>
       </footer>
     </div>
   );

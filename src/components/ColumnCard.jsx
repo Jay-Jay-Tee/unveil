@@ -6,46 +6,27 @@ import ProxyAlert from './ProxyAlert';
 import SliceChart from './SliceChart';
 import Tooltip from './Tooltip';
 
-export default function ColumnCard({
-  name,
-  type,
-  proxies = [],
-  disparateImpact,
-  parityGap,
-  pValue,
-  verdict,
-  slices = [],
-}) {
+export default function ColumnCard({ name, type, proxies = [], disparateImpact, parityGap, pValue, verdict, slices = [] }) {
   const hasMetrics = disparateImpact != null && verdict;
   const hasSlices = slices.length > 0;
   const [expanded, setExpanded] = useState(false);
 
+  const verdictBorderColor = verdict === 'BIASED' ? 'var(--color-biased)' : verdict === 'AMBIGUOUS' ? 'var(--color-ambiguous)' : verdict === 'CLEAN' ? 'var(--color-green)' : 'var(--color-border)';
+  const hasBias = verdict === 'BIASED' || verdict === 'AMBIGUOUS';
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-      className="flex flex-col rounded-xl border border-border-subtle bg-bg-card transition-colors hover:border-accent/20"
-    >
-      {/* Clickable card body */}
-      <div
-        onClick={() => hasSlices && setExpanded((p) => !p)}
-        className={`flex flex-col p-5 ${hasSlices ? 'cursor-pointer' : ''}`}
-      >
-        {/* Header */}
+    <div className="rounded-xl border-2 card-shadow overflow-hidden transition-all hover:card-shadow-lg"
+      style={{ background: 'var(--color-bg-card)', borderColor: hasBias ? verdictBorderColor : 'var(--color-border)', borderLeftWidth: hasBias ? 4 : 2 }}>
+
+      <div onClick={() => hasSlices && setExpanded(p => !p)}
+        className={`p-5 ${hasSlices ? 'cursor-pointer' : ''}`}>
+
         <div className="flex items-start justify-between gap-3 mb-4">
           <div className="flex items-center gap-2 min-w-0">
-            <h3 className="font-[family-name:var(--font-mono)] text-sm font-semibold text-white truncate">
-              {name}
-            </h3>
+            <span className="text-sm font-bold truncate" style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-ink)' }}>{name}</span>
             {hasSlices && (
-              <motion.svg
-                animate={{ rotate: expanded ? 180 : 0 }}
-                transition={{ duration: 0.25 }}
-                className="h-4 w-4 shrink-0 text-gray-500"
-                fill="none" viewBox="0 0 24 24"
-                stroke="currentColor" strokeWidth={2}
-              >
+              <motion.svg animate={{ rotate: expanded ? 180 : 0 }} transition={{ duration: 0.2 }}
+                className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} style={{ color: 'var(--color-ink-muted)' }}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
               </motion.svg>
             )}
@@ -56,31 +37,25 @@ export default function ColumnCard({
           </div>
         </div>
 
-        {/* Gauge */}
         {hasMetrics && (
-          <div className="flex justify-center mb-3">
+          <div className="flex justify-center mb-4">
             <BiasGauge value={disparateImpact} verdict={verdict} />
           </div>
         )}
 
-        {/* Metric pills */}
         {hasMetrics && (
           <div className="grid grid-cols-2 gap-2 mb-2">
-            <MetricPill
-              label="Parity Gap"
-              value={parityGap?.toFixed(2)}
-              tooltip="The difference in approval/positive rates between the best-off and worst-off group. A gap over 10% (0.10) means one group is being treated noticeably differently from another."
-            />
-            <MetricPill
-              label="p-value"
-              value={pValue < 0.001 ? '<0.001' : pValue?.toFixed(3)}
-              tooltip="A statistical measure of how likely this gap is due to chance. Below 0.05 means the disparity is almost certainly real, not random noise — the smaller the number, the more confident we are."
-            />
+            <Tooltip text="Difference in approval/positive rates between best-off and worst-off group. Over 10% (0.10) is a red flag.">
+              <MetricPill label="Parity Gap" value={parityGap?.toFixed(2)} />
+            </Tooltip>
+            <Tooltip text="Statistical confidence. Below 0.05 means the gap is real, not random noise.">
+              <MetricPill label="p-value" value={pValue < 0.001 ? '<0.001' : pValue?.toFixed(3)} />
+            </Tooltip>
           </div>
         )}
 
         {!hasMetrics && (
-          <div className="flex flex-1 items-center justify-center py-6 text-xs text-gray-600">
+          <div className="flex items-center justify-center py-5 text-xs" style={{ color: 'var(--color-ink-faint)' }}>
             No bias metrics for this column
           </div>
         )}
@@ -88,45 +63,37 @@ export default function ColumnCard({
         <ProxyAlert proxies={proxies} />
 
         {hasSlices && !expanded && (
-          <p className="mt-3 text-center text-[10px] text-gray-600 uppercase tracking-wider">
-            Click to view slice breakdown
+          <p className="mt-3 text-center text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--color-ink-faint)' }}>
+            Click to view slice breakdown ↓
           </p>
         )}
       </div>
 
-      {/* Expandable SliceChart */}
       <AnimatePresence initial={false}>
         {expanded && hasSlices && (
           <motion.div
-            key="slice-chart"
+            key="slices"
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-            className="overflow-hidden border-t border-border-subtle"
-          >
+            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            className="overflow-hidden border-t"
+            style={{ borderColor: 'var(--color-border)' }}>
             <div className="p-4">
               <SliceChart slices={slices} columnName={name} />
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.div>
+    </div>
   );
 }
 
-function MetricPill({ label, value, tooltip }) {
+function MetricPill({ label, value }) {
   return (
-    <Tooltip text={tooltip} position="bottom">
-      <div className="w-full rounded-lg bg-white/[0.03] px-3 py-2 text-center">
-        <div className="font-[family-name:var(--font-mono)] text-sm font-semibold text-white">
-          {value ?? '—'}
-        </div>
-        <div className="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5 flex items-center justify-center gap-1">
-          {label}
-          <span className="text-gray-600">?</span>
-        </div>
-      </div>
-    </Tooltip>
+    <div className="rounded-lg px-3 py-2.5 text-center" style={{ background: 'var(--color-bg-warm)' }}>
+      <div className="text-sm font-bold" style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-ink)' }}>{value ?? '—'}</div>
+      <div className="text-[10px] font-semibold uppercase tracking-wider mt-0.5" style={{ color: 'var(--color-ink-muted)' }}>{label}</div>
+    </div>
   );
 }
