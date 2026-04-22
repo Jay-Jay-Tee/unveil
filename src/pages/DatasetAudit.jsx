@@ -23,12 +23,17 @@ export default function DatasetAudit() {
 
   if (!schemaMap || !biasReport) {
     return (
-      <div className="min-h-screen pt-32 flex flex-col items-center gap-6 text-center px-6">
-        <p className="text-gray-400">No analysis data yet.</p>
-        <button onClick={() => navigate('/upload')}
-          className="rounded-xl bg-accent px-6 py-3 text-sm font-semibold text-white hover:bg-accent/80 transition">
-          ← Upload a Dataset
-        </button>
+      <div className="min-h-screen pt-32 flex flex-col items-center gap-8 text-center px-6">
+        <div>
+          <p className="text-lg text-text-muted font-medium">📊 No analysis data yet</p>
+          <p className="text-sm text-text-secondary mt-2">Upload a dataset to start the audit</p>
+        </div>
+        <motion.button onClick={() => navigate('/upload')}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="rounded-xl bg-gradient-to-r from-accent to-accent-dark px-8 py-4 text-sm font-bold text-white shadow-lg shadow-accent/30 transition-all hover:shadow-xl">
+          ← Upload Dataset
+        </motion.button>
       </div>
     );
   }
@@ -36,58 +41,70 @@ export default function DatasetAudit() {
   const columns      = buildColumns(schemaMap, biasReport);
   const biasedCount  = columns.filter(c => c.bias?.verdict === 'BIASED').length;
   const ambiguousCount = columns.filter(c => c.bias?.verdict === 'AMBIGUOUS').length;
-  const headerBg     = biasedCount > 0
-    ? 'rgba(255,64,64,0.05)'
+  const cleanCount = columns.filter(c => c.bias?.verdict === 'CLEAN').length;
+
+  const headerColor = biasedCount > 0
+    ? 'from-accent/10 to-orange-100'
     : ambiguousCount > 0
-      ? 'rgba(245,166,35,0.05)'
-      : 'rgba(46,204,143,0.05)';
+      ? 'from-ambiguous/10 to-yellow-100'
+      : 'from-secondary/10 to-green-100';
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="min-h-screen pt-24 px-6 pb-20">
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="min-h-screen pt-28 px-6 pb-20 bg-gradient-to-br from-white to-accent/3">
       <div className="mx-auto max-w-6xl">
 
         {/* Header */}
-        <div className="rounded-xl px-6 py-6 mb-4 transition-colors duration-500" style={{ backgroundColor: headerBg }}>
-          <h1 className="font-[family-name:var(--font-heading)] text-4xl text-white mb-2">Dataset Audit</h1>
-          <p className="text-gray-400">Fairness analysis across demographic groups in your dataset.</p>
-          {isMock && <p className="text-xs text-ambiguous mt-2">⚠ Demo data — start backend for live results</p>}
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className={`rounded-3xl px-8 py-8 mb-8 bg-gradient-to-r ${headerColor} border-2 border-border-light transition-all`}
+        >
+          <h1 className="font-[family-name:var(--font-heading)] text-5xl text-text-primary mb-3 font-bold">Dataset Audit</h1>
+          <p className="text-lg text-text-secondary max-w-2xl">
+            Fairness analysis across demographic groups. Detect disparate impact, bias, and compliance risks.
+          </p>
+          {isMock && <p className="text-sm text-ambiguous mt-4 font-medium">⚠️  Demo mode — start backend for live results</p>}
+        </motion.div>
 
         {/* Hover hint */}
-        <p className="text-xs text-gray-600 mb-8 px-1">
-          💡 Hover over any badge, metric, or chart label to get a plain-English explanation.
+        <p className="text-sm text-text-secondary mb-10 px-2 font-medium">
+          💡 Hover over any metric or chart to learn what it means
         </p>
 
         {/* Summary stats */}
-        <motion.div initial="hidden" animate="visible" className="grid grid-cols-3 gap-4 mb-10">
+        <motion.div initial="hidden" animate="visible" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
           {[
-            { label: 'Total Analyzed', value: columns.length, color: '#9CA3AF', tooltip: 'The number of demographic columns we checked for unfair treatment.' },
-            { label: 'Biased',    value: biasedCount,    color: SEVERITY.BIASED.color,    tooltip: 'Columns where the model treats different groups significantly unequally — severe enough to fail the legal 80% threshold.' },
-            { label: 'Ambiguous', value: ambiguousCount, color: SEVERITY.AMBIGUOUS.color, tooltip: 'Columns showing some disparity, but not enough to be certain. These warrant further review.' },
+            { label: 'Total Columns', value: columns.length, color: 'from-text-primary to-text-secondary', tooltip: 'Total demographic columns analyzed.' },
+            { label: 'Biased', value: biasedCount, color: 'from-accent to-orange-500', tooltip: 'Severe bias detected — fails 80% legal threshold.' },
+            { label: 'Ambiguous', value: ambiguousCount, color: 'from-ambiguous to-yellow-500', tooltip: 'Possible bias — worth investigating further.' },
+            { label: 'Clean', value: cleanCount, color: 'from-secondary to-green-500', tooltip: 'No significant bias detected.' },
           ].map((s, i) => (
             <motion.div key={s.label} variants={fadeUp} custom={i}>
               <Tooltip text={s.tooltip} position="bottom">
-                <div className="w-full rounded-xl border border-border-subtle bg-bg-card p-5 text-center cursor-help">
-                  <div className="font-mono text-3xl font-bold" style={{ color: s.color }}>{s.value}</div>
-                  <div className="mt-1 text-xs text-gray-500 uppercase tracking-wider flex items-center justify-center gap-1">
-                    {s.label} <span className="text-gray-700">?</span>
+                <motion.div
+                  whileHover={{ scale: 1.05, y: -4 }}
+                  className={`w-full rounded-2xl border-2 border-border-light bg-gradient-to-br ${s.color} p-6 text-center cursor-help shadow-sm hover:shadow-lg transition-all`}
+                >
+                  <div className="font-mono text-3xl font-bold text-white drop-shadow-sm">{s.value}</div>
+                  <div className="mt-2 text-sm text-white/80 uppercase tracking-wider font-bold flex items-center justify-center gap-1">
+                    {s.label} <span className="text-lg">?</span>
                   </div>
-                </div>
+                </motion.div>
               </Tooltip>
             </motion.div>
           ))}
         </motion.div>
 
         {/* Per-column results */}
-        <div className="space-y-8">
+        <div className="space-y-10">
           {columns.map((col, i) => (
             <motion.div key={col.name} initial="hidden" whileInView="visible"
               viewport={{ once: true, margin: '-40px' }} custom={i} variants={fadeUp}>
-              <div className="flex items-center gap-3 mb-4">
-                <h3 className="font-mono text-lg font-semibold text-white">{col.name}</h3>
+              <div className="flex items-center gap-4 mb-6">
+                <h3 className="font-mono text-2xl font-bold text-text-primary">{col.name}</h3>
                 <SeverityBadge verdict={col.bias?.verdict} />
               </div>
-              <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
+              <div className="grid gap-6 lg:grid-cols-[340px_1fr]">
                 <ColumnCard
                   name={col.name} type={col.type} proxies={col.proxies}
                   disparateImpact={col.bias?.disparate_impact} parityGap={col.bias?.parity_gap}
@@ -99,16 +116,20 @@ export default function DatasetAudit() {
           ))}
         </div>
 
-        <div className="mt-12 flex gap-4">
-          <button onClick={() => navigate('/audit/model')}
-            className="rounded-xl bg-accent px-6 py-3 text-sm font-semibold text-white hover:bg-accent/80 transition">
-            Run Model Audit →
-          </button>
-          <button onClick={() => navigate('/report')}
-            className="rounded-xl border border-border-subtle px-6 py-3 text-sm font-semibold text-white hover:bg-white/5 transition">
-            View Report →
-          </button>
-        </div>
+        <motion.div initial="hidden" whileInView="visible" className="mt-14 flex flex-col sm:flex-row gap-4">
+          <motion.button onClick={() => navigate('/audit/model')}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="rounded-xl bg-gradient-to-r from-accent to-accent-dark px-8 py-4 text-sm font-bold text-white shadow-lg shadow-accent/30 transition-all hover:shadow-xl hover:-translate-y-1">
+            🔍 Model Audit →
+          </motion.button>
+          <motion.button onClick={() => navigate('/report')}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="rounded-xl border-2 border-text-primary px-8 py-4 text-sm font-bold text-text-primary transition-all hover:border-accent hover:text-accent hover:bg-accent/5">
+            📋 View Report →
+          </motion.button>
+        </motion.div>
       </div>
     </motion.div>
   );

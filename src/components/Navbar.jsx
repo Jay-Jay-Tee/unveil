@@ -13,36 +13,47 @@ export default function Navbar() {
   const { pathname } = useLocation();
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border-subtle bg-bg/80 backdrop-blur-md">
+    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border-subtle bg-bg/95 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-        <Link to="/" className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-accent flex items-center justify-center">
-            <span className="text-sm font-bold text-bg">U</span>
-          </div>
-          <span className="font-[family-name:var(--font-heading)] text-xl text-white">
+        <Link to="/" className="flex items-center gap-2.5 group">
+          <motion.div
+            className="h-9 w-9 rounded-xl bg-gradient-to-br from-accent to-accent-dark flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow"
+            whileHover={{ scale: 1.05 }}
+          >
+            <span className="text-sm font-bold text-white">⚖️</span>
+          </motion.div>
+          <span className="font-[family-name:var(--font-heading)] text-xl font-bold bg-gradient-to-r from-accent to-secondary bg-clip-text text-transparent">
             UnbiasedAI
           </span>
         </Link>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-6">
           {links.map(({ to, label }) => {
             const isActive = pathname === to;
             return (
-              <Link
+              <motion.div
                 key={to}
-                to={to}
-                className="relative px-3 py-1.5 text-sm transition-colors hover:text-white"
-                style={{ color: isActive ? '#fff' : '#9CA3AF' }}
+                className="relative"
+                whileHover={{ y: -2 }}
               >
-                {label}
+                <Link
+                  to={to}
+                  className={`text-sm font-medium transition-all ${
+                    isActive
+                      ? 'text-accent'
+                      : 'text-text-secondary hover:text-accent'
+                  }`}
+                >
+                  {label}
+                </Link>
                 {isActive && (
                   <motion.div
                     layoutId="nav-indicator"
-                    className="absolute inset-x-0 -bottom-4 h-px bg-accent"
+                    className="absolute inset-x-0 -bottom-1 h-0.5 bg-gradient-to-r from-accent to-secondary rounded-full"
                     transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                   />
                 )}
-              </Link>
+              </motion.div>
             );
           })}
         </div>

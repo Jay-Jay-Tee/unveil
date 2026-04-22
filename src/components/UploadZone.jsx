@@ -67,11 +67,12 @@ export default function UploadZone({ onParsed, disabled = false }) {
         onDragLeave={onDragLeave}
         onClick={() => !file && !disabled && inputRef.current?.click()}
         animate={{
-          borderColor: dragging ? '#4D9EFF' : 'rgba(77,158,255,0.3)',
-          backgroundColor: dragging ? 'rgba(77,158,255,0.06)' : 'rgba(255,255,255,0.03)',
+          borderColor: dragging ? '#FF6B5B' : '#E5E5E0',
+          backgroundColor: dragging ? 'rgba(255, 107, 91, 0.08)' : 'rgba(255, 107, 91, 0.02)',
+          scale: dragging ? 1.02 : 1,
         }}
         transition={{ duration: 0.2 }}
-        className="relative flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-14 text-center transition-colors"
+        className="relative flex cursor-pointer flex-col items-center justify-center rounded-3xl border-3 border-dashed p-16 text-center transition-all"
       >
         <input
           ref={inputRef}
@@ -85,40 +86,47 @@ export default function UploadZone({ onParsed, disabled = false }) {
           {loading ? (
             <motion.div
               key="loading"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex flex-col items-center gap-3"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="flex flex-col items-center gap-4"
             >
-              <div className="h-10 w-10 animate-spin rounded-full border-2 border-accent border-t-transparent" />
-              <span className="text-sm text-gray-400">Parsing file...</span>
+              <div className="h-12 w-12 animate-spin rounded-full border-3 border-accent border-t-transparent" />
+              <span className="text-lg font-medium text-text-primary">Parsing file...</span>
+              <span className="text-sm text-text-secondary">This should only take a moment</span>
             </motion.div>
           ) : file ? (
             <motion.div
               key="success"
-              initial={{ opacity: 0, scale: 0.95 }}
+              initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="flex flex-col items-center gap-3"
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="flex flex-col items-center gap-4"
             >
               {/* Check icon */}
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-clean/10">
-                <svg className="h-6 w-6 text-clean" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <motion.div
+                className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-secondary to-green-400 text-white shadow-lg"
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ repeat: Infinity, duration: 2 }}
+              >
+                <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                 </svg>
-              </div>
+              </motion.div>
               <div>
-                <p className="text-sm font-semibold text-white">{file.name}</p>
-                <p className="mt-1 font-[family-name:var(--font-mono)] text-xs text-gray-400">
-                  {rowCount.toLocaleString()} rows &middot; {colCount} columns
+                <p className="text-lg font-bold text-text-primary">{file.name}</p>
+                <p className="mt-2 font-[family-name:var(--font-mono)] text-sm text-text-secondary font-medium">
+                  ✓ {rowCount.toLocaleString()} rows · {colCount} columns
                 </p>
               </div>
-              <button
+              <motion.button
                 onClick={(e) => { e.stopPropagation(); reset(); }}
-                className="mt-2 rounded-lg border border-border-subtle px-4 py-1.5 text-xs text-gray-400 transition-colors hover:border-gray-600 hover:text-white"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="mt-4 rounded-xl border-2 border-text-primary px-6 py-2 text-sm font-bold text-text-primary transition-all hover:border-accent hover:text-accent hover:bg-accent/5"
               >
-                Upload different file
-              </button>
+                📁 Upload different file
+              </motion.button>
             </motion.div>
           ) : (
             <motion.div
@@ -126,21 +134,25 @@ export default function UploadZone({ onParsed, disabled = false }) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="flex flex-col items-center gap-3"
+              className="flex flex-col items-center gap-4"
             >
               {/* Upload icon */}
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent/10">
-                <svg className="h-6 w-6 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <motion.div
+                className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-accent to-orange-400 text-white shadow-lg"
+                animate={{ y: [0, -8, 0] }}
+                transition={{ repeat: Infinity, duration: 2 }}
+              >
+                <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
                 </svg>
-              </div>
+              </motion.div>
               <div>
-                <p className="text-sm text-white">
+                <p className="text-lg font-bold text-text-primary">
                   Drag & drop your dataset, or{' '}
-                  <span className="font-semibold text-accent">browse</span>
+                  <span className="bg-gradient-to-r from-accent to-secondary bg-clip-text text-transparent">browse</span>
                 </p>
-                <p className="mt-1 text-xs text-gray-500">
-                  Supports CSV, JSON, XLSX, .data
+                <p className="mt-2 text-sm text-text-secondary font-medium">
+                  CSV, JSON, XLSX, or .data files
                 </p>
               </div>
             </motion.div>
@@ -152,12 +164,13 @@ export default function UploadZone({ onParsed, disabled = false }) {
       <AnimatePresence>
         {error && (
           <motion.div
-            initial={{ opacity: 0, y: -8 }}
+            initial={{ opacity: 0, y: -12 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            className="mt-3 rounded-lg border border-biased/20 bg-biased/5 px-4 py-2.5 text-sm text-biased"
+            exit={{ opacity: 0, y: -12 }}
+            className="mt-4 rounded-2xl border-2 border-biased bg-gradient-to-r from-biased/10 to-orange-100 px-6 py-4"
           >
-            {error}
+            <p className="text-sm font-bold text-biased">❌ Error</p>
+            <p className="text-sm text-text-secondary mt-1">{error}</p>
           </motion.div>
         )}
       </AnimatePresence>

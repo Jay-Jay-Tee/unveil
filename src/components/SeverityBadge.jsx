@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import { SEVERITY, COLUMN_TYPES } from '../lib/constants';
 import Tooltip from './Tooltip';
 
@@ -23,13 +24,14 @@ export default function SeverityBadge({ verdict, type }) {
   const tooltipText = type ? TYPE_TOOLTIPS[type] : VERDICT_TOOLTIPS[verdict];
 
   const badge = (
-    <span
-      className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold tracking-wider uppercase"
+    <motion.span
+      whileHover={{ scale: 1.05 }}
+      className="inline-flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-[11px] font-bold tracking-widest uppercase"
       style={{ color: config.color, backgroundColor: bg }}
     >
-      <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: config.color }} />
+      <span className="h-2 w-2 rounded-full" style={{ backgroundColor: config.color }} />
       {config.label}
-    </span>
+    </motion.span>
   );
 
   if (!tooltipText) return badge;
