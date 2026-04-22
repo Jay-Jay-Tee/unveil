@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import UploadZone from '../components/UploadZone';
+import WalkthroughModal from '../components/WalkthroughModal';
 import { useAudit } from '../lib/AuditContext';
 import { analyzeDataset, checkBackendHealth } from '../lib/api';
 import { SEVERITY } from '../lib/constants';
@@ -22,6 +23,7 @@ export default function Upload() {
   const [status, setStatus]   = useState('idle');
   const [errorMsg, setErrorMsg] = useState('');
   const [progress, setProgress] = useState('');
+  const [showWalkthrough, setShowWalkthrough] = useState(false);
 
   async function handleParsed({ file }) {
     audit.setDatasetFile(file);
@@ -54,6 +56,8 @@ export default function Upload() {
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="min-h-screen pt-28 px-6 pb-20 bg-gradient-to-br from-white via-accent/2 to-secondary/2">
+      <WalkthroughModal onComplete={() => setShowWalkthrough(false)} />
+      
       <div className="mx-auto max-w-6xl">
         <div className="mb-12">
           <h1 className="font-[family-name:var(--font-heading)] text-6xl text-text-primary mb-4 font-bold">Upload Dataset</h1>

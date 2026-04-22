@@ -7,6 +7,7 @@ import Upload from './pages/Upload';
 import DatasetAudit from './pages/DatasetAudit';
 import ModelAudit from './pages/ModelAudit';
 import Report from './pages/Report';
+import Glossary from './pages/Glossary';
 
 export default function App() {
   const location = useLocation();
@@ -21,6 +22,7 @@ export default function App() {
           <Route path="/audit/dataset"  element={<DatasetAudit />} />
           <Route path="/audit/model"    element={<ModelAudit />} />
           <Route path="/report"         element={<Report />} />
+          <Route path="/glossary"       element={<Glossary />} />
         </Routes>
       </AnimatePresence>
     </AuditProvider>

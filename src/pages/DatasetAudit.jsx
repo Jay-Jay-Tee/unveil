@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useState } from 'react';
 import ColumnCard from '../components/ColumnCard';
 import SliceChart from '../components/SliceChart';
 import SeverityBadge from '../components/SeverityBadge';
@@ -20,6 +21,8 @@ const fadeUp = {
 export default function DatasetAudit() {
   const navigate = useNavigate();
   const { schemaMap, biasReport, isMock } = useAudit();
+  const [activeTab, setActiveTab] = useState('all');
+  const [sortBy, setSortBy] = useState('severity');
 
   if (!schemaMap || !biasReport) {
     return (
@@ -38,10 +41,31 @@ export default function DatasetAudit() {
     );
   }
 
-  const columns      = buildColumns(schemaMap, biasReport);
-  const biasedCount  = columns.filter(c => c.bias?.verdict === 'BIASED').length;
-  const ambiguousCount = columns.filter(c => c.bias?.verdict === 'AMBIGUOUS').length;
-  const cleanCount = columns.filter(c => c.bias?.verdict === 'CLEAN').length;
+  const allColumns = buildColumns(schemaMap, biasReport);
+  const biasedCount  = allColumns.filter(c => c.bias?.verdict === 'BIASED').length;
+  const ambiguousCount = allColumns.filter(c => c.bias?.verdict === 'AMBIGUOUS').length;
+  const cleanCount = allColumns.filter(c => c.bias?.verdict === 'CLEAN').length;
+
+  // Filter columns by active tab
+  const filteredColumns = activeTab === 'all' 
+    ? allColumns 
+    : activeTab === 'biased'
+    ? allColumns.filter(c => c.bias?.verdict === 'BIASED')
+    : activeTab === 'ambiguous'
+    ? allColumns.filter(c => c.bias?.verdict === 'AMBIGUOUS')
+    : allColumns.filter(c => c.bias?.verdict === 'CLEAN');
+
+  // Sort columns
+  const displayColumns = [...filteredColumns].sort((a, b) => {
+    if (sortBy === 'severity') {
+      return (SEVERITY_ORDER[a.bias?.verdict] ?? 3) - (SEVERITY_ORDER[b.bias?.verdict] ?? 3);
+    } else if (sortBy === 'name') {
+      return a.name.localeCompare(b.name);
+    } else if (sortBy === 'impact') {
+      return (b.bias?.disparate_impact ?? 0) - (a.bias?.disparate_impact ?? 0);
+    }
+    return 0;
+  });
 
   const headerColor = biasedCount > 0
     ? 'from-accent/10 to-orange-100'
@@ -74,7 +98,7 @@ export default function DatasetAudit() {
         {/* Summary stats */}
         <motion.div initial="hidden" animate="visible" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
           {[
-            { label: 'Total Columns', value: columns.length, color: 'from-text-primary to-text-secondary', tooltip: 'Total demographic columns analyzed.' },
+            { label: 'Total Columns', value: allColumns.length, color: 'from-text-primary to-text-secondary', tooltip: 'Total demographic columns analyzed.' },
             { label: 'Biased', value: biasedCount, color: 'from-accent to-orange-500', tooltip: 'Severe bias detected — fails 80% legal threshold.' },
             { label: 'Ambiguous', value: ambiguousCount, color: 'from-ambiguous to-yellow-500', tooltip: 'Possible bias — worth investigating further.' },
             { label: 'Clean', value: cleanCount, color: 'from-secondary to-green-500', tooltip: 'No significant bias detected.' },
@@ -95,25 +119,78 @@ export default function DatasetAudit() {
           ))}
         </motion.div>
 
+        {/* Filter tabs */}
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-8 flex gap-2 flex-wrap">
+          {[
+            { id: 'all', label: 'All Columns', count: allColumns.length },
+            { id: 'biased', label: '🚫 Biased', count: biasedCount },
+            { id: 'ambiguous', label: '⚠️ Ambiguous', count: ambiguousCount },
+            { id: 'clean', label: '✓ Clean', count: cleanCount },
+          ].map((tab) => (
+            <motion.button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className={`px-4 py-2.5 rounded-lg font-semibold text-sm transition-all ${
+                activeTab === tab.id
+                  ? 'bg-gradient-to-r from-accent to-accent-dark text-white shadow-lg shadow-accent/30'
+                  : 'bg-text-primary/5 text-text-primary hover:bg-text-primary/10'
+              }`}
+            >
+              {tab.label} <span className="text-xs ml-1 opacity-75">({tab.count})</span>
+            </motion.button>
+          ))}
+        </motion.div>
+
+        {/* Sort controls */}
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-8 flex gap-3 items-center">
+          <span className="text-sm font-medium text-text-secondary">Sort by:</span>
+          {[
+            { id: 'severity', label: 'Severity' },
+            { id: 'name', label: 'Name' },
+            { id: 'impact', label: 'Disparate Impact' },
+          ].map((sort) => (
+            <motion.button
+              key={sort.id}
+              onClick={() => setSortBy(sort.id)}
+              whileHover={{ scale: 1.05 }}
+              className={`px-3 py-1.5 rounded text-xs font-semibold transition-all ${
+                sortBy === sort.id
+                  ? 'bg-secondary/20 text-secondary'
+                  : 'bg-text-muted/5 text-text-muted hover:bg-text-muted/10'
+              }`}
+            >
+              {sort.label}
+            </motion.button>
+          ))}
+        </motion.div>
+
         {/* Per-column results */}
         <div className="space-y-10">
-          {columns.map((col, i) => (
-            <motion.div key={col.name} initial="hidden" whileInView="visible"
-              viewport={{ once: true, margin: '-40px' }} custom={i} variants={fadeUp}>
-              <div className="flex items-center gap-4 mb-6">
-                <h3 className="font-mono text-2xl font-bold text-text-primary">{col.name}</h3>
-                <SeverityBadge verdict={col.bias?.verdict} />
-              </div>
-              <div className="grid gap-6 lg:grid-cols-[340px_1fr]">
-                <ColumnCard
-                  name={col.name} type={col.type} proxies={col.proxies}
-                  disparateImpact={col.bias?.disparate_impact} parityGap={col.bias?.parity_gap}
-                  pValue={col.bias?.p_value} verdict={col.bias?.verdict}
-                />
-                <SliceChart slices={col.bias?.slices} columnName={col.name} />
-              </div>
+          {displayColumns.length > 0 ? (
+            displayColumns.map((col, i) => (
+              <motion.div key={col.name} initial="hidden" whileInView="visible"
+                viewport={{ once: true, margin: '-40px' }} custom={i} variants={fadeUp}>
+                <div className="flex items-center gap-4 mb-6">
+                  <h3 className="font-mono text-2xl font-bold text-text-primary">{col.name}</h3>
+                  <SeverityBadge verdict={col.bias?.verdict} />
+                </div>
+                <div className="grid gap-6 lg:grid-cols-[340px_1fr]">
+                  <ColumnCard
+                    name={col.name} type={col.type} proxies={col.proxies}
+                    disparateImpact={col.bias?.disparate_impact} parityGap={col.bias?.parity_gap}
+                    pValue={col.bias?.p_value} verdict={col.bias?.verdict}
+                  />
+                  <SliceChart slices={col.bias?.slices} columnName={col.name} />
+                </div>
+              </motion.div>
+            ))
+          ) : (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12">
+              <p className="text-text-muted text-lg font-medium">No columns match the selected filter</p>
             </motion.div>
-          ))}
+          )}
         </div>
 
         <motion.div initial="hidden" whileInView="visible" className="mt-14 flex flex-col sm:flex-row gap-4">

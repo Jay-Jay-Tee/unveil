@@ -1,10 +1,13 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useState } from 'react';
+import AnimatedCounter from '../components/AnimatedCounter';
+import ConfettiCanvas from '../components/ConfettiCanvas';
 
 const stats = [
-  { value: '78%', label: 'of AI systems show measurable bias in hiring decisions' },
-  { value: '0.80', label: 'is the legal Disparate Impact threshold (the 80% rule)' },
-  { value: '3x', label: 'higher false-negative rate for underrepresented groups' },
+  { value: 78, label: 'of AI systems show measurable bias in hiring decisions', suffix: '%' },
+  { value: 80, label: 'is the legal Disparate Impact threshold (the 80% rule)', suffix: ' rule' },
+  { value: 3, label: 'higher false-negative rate for underrepresented groups', suffix: 'x' },
 ];
 
 const features = [
@@ -41,8 +44,16 @@ const fadeUp = {
 };
 
 export default function Landing() {
+  const [showConfetti, setShowConfetti] = useState(false);
+
+  const handleCTAClick = () => {
+    setShowConfetti(true);
+    setTimeout(() => setShowConfetti(false), 3000);
+  };
+
   return (
     <div className="min-h-screen overflow-hidden">
+      {showConfetti && <ConfettiCanvas />}
       {/* Hero */}
       <section className="relative flex min-h-screen flex-col items-center justify-center px-6 pt-24 pb-12 text-center">
         {/* Decorative blobs */}
@@ -101,7 +112,8 @@ export default function Landing() {
         >
           <Link
             to="/upload"
-            className="group relative inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-accent to-accent-dark px-8 py-4 text-sm font-bold text-white transition-all hover:shadow-xl hover:shadow-accent/40 hover:-translate-y-1 active:translate-y-0"
+            onClick={handleCTAClick}
+            className="group relative inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-accent to-accent-dark px-8 py-4 text-sm font-bold text-white transition-all hover:shadow-xl hover:shadow-accent/40 hover:-translate-y-1 active:translate-y-0 hover:scale-105"
           >
             🚀 Start Auditing
             <svg className="h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
@@ -161,10 +173,10 @@ export default function Landing() {
               viewport={{ once: true, margin: '-50px' }}
               custom={i}
               variants={fadeUp}
-              className="group rounded-xl bg-white/60 backdrop-blur p-6 transition-all hover:shadow-lg hover:bg-white"
+              className="group rounded-xl bg-white/60 backdrop-blur p-6 transition-all hover:shadow-lg hover:bg-white hover:scale-105 cursor-pointer"
             >
               <div className="font-[family-name:var(--font-mono)] text-4xl font-bold bg-gradient-to-r from-accent to-secondary bg-clip-text text-transparent">
-                {stat.value}
+                <AnimatedCounter target={stat.value} duration={2.5} isMono={true} />{stat.suffix}
               </div>
               <p className="mt-3 text-sm font-medium text-text-secondary leading-relaxed">{stat.label}</p>
             </motion.div>
@@ -295,7 +307,8 @@ export default function Landing() {
           >
             <Link
               to="/upload"
-              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-accent to-accent-dark px-8 py-4 text-sm font-bold text-white shadow-lg shadow-accent/30 transition-all hover:shadow-xl hover:shadow-accent/50"
+              onClick={handleCTAClick}
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-accent to-accent-dark px-8 py-4 text-sm font-bold text-white shadow-lg shadow-accent/30 transition-all hover:shadow-xl hover:shadow-accent/50 hover:scale-105"
             >
               Upload Dataset
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
