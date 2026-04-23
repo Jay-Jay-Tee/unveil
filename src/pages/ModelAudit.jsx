@@ -1,11 +1,10 @@
-import { useState, useEffect } from 'react';
+
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import ShapChart from '../components/ShapChart';
 import SeverityBadge from '../components/SeverityBadge';
 import Tooltip from '../components/Tooltip';
 import { useAudit } from '../lib/AuditContext';
-import { analyzeModel } from '../lib/api';
 
 const SEVERITY_ORDER = { BIASED: 0, AMBIGUOUS: 1, CLEAN: 2 };
 const fadeUp = {

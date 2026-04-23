@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAudit } from '../lib/AuditContext';
 import { analyzeDataset, analyzeModel, checkBackendHealth } from '../lib/api';
-import { parseFile } from '../lib/fileParser';
 
 // ─── tiny file drop zone used twice on this page ───────────────────────────
 function FileSlot({ label, sublabel, accept, icon, file, onFile, onClear, disabled }) {
