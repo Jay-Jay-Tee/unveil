@@ -8,7 +8,7 @@
 import { mockSchemaMap, mockBiasReport, mockModelBiasReport } from './mockData';
 
 // Change this to your deployed backend URL when hosting on Cloud Run / ngrok
-export const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8001';
+export const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 const USE_MOCK_FALLBACK = import.meta.env.VITE_USE_MOCK !== 'false';
 

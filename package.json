@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "start": "concurrently \"npm run frontend\" \"npm run backend\"",
     "frontend": "vite",
-    "backend": "python backend/api.py",
+    "backend": "uvicorn backend.api:app --reload --port 8001",
     "dev:all": "concurrently \"npm run frontend\" \"npm run backend\""
   },
   "dependencies": {
