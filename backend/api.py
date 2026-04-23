@@ -12,6 +12,7 @@ Run:
 import io
 import json
 import os
+import re
 import sys
 import tempfile
 import traceback
@@ -85,6 +86,75 @@ def _http_error(exc: Exception, status: int = 500) -> HTTPException:
     return HTTPException(status_code=status, detail=str(exc))
 
 
+def _extract_retry_after_seconds(exc: Exception) -> Optional[int]:
+    text = f"{type(exc).__name__}: {exc}".lower()
+    match = re.search(r"retry(?:\s+in|delay)?[^0-9]*(\d+(?:\.\d+)?)\s*s", text)
+    if not match:
+        return None
+    try:
+        return max(1, int(round(float(match.group(1)))))
+    except ValueError:
+        return None
+
+
+def _is_gemini_overloaded_error(exc: Exception) -> bool:
+    """Detect transient Gemini capacity errors (HTTP 503 / UNAVAILABLE)."""
+    text = f"{type(exc).__name__}: {exc}".lower()
+    return (
+        "503" in text
+        and (
+            "unavailable" in text
+            or "high demand" in text
+            or "resource_exhausted" in text
+            or "overloaded" in text
+        )
+    )
+
+
+def _is_gemini_quota_error(exc: Exception) -> bool:
+    """Detect Gemini 429 quota/rate-limit errors."""
+    text = f"{type(exc).__name__}: {exc}".lower()
+    return (
+        "429" in text
+        and (
+            "resource_exhausted" in text
+            or "quota" in text
+            or "rate limit" in text
+            or "generate_content_free_tier_requests" in text
+        )
+    )
+
+
+def _gemini_overloaded_detail(action: str) -> dict:
+    return {
+        "code": "GEMINI_OVERLOADED",
+        "message": (
+            f"Gemini is experiencing high demand and could not {action} right now. "
+            "Please retry in 30-60 seconds."
+        ),
+        "retryable": True,
+    }
+
+
+def _gemini_quota_detail(action: str, exc: Exception) -> dict:
+    retry_after = _extract_retry_after_seconds(exc)
+    message = (
+        f"Gemini quota or rate limits were exceeded and could not {action} right now. "
+        "Please wait and try again."
+    )
+    if retry_after is not None:
+        message += f" Retry in about {retry_after} seconds."
+    message += " If this keeps happening, reduce repeat requests or enable billing/upgrade your Gemini plan."
+    detail = {
+        "code": "GEMINI_QUOTA_EXCEEDED",
+        "message": message,
+        "retryable": True,
+    }
+    if retry_after is not None:
+        detail["retry_after_seconds"] = retry_after
+    return detail
+
+
 # ── routes ─────────────────────────────────────────────────────────────────
 
 @app.get("/health")
@@ -107,6 +177,16 @@ async def analyze_dataset(file: UploadFile = File(...)):
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
     except Exception as e:
+        if _is_gemini_quota_error(e):
+            raise HTTPException(
+                status_code=429,
+                detail=_gemini_quota_detail("classify dataset columns", e),
+            )
+        if _is_gemini_overloaded_error(e):
+            raise HTTPException(
+                status_code=503,
+                detail=_gemini_overloaded_detail("classify dataset columns"),
+            )
         raise _http_error(e)
     finally:
         os.unlink(tmp_path)
@@ -180,6 +260,16 @@ async def gemini_report(payload: dict):
     except EnvironmentError as e:
         raise HTTPException(status_code=503, detail=str(e))
     except Exception as e:
+        if _is_gemini_quota_error(e):
+            raise HTTPException(
+                status_code=429,
+                detail=_gemini_quota_detail("generate the compliance report", e),
+            )
+        if _is_gemini_overloaded_error(e):
+            raise HTTPException(
+                status_code=503,
+                detail=_gemini_overloaded_detail("generate the compliance report"),
+            )
         raise HTTPException(status_code=502, detail=f"Gemini API error: {e}")
 
 

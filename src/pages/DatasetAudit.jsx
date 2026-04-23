@@ -20,7 +20,7 @@ function buildColumns(schemaMap, biasReport) {
 
 export default function DatasetAudit() {
   const navigate = useNavigate();
-  const { schemaMap, biasReport, isMock } = useAudit();
+  const { schemaMap, biasReport, isMock, modelBiasReport, modelFile } = useAudit();
   const [activeTab, setActiveTab] = useState('all');
   const [sortBy, setSortBy] = useState('severity');
 
@@ -148,11 +148,13 @@ export default function DatasetAudit() {
 
         {/* CTA */}
         <div className="mt-12 flex flex-wrap gap-4">
-          <button onClick={() => navigate('/audit/model')}
-            className="px-8 py-4 text-sm font-bold rounded-lg transition-all hover:opacity-90"
-            style={{ background: 'var(--color-ink)', color: '#fff' }}>
-            Run Model Audit →
-          </button>
+          {(modelBiasReport || modelFile) && (
+            <button onClick={() => navigate('/audit/model')}
+              className="px-8 py-4 text-sm font-bold rounded-lg transition-all hover:opacity-90"
+              style={{ background: 'var(--color-ink)', color: '#fff' }}>
+              Run Model Audit →
+            </button>
+          )}
           <button onClick={() => navigate('/report')}
             className="px-8 py-4 text-sm font-bold rounded-lg border-2 transition-all hover:opacity-70"
             style={{ border: '2px solid var(--color-border-strong)', color: 'var(--color-ink)' }}>

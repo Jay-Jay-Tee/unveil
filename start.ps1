@@ -36,6 +36,15 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
+# Prefer local virtual environment if present
+if (Test-Path "venv\Scripts\Activate.ps1") {
+    Write-Host "Activating Python virtual environment..." -ForegroundColor Yellow
+    & "venv\Scripts\Activate.ps1"
+}
+
+# If dependencies are missing, startup will fail with a clear import error.
+# Install manually when needed: python -m pip install -r requirements.txt
+
 Write-Host "✓ Node.js found" -ForegroundColor Green
 Write-Host "✓ Python found: $pythonCheck" -ForegroundColor Green
 

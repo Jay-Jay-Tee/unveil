@@ -57,6 +57,16 @@ PYTHON_VERSION=$(python3 --version)
 echo -e "${GREEN}✓ Node.js found: $NODE_VERSION${NC}"
 echo -e "${GREEN}✓ Python found: $PYTHON_VERSION${NC}"
 
+# Prefer local virtual environment if present
+if [ -f "venv/bin/activate" ]; then
+    echo -e "${YELLOW}Activating Python virtual environment...${NC}"
+    # shellcheck disable=SC1091
+    source venv/bin/activate
+fi
+
+# If dependencies are missing, startup will fail with a clear import error.
+# Install manually when needed: python3 -m pip install -r requirements.txt
+
 echo ""
 echo -e "${CYAN}====================================${NC}"
 echo -e "${CYAN}Starting all services...${NC}"

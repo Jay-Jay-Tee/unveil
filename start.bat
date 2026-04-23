@@ -33,6 +33,15 @@ if errorlevel 1 (
     exit /b 1
 )
 
+REM Prefer local virtual environment if present
+if exist "venv\Scripts\activate.bat" (
+    echo Activating Python virtual environment...
+    call "venv\Scripts\activate.bat"
+)
+
+REM If dependencies are missing, startup will fail with a clear import error.
+REM Install manually when needed: python -m pip install -r requirements.txt
+
 echo.
 echo ====================================
 echo Starting all services...

@@ -1,5 +1,23 @@
 const GEMINI_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
+function isGeminiBusyError(status, message = '') {
+  const msg = String(message).toLowerCase();
+  return status === 503 || msg.includes('unavailable') || msg.includes('high demand') || msg.includes('overloaded');
+}
+
+function isGeminiQuotaError(status, message = '') {
+  const msg = String(message).toLowerCase();
+  return status === 429 || msg.includes('quota') || msg.includes('rate limit') || msg.includes('resource_exhausted');
+}
+
+function friendlyGeminiBusyMessage() {
+  return 'Gemini is busy right now due to high demand. Please retry in about 30-60 seconds.';
+}
+
+function friendlyGeminiQuotaMessage() {
+  return 'Gemini quota or rate limits were exceeded. Please wait a bit and try again. If this keeps happening, enable billing or upgrade your Gemini plan.';
+}
+
 export async function generateAuditReport(biasReport, modelBiasReport) {
   const cacheKey = 'gemini_report_' + JSON.stringify(biasReport).length;
   const cached = localStorage.getItem(cacheKey);
@@ -27,10 +45,11 @@ ${JSON.stringify(biasReport, null, 2)}
 Model Behavior Report:
 ${JSON.stringify(modelBiasReport, null, 2)}
 
-The legal threshold for disparate impact is 0.8. Any score below this fails the 80% rule.`
+The legal threshold for disparate impact is 0.8. Any score below this fails the 80% rule.
+Do not stop mid-sentence. Complete all 4 sections fully before ending.`
             }]
           }],
-          generationConfig: { temperature: 0.3, maxOutputTokens: 1024 }
+          generationConfig: { temperature: 0.3, maxOutputTokens: 2048 }
         })
       }
     );
@@ -39,13 +58,25 @@ The legal threshold for disparate impact is 0.8. Any score below this fails the 
     console.log('[Gemini API] Full response:', JSON.stringify(data, null, 2));
 
     if (!response.ok) {
-      throw new Error(
-        data.error?.message ?? `HTTP ${response.status}: ${response.statusText}`
-      );
+      const msg = data.error?.message ?? `HTTP ${response.status}: ${response.statusText}`;
+      if (isGeminiQuotaError(response.status, msg)) {
+        throw new Error(friendlyGeminiQuotaMessage());
+      }
+      if (isGeminiBusyError(response.status, msg)) {
+        throw new Error(friendlyGeminiBusyMessage());
+      }
+      throw new Error(msg);
     }
 
     if (data.error) {
-      throw new Error(data.error.message ?? JSON.stringify(data.error));
+      const msg = data.error.message ?? JSON.stringify(data.error);
+      if (isGeminiQuotaError(response.status, msg)) {
+        throw new Error(friendlyGeminiQuotaMessage());
+      }
+      if (isGeminiBusyError(response.status, msg)) {
+        throw new Error(friendlyGeminiBusyMessage());
+      }
+      throw new Error(msg);
     }
 
     if (!data.candidates || !data.candidates.length) {

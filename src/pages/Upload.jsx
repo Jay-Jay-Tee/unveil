@@ -4,6 +4,20 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAudit } from '../lib/AuditContext';
 import { analyzeDataset, analyzeModel, checkBackendHealth } from '../lib/api';
 
+function getErrorText(err, fallback = 'Analysis failed.') {
+  if (typeof err === 'string') return err;
+  if (err && typeof err === 'object') {
+    const message = typeof err.message === 'string' ? err.message : null;
+    if (message) return message;
+    try {
+      return JSON.stringify(err);
+    } catch {
+      return fallback;
+    }
+  }
+  return fallback;
+}
+
 // ─── tiny file drop zone used twice on this page ───────────────────────────
 function FileSlot({ label, sublabel, accept, icon, file, onFile, onClear, disabled }) {
   const [drag, setDrag] = useState(false);
@@ -113,7 +127,7 @@ function PklInstructions({ open, onClose }) {
           <div className="rounded-xl p-4 text-sm" style={{ background: 'var(--color-amber-light)', borderLeft: '3px solid var(--color-amber)' }}>
             <p className="font-bold mb-1" style={{ color: 'var(--color-amber-dark)' }}>No model? No problem.</p>
             <p style={{ color: 'var(--color-ink-mid)' }}>
-              If you only upload a dataset, we train a logistic regression on it internally and audit that — so you always get model-level results.
+              Upload a .pkl only if you want to audit your own trained model.
             </p>
           </div>
         </motion.div>
@@ -172,9 +186,9 @@ export default function Upload() {
   const [status,    setStatus]    = useState('idle'); // idle | analyzing | done | error
   const [errorMsg,  setErrorMsg]  = useState('');
   const [steps,     setSteps]     = useState({
-    backend:  'waiting',
-    dataset:  'waiting',
-    model:    'waiting',
+        backend:  'waiting',
+        dataset:  'waiting',
+        model:    'waiting',
   });
 
   function setStep(key, val) {
@@ -189,7 +203,13 @@ export default function Upload() {
 
   async function runAnalysis() {
     if (!canRun) return;
-    audit.resetAll();
+    if (hasModel) {
+      audit.resetAll();
+    } else {
+      audit.setModelBiasReport(null);
+      audit.setModelMeta(null);
+      audit.setModelFile(null);
+    }
     setStatus('analyzing');
     setSteps({ backend: 'running', dataset: 'waiting', model: 'waiting' });
 
@@ -219,8 +239,7 @@ export default function Upload() {
         setStep('dataset', 'skipped');
       }
 
-      // 3. model analysis (Part B)
-      // needs a dataset file to probe against — if model-only, we can't run Part B without data
+      // 3. model analysis (Part B) only when a model file is uploaded
       if (hasModel && !hasDataset) {
         // model only with no dataset: can't do probing without data rows
         audit.setModelFile(modelFile);
@@ -232,14 +251,13 @@ export default function Upload() {
         return;
       }
 
-      if (hasDataset) {
-        // Always run model audit: use uploaded .pkl if provided, else backend uses demo logistic regression
+      if (hasDataset && hasModel) {
         setStep('model', 'running');
         const modelResult = await analyzeModel(
           datasetFile,
           schemaMap,
           proxyFlags || { proxy_columns: [] },
-          hasModel ? modelFile : null,
+          modelFile,
           100,
         );
         audit.setModelBiasReport({
@@ -247,13 +265,15 @@ export default function Upload() {
           shap_summary:      modelResult.shapSummary,
         });
         audit.setModelMeta({
-          modelName: hasModel ? modelFile.name : 'Built-in logistic regression (trained on your dataset)',
-          isDemo:    !hasModel,
+          modelName: modelFile.name,
+          isDemo:    false,
           modelOnly: false,
         });
-        if (hasModel) audit.setModelFile(modelFile);
+        audit.setModelFile(modelFile);
         audit.setIsMock(audit.isMock || modelResult.isMock);
         setStep('model', 'done');
+      } else if (hasDataset) {
+        setStep('model', 'skipped');
       }
 
       audit.setAuditMode(mode);
@@ -261,7 +281,7 @@ export default function Upload() {
 
     } catch (err) {
       setStatus('error');
-      setErrorMsg(err.message || 'Analysis failed.');
+      setErrorMsg(getErrorText(err));
     }
   }
 
@@ -312,7 +332,7 @@ export default function Upload() {
               disabled={status === 'analyzing'}
             />
             <p className="mt-2 text-xs" style={{ color: 'var(--color-ink-muted)' }}>
-              Runs disparate impact, parity gaps, counterfactual probing &amp; SHAP.
+              Runs disparate impact, parity gaps, and slice-level bias metrics.
             </p>
           </div>
 
@@ -357,12 +377,12 @@ export default function Upload() {
               <div>
                 <span className="text-sm font-bold" style={{ color: 'var(--color-ink)' }}>
                   {mode === 'both'    ? 'Full audit — dataset + model'   :
-                   mode === 'dataset' ? 'Dataset audit + auto model probe' :
+                   mode === 'dataset' ? 'Dataset audit only' :
                                         'Model audit (needs dataset too)'}
                 </span>
                 <span className="ml-2 text-xs" style={{ color: 'var(--color-ink-muted)' }}>
                   {mode === 'both'    ? 'Disparate impact, SHAP, probing on your uploaded model'   :
-                   mode === 'dataset' ? 'Will train a logistic regression internally to also run model audit' :
+                   mode === 'dataset' ? 'Dataset bias metrics only' :
                                         'Please add a dataset file to probe the model against'}
                 </span>
               </div>
@@ -383,7 +403,7 @@ export default function Upload() {
           {status === 'analyzing' ? 'Running Analysis…' :
            !canRun                ? 'Upload at least one file to begin' :
            mode === 'both'        ? 'Run Full Audit →' :
-           mode === 'dataset'     ? 'Run Dataset + Model Audit →' :
+           mode === 'dataset'     ? 'Run Dataset Audit →' :
                                     'Run Audit →'}
         </button>
 
@@ -397,7 +417,9 @@ export default function Upload() {
               </p>
               <ProgressStep label="Connecting to backend" status={steps.backend} />
               <ProgressStep label={hasDataset ? 'Classifying columns + computing bias metrics (Gemini + stats)' : 'Dataset analysis'} status={steps.dataset} />
-              <ProgressStep label={hasModel ? `Probing your model (${modelFile?.name}) with synthetic pairs + SHAP` : 'Probing built-in logistic regression + SHAP'} status={steps.model} />
+              {hasModel && (
+                <ProgressStep label={`Probing your model (${modelFile?.name}) with synthetic pairs + SHAP`} status={steps.model} />
+              )}
             </motion.div>
           )}
         </AnimatePresence>
@@ -440,7 +462,7 @@ export default function Upload() {
                     View Dataset Audit →
                   </button>
                 )}
-                {(mode === 'dataset' || mode === 'both') && (
+                {hasModel && mode === 'both' && (
                   <button onClick={() => navigate('/audit/model')}
                     className="px-6 py-3 text-sm font-bold rounded-lg transition-all hover:opacity-90"
                     style={{ background: mode === 'both' ? 'var(--color-ink)' : 'transparent', color: mode === 'both' ? '#fff' : 'var(--color-ink)',

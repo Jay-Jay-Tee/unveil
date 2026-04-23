@@ -12,6 +12,20 @@ const fadeUp = {
 const VERDICT_EMOJI = { BIASED: '🔴', AMBIGUOUS: '🟡', CLEAN: '🟢' };
 const VERDICT_COLOR = { BIASED: 'var(--color-biased)', AMBIGUOUS: 'var(--color-ambiguous)', CLEAN: 'var(--color-green)' };
 
+function getErrorText(err, fallback = 'Gemini report generation failed.') {
+  if (typeof err === 'string') return err;
+  if (err && typeof err === 'object') {
+    const message = typeof err.message === 'string' ? err.message : null;
+    if (message) return message;
+    try {
+      return JSON.stringify(err);
+    } catch {
+      return fallback;
+    }
+  }
+  return fallback;
+}
+
 // ─── Markdown renderer ────────────────────────────────────────────────────
 // Handles the subset Gemini actually emits: ## headings, **bold**, * bullets,
 // numbered lists, blank-line paragraphs. No external dependency needed.
@@ -174,7 +188,7 @@ export default function Report() {
       setStatus('done');
     } catch (err) {
       setStatus('error');
-      setErrorMsg(err.message || 'Gemini report generation failed.');
+      setErrorMsg(getErrorText(err));
     }
   }
 
@@ -342,11 +356,13 @@ export default function Report() {
               ↺ Regenerate Report
             </button>
           )}
-          <button onClick={() => navigate('/audit/model')}
-            className="px-5 py-3 text-sm font-bold rounded-lg border-2 transition-all hover:opacity-70"
-            style={{ border: '2px solid var(--color-border)', color: 'var(--color-ink-mid)' }}>
-            ← Back to Model Audit
-          </button>
+          {(audit.modelBiasReport || audit.modelFile) && (
+            <button onClick={() => navigate('/audit/model')}
+              className="px-5 py-3 text-sm font-bold rounded-lg border-2 transition-all hover:opacity-70"
+              style={{ border: '2px solid var(--color-border)', color: 'var(--color-ink-mid)' }}>
+              ← Back to Model Audit
+            </button>
+          )}
           <button onClick={() => navigate('/upload')}
             className="px-5 py-3 text-sm font-bold rounded-lg transition-all hover:opacity-90"
             style={{ background: 'var(--color-ink)', color: '#fff' }}>

@@ -379,11 +379,12 @@ Dataset Bias Report:
 Model Behavior Report:
 {json.dumps(model_bias_report, indent=2)}
 
-The legal threshold for disparate impact is 0.8. Any score below this fails the 80% rule."""
+The legal threshold for disparate impact is 0.8. Any score below this fails the 80% rule.
+Do not stop mid-sentence. Complete all 4 sections fully before ending."""
 
     body = json.dumps({
         "contents": [{"parts": [{"text": prompt}]}],
-        "generationConfig": {"temperature": 0.3, "maxOutputTokens": 1024},
+        "generationConfig": {"temperature": 0.3, "maxOutputTokens": 2048},
     }).encode()
 
     req = urllib.request.Request(

@@ -12,6 +12,46 @@ export const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 const USE_MOCK_FALLBACK = import.meta.env.VITE_USE_MOCK !== 'false';
 
+function isGeminiOverloadedPayload(status, detailText, detailObj) {
+  if (detailObj?.code === 'GEMINI_OVERLOADED') return true;
+  if (status !== 503) return false;
+  const msg = (detailText || '').toLowerCase();
+  return msg.includes('unavailable') || msg.includes('high demand') || msg.includes('overloaded');
+}
+
+function isGeminiQuotaPayload(status, detailText, detailObj) {
+  if (detailObj?.code === 'GEMINI_QUOTA_EXCEEDED') return true;
+  if (status !== 429) return false;
+  const msg = (detailText || '').toLowerCase();
+  return msg.includes('quota') || msg.includes('rate limit') || msg.includes('resource_exhausted');
+}
+
+function friendlyGeminiBusyMessage() {
+  return 'Gemini is busy right now due to high demand. Please retry in about 30-60 seconds.';
+}
+
+function friendlyGeminiQuotaMessage(retryAfterSeconds) {
+  const retryText = retryAfterSeconds ? ` Please retry in about ${retryAfterSeconds} seconds.` : ' Please retry in a bit.';
+  return `Gemini quota or rate limits were exceeded.${retryText} If this keeps happening, wait and try again later or enable billing / upgrade your Gemini plan.`;
+}
+
+async function toApiError(res) {
+  const body = await res.json().catch(() => ({}));
+  const detail = body?.detail;
+  const detailObj = detail && typeof detail === 'object' ? detail : null;
+  const detailText = typeof detail === 'string' ? detail : detailObj?.message;
+
+  if (isGeminiQuotaPayload(res.status, detailText, detailObj)) {
+    throw new Error(detailObj?.message || friendlyGeminiQuotaMessage(detailObj?.retry_after_seconds));
+  }
+
+  if (isGeminiOverloadedPayload(res.status, detailText, detailObj)) {
+    throw new Error(detailObj?.message || friendlyGeminiBusyMessage());
+  }
+
+  throw new Error(detailText || `HTTP ${res.status}`);
+}
+
 // ─── health check ──────────────────────────────────────────────────────────
 
 export async function checkBackendHealth() {
@@ -42,8 +82,7 @@ export async function analyzeDataset(file) {
     });
 
     if (!res.ok) {
-      const err = await res.json().catch(() => ({ detail: res.statusText }));
-      throw new Error(err.detail || `HTTP ${res.status}`);
+      await toApiError(res);
     }
 
     const data = await res.json();
@@ -100,8 +139,7 @@ export async function analyzeModel(datasetFile, schemaMap, proxyFlags, modelFile
     });
 
     if (!res.ok) {
-      const err = await res.json().catch(() => ({ detail: res.statusText }));
-      throw new Error(err.detail || `HTTP ${res.status}`);
+      await toApiError(res);
     }
 
     const data = await res.json();
@@ -132,6 +170,8 @@ export async function analyzeModel(datasetFile, schemaMap, proxyFlags, modelFile
  * falls back to direct Gemini API call using VITE_GEMINI_API_KEY.
  */
 export async function generateGeminiReport(biasReport, modelBiasReport) {
+  let backendError = null;
+
   // 1. Try backend proxy (preferred — keeps API key server-side)
   try {
     const res = await fetch(`${API_BASE}/report/gemini`, {
@@ -145,11 +185,25 @@ export async function generateGeminiReport(biasReport, modelBiasReport) {
       const data = await res.json();
       return data.report_text;
     }
-  } catch {
+    await toApiError(res);
+  } catch (err) {
+    backendError = err;
     // Backend not available — fall through to direct call
   }
 
   // 2. Direct Gemini call (uses VITE_GEMINI_API_KEY from .env)
-  const { generateAuditReport } = await import('./gemini');
-  return generateAuditReport(biasReport, modelBiasReport);
+  try {
+    const { generateAuditReport } = await import('./gemini');
+    return await generateAuditReport(biasReport, modelBiasReport);
+  } catch (directErr) {
+    const combinedMsg = [backendError?.message, directErr?.message].filter(Boolean).join(' | ');
+    const lower = combinedMsg.toLowerCase();
+    if (lower.includes('quota') || lower.includes('rate limit') || lower.includes('resource_exhausted')) {
+      throw new Error(friendlyGeminiQuotaMessage());
+    }
+    if (lower.includes('high demand') || lower.includes('unavailable')) {
+      throw new Error(friendlyGeminiBusyMessage());
+    }
+    throw directErr;
+  }
 }
