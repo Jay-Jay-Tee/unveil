@@ -387,8 +387,10 @@ Do not stop mid-sentence. Complete all 4 sections fully before ending."""
         "generationConfig": {"temperature": 0.3, "maxOutputTokens": 2048},
     }).encode()
 
+    report_model = os.environ.get("GEMINI_REPORT_MODEL", "gemini-2.5-flash")
+
     req = urllib.request.Request(
-        f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}",
+        f"https://generativelanguage.googleapis.com/v1beta/models/{report_model}:generateContent?key={api_key}",
         data=body,
         headers={"Content-Type": "application/json"},
         method="POST",

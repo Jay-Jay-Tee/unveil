@@ -61,6 +61,7 @@ app.add_middleware(
         "https://unbiased-ai-demo.web.app",
         "https://unbiased-ai-demo.firebaseapp.com",
     ] + _extra_origins,
+    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

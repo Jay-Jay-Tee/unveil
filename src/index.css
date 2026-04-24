@@ -72,6 +72,20 @@
   --color-error-light: #FDEEE8;
   --color-success-light: #E3F5EE;
 
+  /* Legacy aliases used across existing components */
+  --color-ink: var(--color-on-surface);
+  --color-ink-mid: var(--color-text-mid);
+  --color-ink-muted: var(--color-on-surface-variant);
+  --color-border: var(--color-border-subtle);
+  --color-biased: var(--color-status-biased);
+  --color-ambiguous: var(--color-status-ambiguous);
+  --color-green: var(--color-status-clean);
+  --color-green-light: var(--color-success-light);
+  --color-red-light: var(--color-error-light);
+  --color-amber: var(--color-tertiary);
+  --color-amber-light: var(--color-accent-light);
+  --color-amber-dark: var(--color-accent-dark);
+
   --font-display: 'Instrument Serif', serif;
   --font-sans: 'Syne', sans-serif;
   --font-mono: 'DM Mono', monospace;

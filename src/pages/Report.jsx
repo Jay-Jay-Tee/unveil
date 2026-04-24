@@ -176,14 +176,18 @@ export default function Report() {
   const hasData = audit.biasReport || audit.modelBiasReport;
 
   useEffect(() => {
-    if (hasData && status === 'idle') generate();
+    if (hasData && status === 'idle') generate(false);
   }, []);
 
-  async function generate() {
+  async function generate(forceRefresh = false) {
     setStatus('generating');
     setReportText('');
     try {
-      const text = await generateGeminiReport(audit.biasReport || {}, audit.modelBiasReport || {});
+      const text = await generateGeminiReport(
+        audit.biasReport || {},
+        audit.modelBiasReport || {},
+        { forceRefresh }
+      );
       setReportText(text);
       setStatus('done');
     } catch (err) {
@@ -330,7 +334,7 @@ export default function Report() {
               </div>
               <div className="ml-auto flex items-center gap-3">
                 <span className="w-2 h-2 rounded-full" style={{ background: 'var(--color-green)' }} />
-                <button onClick={generate}
+                <button onClick={() => generate(true)}
                   className="text-xs font-semibold transition-opacity hover:opacity-70"
                   style={{ color: 'rgba(255,255,255,0.5)', fontFamily: 'var(--font-mono)' }}>
                   ↺ Regenerate
@@ -348,7 +352,7 @@ export default function Report() {
         {/* Nav buttons */}
         <div className="mt-8 flex flex-wrap gap-4">
           {status === 'done' && (
-            <button onClick={generate}
+            <button onClick={() => generate(true)}
               className="px-5 py-3 text-sm font-bold rounded-lg border-2 transition-all hover:opacity-70"
               style={{ border: '2px solid var(--color-border-strong)', color: 'var(--color-ink)' }}>
               ↺ Regenerate Report

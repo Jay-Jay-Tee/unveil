@@ -169,7 +169,7 @@ export async function analyzeModel(datasetFile, schemaMap, proxyFlags, modelFile
  * Tries backend proxy first (avoids exposing API key in browser),
  * falls back to direct Gemini API call using VITE_GEMINI_API_KEY.
  */
-export async function generateGeminiReport(biasReport, modelBiasReport) {
+export async function generateGeminiReport(biasReport, modelBiasReport, { forceRefresh = false } = {}) {
   let backendError = null;
 
   // 1. Try backend proxy (preferred — keeps API key server-side)
@@ -194,7 +194,7 @@ export async function generateGeminiReport(biasReport, modelBiasReport) {
   // 2. Direct Gemini call (uses VITE_GEMINI_API_KEY from .env)
   try {
     const { generateAuditReport } = await import('./gemini');
-    return await generateAuditReport(biasReport, modelBiasReport);
+    return await generateAuditReport(biasReport, modelBiasReport, { forceRefresh });
   } catch (directErr) {
     const combinedMsg = [backendError?.message, directErr?.message].filter(Boolean).join(' | ');
     const lower = combinedMsg.toLowerCase();

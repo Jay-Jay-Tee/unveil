@@ -1,5 +1,15 @@
 const GEMINI_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
+function hashString(input = '') {
+  // Deterministic 32-bit hash for compact localStorage keys.
+  let h = 5381;
+  for (let i = 0; i < input.length; i++) {
+    h = ((h << 5) + h) + input.charCodeAt(i);
+    h |= 0;
+  }
+  return (h >>> 0).toString(36);
+}
+
 function isGeminiBusyError(status, message = '') {
   const msg = String(message).toLowerCase();
   return status === 503 || msg.includes('unavailable') || msg.includes('high demand') || msg.includes('overloaded');
@@ -18,9 +28,10 @@ function friendlyGeminiQuotaMessage() {
   return 'Gemini quota or rate limits were exceeded. Please wait a bit and try again. If this keeps happening, enable billing or upgrade your Gemini plan.';
 }
 
-export async function generateAuditReport(biasReport, modelBiasReport) {
-  const cacheKey = 'gemini_report_' + JSON.stringify(biasReport).length;
-  const cached = localStorage.getItem(cacheKey);
+export async function generateAuditReport(biasReport, modelBiasReport, { forceRefresh = false } = {}) {
+  const payloadFingerprint = JSON.stringify({ biasReport, modelBiasReport });
+  const cacheKey = `gemini_report_${hashString(payloadFingerprint)}`;
+  const cached = !forceRefresh ? localStorage.getItem(cacheKey) : null;
   if (cached) return cached;
 
   try {
