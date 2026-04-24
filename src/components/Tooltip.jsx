@@ -15,8 +15,8 @@ export default function Tooltip({ text, children, position = 'top' }) {
     <div className="relative inline-block" onMouseEnter={() => setShow(true)} onMouseLeave={() => setShow(false)}>
       {children}
       {show && (
-        <div className="absolute z-50 w-56 text-xs leading-relaxed px-3 py-2.5 rounded-lg pointer-events-none shadow-xl"
-          style={{ ...posStyles[position], background: 'var(--color-ink)', color: 'rgba(255,255,255,0.85)', fontFamily: 'var(--font-sans)' }}>
+        <div className="absolute z-50 w-56 text-xs leading-relaxed px-3 py-2.5 rounded-lg pointer-events-none shadow-lg"
+          style={{ ...posStyles[position], background: 'var(--color-bg-ink)', color: '#ffffff', fontFamily: 'var(--font-sans)' }}>
           {text}
         </div>
       )}

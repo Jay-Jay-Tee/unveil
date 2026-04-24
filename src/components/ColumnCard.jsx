@@ -6,27 +6,29 @@ import ProxyAlert from './ProxyAlert';
 import SliceChart from './SliceChart';
 import Tooltip from './Tooltip';
 
+const VERDICT_COLOR = { BIASED: 'var(--color-status-biased)', AMBIGUOUS: 'var(--color-status-ambiguous)', CLEAN: 'var(--color-status-clean)' };
+
 export default function ColumnCard({ name, type, proxies = [], disparateImpact, parityGap, pValue, verdict, slices = [] }) {
   const hasMetrics = disparateImpact != null && verdict;
   const hasSlices = slices.length > 0;
   const [expanded, setExpanded] = useState(false);
 
-  const verdictBorderColor = verdict === 'BIASED' ? 'var(--color-biased)' : verdict === 'AMBIGUOUS' ? 'var(--color-ambiguous)' : verdict === 'CLEAN' ? 'var(--color-green)' : 'var(--color-border)';
+  const verdictBorderColor = VERDICT_COLOR[verdict] || 'var(--color-outline-variant)';
   const hasBias = verdict === 'BIASED' || verdict === 'AMBIGUOUS';
 
   return (
-    <div className="rounded-xl border-2 card-shadow overflow-hidden transition-all hover:card-shadow-lg"
-      style={{ background: 'var(--color-bg-card)', borderColor: hasBias ? verdictBorderColor : 'var(--color-border)', borderLeftWidth: hasBias ? 4 : 2 }}>
+    <div className="rounded-xl border overflow-hidden transition-all"
+      style={{ background: 'var(--color-surface-container-lowest)', borderColor: hasBias ? verdictBorderColor : 'var(--color-outline-variant)', borderLeftWidth: hasBias ? 4 : 1 }}>
 
       <div onClick={() => hasSlices && setExpanded(p => !p)}
         className={`p-5 ${hasSlices ? 'cursor-pointer' : ''}`}>
 
         <div className="flex items-start justify-between gap-3 mb-4">
           <div className="flex items-center gap-2 min-w-0">
-            <span className="text-sm font-bold truncate" style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-ink)' }}>{name}</span>
+            <span className="text-sm font-bold truncate" style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-on-surface)' }}>{name}</span>
             {hasSlices && (
               <motion.svg animate={{ rotate: expanded ? 180 : 0 }} transition={{ duration: 0.2 }}
-                className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} style={{ color: 'var(--color-ink-muted)' }}>
+                className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} style={{ color: 'var(--color-on-surface-variant)' }}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
               </motion.svg>
             )}
@@ -55,7 +57,7 @@ export default function ColumnCard({ name, type, proxies = [], disparateImpact, 
         )}
 
         {!hasMetrics && (
-          <div className="flex items-center justify-center py-5 text-xs" style={{ color: 'var(--color-ink-faint)' }}>
+          <div className="flex items-center justify-center py-5 text-xs" style={{ color: 'var(--color-on-surface-variant)' }}>
             No bias metrics for this column
           </div>
         )}
@@ -63,7 +65,7 @@ export default function ColumnCard({ name, type, proxies = [], disparateImpact, 
         <ProxyAlert proxies={proxies} />
 
         {hasSlices && !expanded && (
-          <p className="mt-3 text-center text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--color-ink-faint)' }}>
+          <p className="mt-3 text-center text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--color-on-surface-variant)' }}>
             Click to view slice breakdown ↓
           </p>
         )}
@@ -78,7 +80,7 @@ export default function ColumnCard({ name, type, proxies = [], disparateImpact, 
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
             className="overflow-hidden border-t"
-            style={{ borderColor: 'var(--color-border)' }}>
+            style={{ borderColor: 'var(--color-outline-variant)' }}>
             <div className="p-4">
               <SliceChart slices={slices} columnName={name} />
             </div>
@@ -91,9 +93,9 @@ export default function ColumnCard({ name, type, proxies = [], disparateImpact, 
 
 function MetricPill({ label, value }) {
   return (
-    <div className="rounded-lg px-3 py-2.5 text-center" style={{ background: 'var(--color-bg-warm)' }}>
-      <div className="text-sm font-bold" style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-ink)' }}>{value ?? '—'}</div>
-      <div className="text-[10px] font-semibold uppercase tracking-wider mt-0.5" style={{ color: 'var(--color-ink-muted)' }}>{label}</div>
+    <div className="rounded-lg px-3 py-2.5 text-center" style={{ background: 'var(--color-surface-container-high)' }}>
+      <div className="text-sm font-bold" style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-on-surface)' }}>{value ?? '—'}</div>
+      <div className="text-xs font-semibold uppercase tracking-wider mt-0.5" style={{ color: 'var(--color-on-surface-variant)' }}>{label}</div>
     </div>
   );
 }

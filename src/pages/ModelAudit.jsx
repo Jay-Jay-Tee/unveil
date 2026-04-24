@@ -1,4 +1,3 @@
-
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import ShapChart from '../components/ShapChart';
@@ -11,7 +10,7 @@ const fadeUp = {
   hidden: { opacity: 0, y: 20 },
   visible: (i = 0) => ({ opacity: 1, y: 0, transition: { delay: i * 0.08, duration: 0.5, ease: [0.22, 1, 0.36, 1] } }),
 };
-const VERDICT_COLOR = { BIASED: 'var(--color-biased)', AMBIGUOUS: 'var(--color-ambiguous)', CLEAN: 'var(--color-green)' };
+const VERDICT_COLOR = { BIASED: 'var(--color-status-biased)', AMBIGUOUS: 'var(--color-status-ambiguous)', CLEAN: 'var(--color-status-clean)' };
 
 export default function ModelAudit() {
   const navigate = useNavigate();
@@ -29,9 +28,10 @@ export default function ModelAudit() {
   if (!modelReport && !audit.schemaMap) {
     return (
       <div className="min-h-screen pt-32 flex flex-col items-center gap-6 text-center px-6">
-        <p style={{ color: 'var(--color-ink-muted)' }}>No model analysis found. Run an audit first.</p>
+        <p style={{ color: 'var(--color-on-surface-variant)' }}>No model analysis found. Run an audit first.</p>
         <button onClick={() => navigate('/upload')}
-          className="px-6 py-3 text-sm font-bold rounded-lg" style={{ background: 'var(--color-ink)', color: '#fff' }}>
+          className="px-6 py-3 text-sm font-bold rounded-lg text-white transition-colors"
+          style={{ background: 'var(--color-bg-ink)' }}>
           ← Back to Upload
         </button>
       </div>
@@ -39,68 +39,56 @@ export default function ModelAudit() {
   }
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-h-screen pt-20 pb-20 px-6">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-h-screen pt-20 pb-20 px-6" style={{ background: 'var(--color-surface)' }}>
       <div className="mx-auto max-w-5xl">
 
         {/* Header */}
-        <div className="py-12 border-b-2 mb-10" style={{ borderColor: 'var(--color-border)' }}>
-          <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: 'var(--color-ink-muted)', fontFamily: 'var(--font-mono)' }}>
+        <div className="py-12 border-b mb-10" style={{ borderColor: 'var(--color-outline-variant)' }}>
+          <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: 'var(--color-on-surface-variant)', fontFamily: 'var(--font-mono)' }}>
             {audit.auditMode === 'both' ? 'Step 03' : 'Step 02'}
           </p>
-          <h1 className="text-5xl md:text-6xl font-black tracking-tight leading-tight mb-4" style={{ fontFamily: 'var(--font-sans)', color: 'var(--color-ink)' }}>
-            Model<br />
-            <span style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', fontWeight: 400, color: 'var(--color-amber-dark)' }}>Audit.</span>
+          <h1 className="text-4xl font-black mb-4" style={{ color: 'var(--color-on-surface)' }}>
+            Model Analysis
           </h1>
-          <p className="text-base max-w-lg" style={{ color: 'var(--color-ink-mid)' }}>
+          <p className="text-base max-w-lg" style={{ color: 'var(--color-on-surface-variant)' }}>
             Synthetic probe pairs test how the model treats different demographic groups. SHAP reveals which features drive decisions.
           </p>
         </div>
 
-        {/* Model identity banner — always shown, critical for judge clarity */}
-        <div className="mb-8 rounded-xl border-2 p-5 flex items-start gap-4"
-          style={{ background: meta?.isDemo ? 'var(--color-amber-light)' : 'var(--color-green-light)', borderColor: meta?.isDemo ? 'var(--color-amber)' : 'var(--color-green)' }}>
-          <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 text-xl"
-            style={{ background: meta?.isDemo ? 'var(--color-amber)' : 'var(--color-green)' }}>
-            🧠
-          </div>
-          <div className="min-w-0">
-            <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: meta?.isDemo ? 'var(--color-amber-dark)' : 'var(--color-green)', fontFamily: 'var(--font-mono)' }}>
-              {meta?.isDemo ? 'Auto-generated model' : 'Your uploaded model'}
+        {/* Model info banner */}
+        <div className="mb-8 rounded-xl border p-5"
+          style={{ background: meta?.isDemo ? 'var(--color-surface-container-low)' : 'var(--color-surface-container-lowest)', borderColor: 'var(--color-outline-variant)' }}>
+          <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--color-on-surface-variant)', fontFamily: 'var(--font-mono)' }}>
+            {meta?.isDemo ? 'Auto-generated model' : 'Uploaded model'}
+          </p>
+          <p className="text-sm font-bold mb-2" style={{ color: 'var(--color-on-surface)' }}>
+            {meta?.modelName || 'Logistic regression trained on your dataset'}
+          </p>
+          {meta?.isDemo && (
+            <p className="text-xs" style={{ color: 'var(--color-on-surface-variant)' }}>
+              No .pkl was uploaded — we trained a logistic regression on your dataset internally. Upload your own model on the <button onClick={() => navigate('/upload')} className="underline font-semibold hover:opacity-70" style={{ color: 'var(--color-on-surface)', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>Upload page</button> for real-world results.
             </p>
-            <p className="text-sm font-bold truncate" style={{ color: 'var(--color-ink)' }}>
-              {meta?.modelName || 'Logistic regression trained on your dataset'}
-            </p>
-            {meta?.isDemo && (
-              <p className="text-xs mt-1" style={{ color: 'var(--color-ink-mid)' }}>
-                No .pkl was uploaded — we trained a logistic regression on your dataset internally and probed that.
-                Upload your own model on the <button onClick={() => navigate('/upload')} className="underline font-semibold" style={{ color: 'var(--color-amber-dark)' }}>Upload page</button> for real-world results.
-              </p>
-            )}
-          </div>
+          )}
         </div>
 
         {audit.isMock && (
-          <p className="text-xs mb-6 font-medium" style={{ color: 'var(--color-ambiguous)', fontFamily: 'var(--font-mono)' }}>
-            ⚠ Demo mode — showing pre-computed UCI Adult results. Start backend for live analysis.
+          <p className="text-xs mb-6 px-4 py-2 rounded" style={{ color: 'var(--color-on-surface-variant)', background: 'var(--color-surface-container-high)', fontFamily: 'var(--font-mono)' }}>
+            Demo mode — showing pre-computed results. Start backend for live analysis.
           </p>
         )}
 
-        {/* Stat pills */}
-        <motion.div initial="hidden" animate="visible" className="grid grid-cols-3 gap-4 mb-10">
+        {/* Stats Boxes */}
+        <motion.div initial="hidden" animate="visible" className="grid grid-cols-3 gap-6 mb-12">
           {[
-            { label: 'Attributes Tested', value: sorted.length, color: 'var(--color-ink)', bg: 'var(--color-bg-warm)',
-              tip: 'Number of protected demographic attributes the model was tested against.' },
-            { label: 'Biased', value: biasedCount, color: 'var(--color-biased)', bg: 'var(--color-red-light)',
-              tip: 'Attributes where the model gives statistically significant different outcomes based on that demographic.' },
-            { label: 'Proxy Features', value: proxyCount, color: 'var(--color-ambiguous)', bg: '#FFF4E6',
-              tip: 'Features correlated with protected attributes that the model relies on — indirect discrimination risk.' },
+            { label: 'Attributes Tested', value: sorted.length, tip: 'Number of protected demographic attributes the model was tested against.' },
+            { label: 'Biased', value: biasedCount, tip: 'Attributes where the model gives statistically significant different outcomes based on that demographic.' },
+            { label: 'Proxy Features', value: proxyCount, tip: 'Features correlated with protected attributes that the model relies on — indirect discrimination risk.' },
           ].map((s, i) => (
-            <motion.div key={s.label} variants={fadeUp} custom={i}>
+            <motion.div key={s.label} variants={fadeUp} custom={i} className="w-full h-full">
               <Tooltip text={s.tip} position="bottom">
-                <div className="rounded-xl p-5 text-center border-2 card-shadow cursor-help"
-                  style={{ background: s.bg, borderColor: 'transparent' }}>
-                  <div className="text-3xl font-black" style={{ color: s.color, fontFamily: 'var(--font-mono)' }}>{s.value}</div>
-                  <div className="text-[10px] font-bold uppercase tracking-wider mt-1.5" style={{ color: s.color, opacity: 0.7 }}>{s.label}</div>
+                <div className="w-full h-full rounded-lg p-6 text-center border cursor-help transition-all hover:shadow-sm flex flex-col items-center justify-center" style={{ background: 'var(--color-surface-container-lowest)', borderColor: 'var(--color-outline-variant)', minHeight: '140px' }}>
+                  <div className="text-3xl font-black" style={{ color: 'var(--color-on-surface)', fontFamily: 'var(--font-mono)' }}>{s.value}</div>
+                  <div className="text-xs font-bold uppercase tracking-wider mt-2" style={{ color: 'var(--color-on-surface-variant)' }}>{s.label}</div>
                 </div>
               </Tooltip>
             </motion.div>
@@ -117,25 +105,25 @@ export default function ModelAudit() {
         {/* Probe results */}
         {sorted.length > 0 && (
           <>
-            <h2 className="text-2xl font-black mb-1" style={{ color: 'var(--color-ink)' }}>
+            <h2 className="text-2xl font-black mb-1" style={{ color: 'var(--color-on-surface)' }}>
               Counterfactual Probe Results
             </h2>
-            <p className="text-sm mb-6" style={{ color: 'var(--color-ink-muted)' }}>
-              Identical synthetic personas differing only in one protected attribute — how much did it shift the decision?
+            <p className="text-sm mb-6" style={{ color: 'var(--color-on-surface-variant)' }}>
+              Synthetic personas differing only in one protected attribute — how much did it shift the model's decision?
             </p>
 
             <div className="grid gap-4 sm:grid-cols-2">
               {sorted.map((attr, i) => (
                 <motion.div key={attr.name}
                   initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-30px' }} custom={i} variants={fadeUp}
-                  className="rounded-xl border-2 p-5 card-shadow transition-all hover:-translate-y-0.5"
+                  className="rounded-xl border p-5 transition-all"
                   style={{
-                    background: 'var(--color-bg-card)',
-                    borderColor: attr.verdict === 'BIASED' ? 'var(--color-biased)' : attr.verdict === 'AMBIGUOUS' ? 'var(--color-ambiguous)' : 'var(--color-border)',
-                    borderLeftWidth: attr.verdict !== 'CLEAN' ? 4 : 2,
+                    background: 'var(--color-surface-container-lowest)',
+                    borderColor: attr.verdict === 'BIASED' ? 'var(--color-status-biased)' : attr.verdict === 'AMBIGUOUS' ? 'var(--color-status-ambiguous)' : 'var(--color-outline-variant)',
+                    borderLeftWidth: attr.verdict !== 'CLEAN' ? 4 : 1,
                   }}>
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-sm font-bold" style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-ink)' }}>{attr.name}</h3>
+                    <h3 className="text-sm font-bold" style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-on-surface)' }}>{attr.name}</h3>
                     <SeverityBadge verdict={attr.verdict} />
                   </div>
                   <div className="grid grid-cols-3 gap-2 mb-4">
@@ -151,9 +139,9 @@ export default function ModelAudit() {
                   </div>
                   {attr.mean_diff != null && (
                     <div>
-                      <div className="h-1.5 w-full rounded-full" style={{ background: 'var(--color-bg-warm)' }}>
+                      <div className="h-1.5 w-full rounded-full" style={{ background: 'var(--color-surface-container-high)' }}>
                         <div className="h-full rounded-full transition-all duration-700"
-                          style={{ width: `${Math.min(attr.mean_diff / 0.3 * 100, 100)}%`, background: VERDICT_COLOR[attr.verdict] || 'var(--color-ink)' }} />
+                          style={{ width: `${Math.min(attr.mean_diff / 0.3 * 100, 100)}%`, background: VERDICT_COLOR[attr.verdict] || 'var(--color-on-surface)' }} />
                       </div>
                     </div>
                   )}
@@ -166,21 +154,21 @@ export default function ModelAudit() {
         {/* Nav */}
         <div className="mt-12 flex flex-wrap gap-4">
           <button onClick={() => navigate('/report')}
-            className="px-8 py-4 text-sm font-bold rounded-lg transition-all hover:opacity-90"
-            style={{ background: 'var(--color-ink)', color: '#fff' }}>
-            Generate Compliance Report →
+            className="px-8 py-4 text-sm font-bold rounded-lg text-white transition-colors hover:opacity-90"
+            style={{ background: 'var(--color-bg-ink)' }}>
+            Generate Report
           </button>
           {audit.auditMode === 'both' && (
             <button onClick={() => navigate('/audit/dataset')}
-              className="px-8 py-4 text-sm font-bold rounded-lg border-2 transition-all hover:opacity-70"
-              style={{ border: '2px solid var(--color-border-strong)', color: 'var(--color-ink)' }}>
-              ← Dataset Audit
+              className="px-8 py-4 text-sm font-bold rounded-lg border-2 transition-colors hover:opacity-70"
+              style={{ borderColor: 'var(--color-outline-variant)', color: 'var(--color-on-surface)' }}>
+              View Dataset
             </button>
           )}
           <button onClick={() => navigate('/upload')}
-            className="px-8 py-4 text-sm font-bold rounded-lg border-2 transition-all hover:opacity-70"
-            style={{ border: '2px solid var(--color-border)', color: 'var(--color-ink-mid)' }}>
-            ← Upload
+            className="px-8 py-4 text-sm font-bold rounded-lg border-2 transition-colors hover:opacity-70"
+            style={{ borderColor: 'var(--color-outline-variant)', color: 'var(--color-on-surface-variant)' }}>
+            New Upload
           </button>
         </div>
       </div>
@@ -190,9 +178,9 @@ export default function ModelAudit() {
 
 function MetricPill({ label, value, highlight }) {
   return (
-    <div className="rounded-lg px-3 py-2.5 text-center" style={{ background: highlight ? 'var(--color-red-light)' : 'var(--color-bg-warm)' }}>
-      <div className="text-sm font-black" style={{ fontFamily: 'var(--font-mono)', color: highlight ? 'var(--color-biased)' : 'var(--color-ink)' }}>{value}</div>
-      <div className="text-[10px] font-semibold uppercase tracking-wider mt-0.5" style={{ color: highlight ? 'var(--color-biased)' : 'var(--color-ink-muted)' }}>{label}</div>
+    <div className="rounded-lg px-3 py-2.5 text-center" style={{ background: highlight ? 'var(--color-error-light)' : 'var(--color-surface-container-high)' }}>
+      <div className="text-sm font-black" style={{ fontFamily: 'var(--font-mono)', color: highlight ? 'var(--color-status-biased)' : 'var(--color-on-surface)' }}>{value}</div>
+      <div className="text-xs font-semibold uppercase tracking-wider mt-0.5" style={{ color: highlight ? 'var(--color-status-biased)' : 'var(--color-on-surface-variant)' }}>{label}</div>
     </div>
   );
 }

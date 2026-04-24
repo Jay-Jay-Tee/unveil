@@ -109,7 +109,7 @@ function MarkdownBlock({ text }) {
           {items.map((item, j) => (
             <li key={j} className="flex items-start gap-2 text-sm leading-relaxed"
               style={{ color: 'var(--color-ink-mid)' }}>
-              <span className="mt-1.5 w-1.5 h-1.5 rounded-full flex-shrink-0"
+              <span className="mt-1.5 w-1.5 h-1.5 rounded-full shrink-0"
                 style={{ background: 'var(--color-amber)' }} />
               <Inline text={item} />
             </li>
@@ -217,10 +217,8 @@ export default function Report() {
         <div className="py-12 border-b-2 mb-10" style={{ borderColor: 'var(--color-border)' }}>
           <p className="text-xs font-semibold tracking-widest uppercase mb-3"
             style={{ color: 'var(--color-ink-muted)', fontFamily: 'var(--font-mono)' }}>Step 04</p>
-          <h1 className="text-5xl md:text-6xl font-black tracking-tight leading-tight mb-4"
-            style={{ fontFamily: 'var(--font-sans)', color: 'var(--color-ink)' }}>
-            Compliance<br />
-            <span style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', fontWeight: 400, color: 'var(--color-amber-dark)' }}>Report.</span>
+          <h1 className="text-4xl font-black mb-4" style={{ color: 'var(--color-on-surface)' }}>
+            Compliance Report
           </h1>
           <p className="text-base max-w-lg" style={{ color: 'var(--color-ink-mid)' }}>
             Gemini converts your full bias analysis into plain-English findings. No data science background required.
@@ -317,7 +315,7 @@ export default function Report() {
             {/* Header bar */}
             <div className="flex items-center gap-3 px-8 py-5 border-b-2 rounded-t-2xl"
               style={{ borderColor: 'var(--color-border)', background: 'var(--color-ink)' }}>
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
                 style={{ background: 'var(--color-amber)' }}>
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="var(--color-ink)" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round"
