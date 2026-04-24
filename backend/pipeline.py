@@ -18,6 +18,7 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
+import joblib
 
 from backend.ingestor import ingest
 from backend.gemini_classifier import classify
@@ -323,11 +324,14 @@ def run_model_pipeline(
 
 
 def _load_model(model_path: Optional[str]):
-    """Load a pickle model from the given path, or fall back to demo_model.pkl."""
+    """Load a model from the given path, accepting joblib or plain pickle files."""
     path = Path(model_path) if model_path else DEMO_MODEL_PATH
     if path.exists():
-        with open(path, "rb") as f:
-            return pickle.load(f)
+        try:
+            return joblib.load(path)
+        except Exception:
+            with open(path, "rb") as f:
+                return pickle.load(f)
     return None
 
 
