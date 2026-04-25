@@ -158,20 +158,7 @@ const SECTION_TOKEN_BUDGET = {
 
 // ── Public API ──────────────────────────────────────────────────────────
 
-export async function generateAuditReport(biasReport, modelBiasReport, { forceRefresh = false } = {}) {
-  const biasCompact = compactBiasReport(biasReport);
-  const modelCompact = compactModelReport(modelBiasReport);
-
-  const fingerprint = JSON.stringify({ b: biasCompact, m: modelCompact });
-  const cacheKey = `unveil_report_${hashString(fingerprint)}`;
-
-  if (!forceRefresh) {
-    try {
-      const cached = localStorage.getItem(cacheKey);
-      if (cached) return cached;
-    } catch {}
-  }
-
+async function generateSections(biasCompact, modelCompact) {
   const sections = [];
   let firstError = null;
 
@@ -186,6 +173,25 @@ export async function generateAuditReport(biasReport, modelBiasReport, { forceRe
       if (!firstError) firstError = err;
     }
   }
+
+  return { sections, firstError };
+}
+
+export async function generateAuditReport(biasReport, modelBiasReport, { forceRefresh = false } = {}) {
+  const biasCompact = compactBiasReport(biasReport);
+  const modelCompact = compactModelReport(modelBiasReport);
+
+  const fingerprint = JSON.stringify({ b: biasCompact, m: modelCompact });
+  const cacheKey = `unveil_report_${hashString(fingerprint)}`;
+
+  if (!forceRefresh) {
+    try {
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) return cached;
+    } catch {}
+  }
+
+  const { sections, firstError } = await generateSections(biasCompact, modelCompact);
 
   const fullReport = sections.join('\n\n');
 

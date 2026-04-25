@@ -13,7 +13,7 @@ function isHeaderless(firstRow) {
   if (!firstRow || firstRow.length === 0) return false;
   const first = String(firstRow[0]).trim();
   // If the first cell is a number, this is almost certainly a data row, not a header
-  return !isNaN(Number(first));
+  return !Number.isNaN(Number(first));
 }
 
 function applyHeaders(rows, columns) {

@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import SliceChart from './SliceChart';
 import {
   COLUMN_ROLE, VERDICT, METRIC,
-  verdictLabel, verdictColor, verdictBg,
   summarizeColumnFinding,
 } from '../lib/terminology';
 
@@ -39,7 +38,6 @@ export default function ColumnCard(props) {
   const hasStats = verdict && (disparateImpact != null || parityGap != null);
   const hasSlices = slices?.length > 0;
   const verdictInfo = VERDICT[verdict] || VERDICT.SKIPPED;
-  const roleInfo = COLUMN_ROLE[type] || COLUMN_ROLE.NEUTRAL;
 
   const finding = hasStats ? summarizeColumnFinding({
     name, role, verdict,

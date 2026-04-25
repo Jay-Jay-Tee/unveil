@@ -11,7 +11,68 @@ const fadeUp = {
 };
 
 // ── Markdown renderer (unchanged from before, small polish) ───────────────
+function parseHeader(lines, i) {
+  const line = lines[i];
+  const trimmed = line.trim();
+  const element = (
+    <h3 key={i} className="text-label-mono mt-6 mb-2 first:mt-0"
+      style={{ color: 'var(--color-text-mid)' }}>
+      {trimmed.replace(/^##+\s+/, '')}
+    </h3>
+  );
+  return { element, newI: i + 1 };
+}
 
+function parseOrderedList(lines, i) {
+  const items = [];
+  while (i < lines.length && /^\d+\.\s/.test(lines[i].trim())) {
+    items.push(lines[i].trim().replace(/^\d+\.\s/, ''));
+    i++;
+  }
+  const element = (
+    <ol key={`ol-${i}`} className="list-decimal list-inside space-y-1.5 my-2 pl-1">
+      {items.map((item, j) => (
+        <li key={j} className="text-sm leading-relaxed" style={{ color: 'var(--color-text-mid)' }}>
+          <Inline text={item} />
+        </li>
+      ))}
+    </ol>
+  );
+  return { element, newI: i };
+}
+
+function parseUnorderedList(lines, i) {
+  const items = [];
+  while (i < lines.length && /^[*\-•]\s/.test(lines[i].trim())) {
+    items.push(lines[i].trim().replace(/^[*\-•]\s/, ''));
+    i++;
+  }
+  const element = (
+    <ul key={`ul-${i}`} className="space-y-2 my-2 pl-1">
+      {items.map((item, j) => (
+        <li key={j} className="flex items-start gap-2.5 text-sm leading-relaxed" style={{ color: 'var(--color-text-mid)' }}>
+          <span className="mt-1.5 w-1.5 h-1.5 rounded-full shrink-0" style={{ background: 'var(--color-accent)' }} />
+          <span className="flex-1"><Inline text={item} /></span>
+        </li>
+      ))}
+    </ul>
+  );
+  return { element, newI: i };
+}
+
+function parseParagraph(lines, i) {
+  const paraLines = [];
+  while (i < lines.length && lines[i].trim()) {
+    paraLines.push(lines[i]);
+    i++;
+  }
+  const element = (
+    <p key={`p-${i}`} className="text-sm leading-relaxed my-3" style={{ color: 'var(--color-text-mid)' }}>
+      <Inline text={paraLines.join(' ')} />
+    </p>
+  );
+  return { element, newI: i };
+}
 function MarkdownBlock({ text }) {
   if (!text) return null;
   const lines = text.split('\n');
@@ -23,64 +84,18 @@ function MarkdownBlock({ text }) {
     const trimmed = line.trim();
     if (!trimmed) { i++; continue; }
 
+    let result;
     if (/^##+\s/.test(trimmed)) {
-      elements.push(
-        <h3 key={i} className="text-label-mono mt-6 mb-2 first:mt-0"
-          style={{ color: 'var(--color-text-mid)' }}>
-          {trimmed.replace(/^##+\s+/, '')}
-        </h3>
-      );
-      i++; continue;
+      result = parseHeader(lines, i);
+    } else if (/^\d+\.\s/.test(trimmed)) {
+      result = parseOrderedList(lines, i);
+    } else if (/^[*\-•]\s/.test(trimmed)) {
+      result = parseUnorderedList(lines, i);
+    } else {
+      result = parseParagraph(lines, i);
     }
-
-    if (/^\d+\.\s/.test(trimmed)) {
-      const items = [];
-      while (i < lines.length && /^\d+\.\s/.test(lines[i].trim())) {
-        items.push(lines[i].trim().replace(/^\d+\.\s/, ''));
-        i++;
-      }
-      elements.push(
-        <ol key={`ol-${i}`} className="list-decimal list-inside space-y-1.5 my-2 pl-1">
-          {items.map((item, j) => (
-            <li key={j} className="text-sm leading-relaxed" style={{ color: 'var(--color-text-mid)' }}>
-              <Inline text={item} />
-            </li>
-          ))}
-        </ol>
-      );
-      continue;
-    }
-
-    if (/^[*\-•]\s/.test(trimmed)) {
-      const items = [];
-      while (i < lines.length && /^[*\-•]\s/.test(lines[i].trim())) {
-        items.push(lines[i].trim().replace(/^[*\-•]\s/, ''));
-        i++;
-      }
-      elements.push(
-        <ul key={`ul-${i}`} className="space-y-2 my-2 pl-1">
-          {items.map((item, j) => (
-            <li key={j} className="flex items-start gap-2.5 text-sm leading-relaxed" style={{ color: 'var(--color-text-mid)' }}>
-              <span className="mt-1.5 w-1.5 h-1.5 rounded-full shrink-0" style={{ background: 'var(--color-accent)' }} />
-              <span className="flex-1"><Inline text={item} /></span>
-            </li>
-          ))}
-        </ul>
-      );
-      continue;
-    }
-
-    // Paragraph
-    const paraLines = [];
-    while (i < lines.length && lines[i].trim()) {
-      paraLines.push(lines[i]);
-      i++;
-    }
-    elements.push(
-      <p key={`p-${i}`} className="text-sm leading-relaxed my-3" style={{ color: 'var(--color-text-mid)' }}>
-        <Inline text={paraLines.join(' ')} />
-      </p>
-    );
+    elements.push(result.element);
+    i = result.newI;
   }
   return <>{elements}</>;
 }
