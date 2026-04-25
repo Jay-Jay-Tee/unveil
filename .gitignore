@@ -17,6 +17,7 @@ dist-ssr
 .env
 .env.local
 .env.*.local
+_cache
 
 # Editor directories and files
 .vscode
@@ -30,5 +31,5 @@ dist-ssr
 *.sln
 *.sw?
 .venv
-__pycache__/*
+__pycache__
 *.pyc
