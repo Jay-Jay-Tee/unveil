@@ -10,7 +10,7 @@ const fadeUp = {
 
 export default function ModelAudit() {
   const navigate = useNavigate();
-  const { modelBiasReport, isMock, schemaMap } = useAudit();
+  const { modelBiasReport, isMock, schemaMap, datasetMeta } = useAudit();
 
   if (!modelBiasReport) {
     return (
@@ -164,8 +164,24 @@ export default function ModelAudit() {
           <button onClick={() => navigate('/audit/dataset')} className="btn btn-ghost">
             ← Back to dataset audit
           </button>
+          <button
+            onClick={() => {
+              const data = { modelBiasReport, datasetMeta };
+              const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json;charset=utf-8' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              const name = (datasetMeta?.name || datasetMeta?.datasetName || 'model').replace(/[^a-z0-9]+/gi, '-').toLowerCase();
+              a.download = `${name}-model-audit.json`;
+              document.body.appendChild(a); a.click(); a.remove();
+              URL.revokeObjectURL(url);
+            }}
+            className="btn btn-ghost"
+          >
+            ↓ Download model audit
+          </button>
           <button onClick={() => navigate('/report')} className="btn btn-primary">
-            Generate full report →
+            Next: generate report →
           </button>
         </div>
       </div>

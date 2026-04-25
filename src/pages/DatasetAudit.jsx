@@ -228,16 +228,33 @@ export default function DatasetAudit() {
 
         {/* CTA row */}
         <div className="mt-12 flex flex-wrap gap-3">
-          {(modelBiasReport || modelFile) && (
+          <button
+            onClick={() => {
+              const data = { biasReport, schemaMap, datasetMeta };
+              const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json;charset=utf-8' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              const name = (datasetMeta?.name || datasetMeta?.datasetName || 'dataset').replace(/[^a-z0-9]+/gi, '-').toLowerCase();
+              a.download = `${name}-dataset-audit.json`;
+              document.body.appendChild(a); a.click(); a.remove();
+              URL.revokeObjectURL(url);
+            }}
+            className="btn btn-ghost"
+          >
+            ↓ Download dataset audit
+          </button>
+          {(modelBiasReport || modelFile) ? (
             <button onClick={() => navigate('/audit/model')} className="btn btn-primary">
-              View model analysis →
+              Next: model audit →
+            </button>
+          ) : (
+            <button onClick={() => navigate('/report')} className="btn btn-primary">
+              Next: generate report →
             </button>
           )}
-          <button onClick={() => navigate('/report')} className="btn btn-secondary">
-            Generate plain-English report
-          </button>
           <button onClick={() => navigate('/upload')} className="btn btn-ghost">
-            ↺ Start new audit
+            ↺ New audit
           </button>
         </div>
       </div>

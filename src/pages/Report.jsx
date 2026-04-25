@@ -122,7 +122,7 @@ export default function Report() {
   const navigate = useNavigate();
   const audit = useAudit();
   const [status, setStatus] = useState('idle');
-  const [reportText, setReportText] = useState('');
+  const [reportText, setReportText] = useState(audit.reportText || '');
   const [errorMsg, setErrorMsg] = useState('');
   const [retryIn, setRetryIn] = useState(0);
 
@@ -133,7 +133,8 @@ export default function Report() {
   const unfairAttrs = attrResults.filter((a) => a.verdict === 'BIASED').length;
 
   useEffect(() => {
-    if (hasData && status === 'idle') generate(false);
+    if (hasData && status === 'idle' && !audit.reportText) generate(false);
+    else if (audit.reportText) setStatus('done');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -159,6 +160,7 @@ export default function Report() {
         }
       );
       setReportText(text);
+      audit.setReportText(text);
       setStatus('done');
     } catch (err) {
       const msg = err?.message || String(err);
@@ -307,13 +309,32 @@ export default function Report() {
             <div className="px-7 py-7">
               <MarkdownBlock text={reportText} />
             </div>
+
+            {/* Download report */}
+            <div className="px-7 pb-7">
+              <button
+                onClick={() => {
+                  const blob = new Blob([reportText], { type: 'text/markdown;charset=utf-8' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  const name = audit.datasetMeta?.name || audit.datasetMeta?.datasetName || 'audit';
+                  a.download = `${name.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}-report.md`;
+                  document.body.appendChild(a); a.click(); a.remove();
+                  URL.revokeObjectURL(url);
+                }}
+                className="btn btn-secondary text-sm"
+              >
+                ↓ Download report (.md)
+              </button>
+            </div>
           </motion.div>
         )}
 
         {/* Nav */}
         <div className="mt-8 flex flex-wrap gap-3">
-          <button onClick={() => navigate('/audit/dataset')} className="btn btn-ghost">
-            ← Back to audit
+          <button onClick={() => navigate(audit.modelBiasReport ? '/audit/model' : '/audit/dataset')} className="btn btn-ghost">
+            ← Back
           </button>
           <button onClick={() => navigate('/upload')} className="btn btn-secondary">
             ↺ New audit

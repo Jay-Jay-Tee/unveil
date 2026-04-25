@@ -29,6 +29,9 @@ export function AuditProvider({ children }) {
   const [modelBiasReport, setModelBiasReport] = useState(null);
   const [modelMeta, setModelMeta] = useState(null);
 
+  // Report
+  const [reportText, setReportText] = useState('');
+
   // UI state
   const [isMock, setIsMock] = useState(false);
   const [backendOnline, setBackendOnline] = useState(null);
@@ -61,6 +64,7 @@ export function AuditProvider({ children }) {
     setModelMeta(null);
     setIsMock(false);
     setBackendOnline(null);
+    setReportText('');
   }
 
   // overrides lets callers pass fresh data directly (avoids stale React closure reads)
@@ -74,6 +78,7 @@ export function AuditProvider({ children }) {
       schemaMap:   overrides.schemaMap   ?? schemaMap,
       biasReport:  overrides.biasReport  ?? biasReport,
       modelBiasReport: overrides.modelBiasReport ?? modelBiasReport,
+      reportText:  overrides.reportText  ?? reportText ?? '',
       note,
       createdAt: Date.now(),
     });
@@ -83,6 +88,7 @@ export function AuditProvider({ children }) {
     setSchemaMap(audit.schemaMap || null);
     setBiasReport(audit.biasReport || null);
     setModelBiasReport(audit.modelBiasReport || null);
+    setReportText(audit.reportText || '');
     setDatasetMeta({
       name: audit.datasetName,
       rowCount: audit.rowCount,
@@ -102,6 +108,7 @@ export function AuditProvider({ children }) {
       datasetMeta, setDatasetMeta,
       modelBiasReport, setModelBiasReport,
       modelMeta, setModelMeta,
+      reportText, setReportText,
       isMock, setIsMock,
       backendOnline, setBackendOnline,
       user, authReady, setUser,
