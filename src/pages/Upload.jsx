@@ -175,32 +175,25 @@ function SuccessBanner({ mode, hasModel, onNavigate }) {
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
       className="mt-8 rounded-xl border p-6"
       style={{ background: 'var(--color-success-light)', borderColor: 'var(--color-status-clean)' }}>
-      <div className="flex items-center gap-3 mb-5">
+      <div className="flex items-center gap-3 mb-2">
         <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white"
           style={{ background: 'var(--color-status-clean)' }}>
           <CheckIcon className="w-5 h-5" />
         </div>
         <p className="text-sm font-black text-status-clean">Analysis complete</p>
       </div>
+      <p className="text-xs mb-4" style={{ color: 'var(--color-text-mid)' }}>
+        {mode === 'both'
+          ? 'Dataset audit → Model audit → Report'
+          : mode === 'model'
+          ? 'Model audit → Report'
+          : 'Dataset audit → Report'}
+      </p>
       <div className="flex flex-wrap gap-3">
-        {(mode === 'dataset' || mode === 'both') && (
-          <button onClick={() => onNavigate('/audit/dataset')}
-            className="px-6 py-3 text-sm font-bold rounded-lg text-white transition-all"
-            style={{ background: 'var(--color-bg-ink)' }}>
-            View Dataset
-          </button>
-        )}
-        {hasModel && mode === 'both' && (
-          <button onClick={() => onNavigate('/audit/model')}
-            className="px-6 py-3 text-sm font-bold rounded-lg text-white transition-all"
-            style={{ background: 'var(--color-bg-ink)' }}>
-            View Model
-          </button>
-        )}
-        <button onClick={() => onNavigate('/report')}
-          className="px-6 py-3 text-sm font-bold rounded-lg border-2 transition-all"
-          style={{ borderColor: 'var(--color-outline-variant)', color: 'var(--color-on-surface)' }}>
-          View Report
+        <button onClick={() => onNavigate(mode === 'model' ? '/audit/model' : '/audit/dataset')}
+          className="px-6 py-3 text-sm font-bold rounded-lg text-white transition-all"
+          style={{ background: 'var(--color-bg-ink)' }}>
+          {mode === 'model' ? 'View Model Audit →' : 'View Dataset Audit →'}
         </button>
       </div>
     </motion.div>

@@ -261,29 +261,73 @@ function AuditCard({ audit, onOpen, onDelete }) {
         </p>
       )}
 
-      <div className="mt-3 flex gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
-        <button
-          onClick={() => exportAuditJson(audit)}
-          className="px-2.5 py-1.5 rounded-md text-xs font-semibold transition-all"
-          style={{
-            background: 'var(--color-surface-container-low)',
-            color: 'var(--color-on-surface)',
-          }}
-          title="Download this audit as one JSON file"
-        >
-          Download JSON
-        </button>
-        <button
-          onClick={() => exportAuditArtifacts(audit)}
-          className="px-2.5 py-1.5 rounded-md text-xs font-semibold transition-all"
-          style={{
-            background: 'var(--color-surface-container-high)',
-            color: 'var(--color-on-surface)',
-          }}
-          title="Download this audit as separate files"
-        >
-          Download files
-        </button>
+      <div className="mt-3 pt-3 border-t" style={{ borderColor: 'var(--color-border)' }} onClick={(e) => e.stopPropagation()}>
+        <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--color-text-mid)' }}>Downloads</p>
+        <div className="flex flex-col gap-1.5">
+          {/* Dataset audit — always present */}
+          <button
+            onClick={() => {
+              const stamp = new Date(audit.createdAt || Date.now()).toISOString().slice(0, 10);
+              const prefix = `${safeFileSlug(audit.datasetName)}-${stamp}`;
+              downloadJsonFile(`${prefix}.dataset-audit.json`, { biasReport: audit.biasReport, schemaMap: audit.schemaMap, datasetMeta: { name: audit.datasetName, rowCount: audit.rowCount, columnCount: audit.columnCount } });
+            }}
+            className="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs font-semibold transition-all text-left"
+            style={{ background: 'var(--color-surface-container-low)', color: 'var(--color-on-surface)' }}
+            title="Download dataset bias audit as JSON"
+          >
+            <svg className="w-3 h-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            Dataset audit (.json)
+          </button>
+
+          {/* Model audit — only if model data exists */}
+          <button
+            onClick={() => {
+              if (!audit.modelBiasReport) return;
+              const stamp = new Date(audit.createdAt || Date.now()).toISOString().slice(0, 10);
+              const prefix = `${safeFileSlug(audit.datasetName)}-${stamp}`;
+              downloadJsonFile(`${prefix}.model-audit.json`, audit.modelBiasReport);
+            }}
+            disabled={!audit.modelBiasReport}
+            className="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs font-semibold transition-all text-left"
+            style={{
+              background: audit.modelBiasReport ? 'var(--color-surface-container-low)' : 'var(--color-surface-container)',
+              color: audit.modelBiasReport ? 'var(--color-on-surface)' : 'var(--color-text-faint)',
+              cursor: audit.modelBiasReport ? 'pointer' : 'not-allowed',
+              opacity: audit.modelBiasReport ? 1 : 0.5,
+            }}
+            title={audit.modelBiasReport ? 'Download model bias audit as JSON' : 'No model audit — upload a model file to generate one'}
+          >
+            <svg className="w-3 h-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            Model audit (.json){!audit.modelBiasReport && <span className="ml-auto opacity-60">— no model</span>}
+          </button>
+
+          {/* Report — only if report has been generated */}
+          <button
+            onClick={() => {
+              if (!audit.reportText) return;
+              const stamp = new Date(audit.createdAt || Date.now()).toISOString().slice(0, 10);
+              const prefix = `${safeFileSlug(audit.datasetName)}-${stamp}`;
+              const blob = new Blob([audit.reportText], { type: 'text/markdown;charset=utf-8' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url; a.download = `${prefix}-report.md`;
+              document.body.appendChild(a); a.click(); a.remove();
+              URL.revokeObjectURL(url);
+            }}
+            disabled={!audit.reportText}
+            className="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs font-semibold transition-all text-left"
+            style={{
+              background: audit.reportText ? 'var(--color-surface-container-low)' : 'var(--color-surface-container)',
+              color: audit.reportText ? 'var(--color-on-surface)' : 'var(--color-text-faint)',
+              cursor: audit.reportText ? 'pointer' : 'not-allowed',
+              opacity: audit.reportText ? 1 : 0.5,
+            }}
+            title={audit.reportText ? 'Download compliance report as Markdown' : 'No report yet — generate one from the audit page'}
+          >
+            <svg className="w-3 h-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            Compliance report (.md){!audit.reportText && <span className="ml-auto opacity-60">— not generated</span>}
+          </button>
+        </div>
       </div>
 
       <p className="text-[11px] mt-3" style={{ color: 'var(--color-text-faint)' }}>

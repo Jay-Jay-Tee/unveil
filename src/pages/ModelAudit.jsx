@@ -181,7 +181,7 @@ export default function ModelAudit() {
             ↓ Download model audit
           </button>
           <button onClick={() => navigate('/report')} className="btn btn-primary">
-            Next: generate report →
+            Next: compliance report →
           </button>
         </div>
       </div>

@@ -227,7 +227,10 @@ export default function DatasetAudit() {
         </div>
 
         {/* CTA row */}
-        <div className="mt-12 flex flex-wrap gap-3">
+        <div className="mt-12 flex flex-wrap gap-3 items-center">
+          <button onClick={() => navigate('/upload')} className="btn btn-ghost">
+            ← Back
+          </button>
           <button
             onClick={() => {
               const data = { biasReport, schemaMap, datasetMeta };
@@ -250,12 +253,9 @@ export default function DatasetAudit() {
             </button>
           ) : (
             <button onClick={() => navigate('/report')} className="btn btn-primary">
-              Next: generate report →
+              Next: compliance report →
             </button>
           )}
-          <button onClick={() => navigate('/upload')} className="btn btn-ghost">
-            ↺ New audit
-          </button>
         </div>
       </div>
     </motion.div>
