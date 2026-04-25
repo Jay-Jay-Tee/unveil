@@ -349,6 +349,7 @@ async def gemini_report(
             payload.get("bias_report", {}),
             payload.get("model_bias_report", {}),
             force_refresh=bool(payload.get("force_refresh", False)),
+            dataset_name=payload.get("dataset_name"),
         )
         return {"report_text": text}
     except EnvironmentError as e:

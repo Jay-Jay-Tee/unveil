@@ -337,6 +337,7 @@ def _gemini_call_raw(prompt: str, max_tokens: int = 4096) -> str:
 
 _EXEC_SUMMARY_PROMPT = """You are a bias compliance officer. Write ONLY the EXECUTIVE SUMMARY section
 of an audit report for a non-technical reader. 3-4 sentences MAX. No headings, no bullet points.
+Reference "{dataset}" when relevant.
 
 Here is the data:
 
@@ -352,7 +353,7 @@ Just write the 3-4 sentence summary. Don't add any section heading — the calle
 _FINDINGS_PROMPT = """You are a bias compliance officer. Write ONLY the CRITICAL FINDINGS section.
 For each unfair or borderline column in the data below, write ONE short paragraph (2-3 sentences)
 in plain English. State the column name, the worst-off group, the fairness ratio, and why it matters.
-Do NOT include a heading — the caller will add that.
+Reference "{dataset}" when relevant. Do NOT include a heading — the caller will add that.
 
 Dataset findings:
 {bias}
@@ -363,13 +364,13 @@ Model findings:
 _PROXY_PROMPT = """You are a bias compliance officer. Write ONLY the PROXY RISK section.
 Look for columns where proxy_strength is high or role is PROXY. In 3-4 sentences plain English,
 explain which features act as stand-ins for sensitive attributes and why removing the sensitive
-column alone doesn't fix bias. No heading.
+column alone doesn't fix bias. Reference "{dataset}" when relevant. No heading.
 
 Dataset findings:
 {bias}"""
 
 _RECS_PROMPT = """You are a bias compliance officer. Write ONLY the RECOMMENDATIONS section as
-3 bullet points. Each bullet is one sentence, action-oriented, specific to the data below.
+3 bullet points. Each bullet is one sentence, action-oriented, specific to "{dataset}" below.
 Start each bullet with "* ".
 
 Dataset findings:
@@ -379,12 +380,14 @@ Model findings:
 {model}"""
 
 
-def run_gemini_report(bias_report: dict, model_bias_report: dict, force_refresh: bool = False) -> str:
+def run_gemini_report(bias_report: dict, model_bias_report: dict, force_refresh: bool = False, dataset_name: Optional[str] = None) -> str:
     """
     Generate the compliance narrative in 4 chunks so we don't hit the
     max_output_tokens ceiling and get cut off mid-sentence.
     Cached by content hash — regenerating the same audit is free.
     """
+    if not dataset_name:
+        dataset_name = "the dataset"
     cache_key = _report_cache_key(bias_report, model_bias_report)
     cached = _report_cache_get(cache_key)
     if not force_refresh:
@@ -396,7 +399,11 @@ def run_gemini_report(bias_report: dict, model_bias_report: dict, force_refresh:
     model_compact = _compact_model_report(model_bias_report)
 
     # Shared template fill
-    fmt = {"bias": json.dumps(bias_compact, indent=2), "model": json.dumps(model_compact, indent=2)}
+    fmt = {
+        "bias": json.dumps(bias_compact, indent=2),
+        "model": json.dumps(model_compact, indent=2),
+        "dataset": dataset_name,
+    }
 
     sections = []
     failed_sections = 0

@@ -150,7 +150,14 @@ export default function Report() {
     setErrorMsg('');
     setRetryIn(0);
     try {
-      const text = await generateGeminiReport(audit.biasReport || {}, audit.modelBiasReport || {}, { forceRefresh });
+      const text = await generateGeminiReport(
+        audit.biasReport || {},
+        audit.modelBiasReport || {},
+        {
+          forceRefresh,
+          datasetName: audit.datasetMeta?.name || audit.datasetMeta?.datasetName || 'the dataset',
+        }
+      );
       setReportText(text);
       setStatus('done');
     } catch (err) {

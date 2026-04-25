@@ -178,7 +178,7 @@ export async function analyzeModel(datasetFile, schemaMap, proxyFlags, modelFile
 
 // ── Gemini report ───────────────────────────────────────────────────────
 
-export async function generateGeminiReport(biasReport, modelBiasReport, { forceRefresh = false } = {}) {
+export async function generateGeminiReport(biasReport, modelBiasReport, { forceRefresh = false, datasetName = null } = {}) {
   // 1. Try backend proxy first
   try {
     const authHeaders = await buildAuthHeaders({ required: REQUIRE_AUTH_FOR_ANALYSIS });
@@ -192,6 +192,7 @@ export async function generateGeminiReport(biasReport, modelBiasReport, { forceR
         bias_report: biasReport,
         model_bias_report: modelBiasReport,
         force_refresh: forceRefresh,
+        dataset_name: datasetName,
       }),
       signal: AbortSignal.timeout(90000),  // 90s — chunked generation takes longer
     });
@@ -208,7 +209,7 @@ export async function generateGeminiReport(biasReport, modelBiasReport, { forceR
     // 2. Fallback: direct browser-side Gemini call
     try {
       const { generateAuditReport } = await import('./gemini');
-      return await generateAuditReport(biasReport, modelBiasReport, { forceRefresh });
+      return await generateAuditReport(biasReport, modelBiasReport, { forceRefresh, datasetName });
     } catch (directErr) {
       // Prefer the more specific error message
       if (directErr?.retryable) throw directErr;

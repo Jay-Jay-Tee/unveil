@@ -116,8 +116,9 @@ function pickWorstGroup(slices) {
 // ── Section prompts ─────────────────────────────────────────────────────
 
 const SECTION_PROMPTS = {
-  'Executive Summary': (bias, model) => `You're a bias compliance officer writing for a non-technical reader.
+  'Executive Summary': (bias, model, datasetName) => `You're a bias compliance officer writing for a non-technical reader.
 Write ONLY the EXECUTIVE SUMMARY (3-4 sentences, plain English, no jargon, no heading).
+Reference the dataset as "${datasetName}" in your summary.
 
 Dataset findings:
 ${JSON.stringify(bias, null, 2)}
@@ -127,7 +128,7 @@ ${JSON.stringify(model, null, 2)}
 
 A fairness ratio below 0.80 fails the legal 80% rule. Don't use the word "PROTECTED" — say "sensitive attributes" instead.`,
 
-  'Critical Findings': (bias, model) => `Write ONLY the CRITICAL FINDINGS section — one short paragraph (2-3 sentences) per "Unfair" or "Borderline" column. State the column name, worst-affected group, fairness ratio, and why it matters. No section heading.
+  'Critical Findings': (bias, model, datasetName) => `Write ONLY the CRITICAL FINDINGS section — one short paragraph (2-3 sentences) per "Unfair" or "Borderline" column. State the column name, worst-affected group, fairness ratio, and why it matters. Reference "${datasetName}" when relevant. No section heading.
 
 Dataset findings:
 ${JSON.stringify(bias, null, 2)}
@@ -135,12 +136,12 @@ ${JSON.stringify(bias, null, 2)}
 Model findings:
 ${JSON.stringify(model, null, 2)}`,
 
-  'Proxy Risk': (bias) => `Write ONLY the PROXY RISK section in 3-4 sentences plain English. Identify any columns with high proxy_strength or role=PROXY, explain which sensitive attribute they stand in for, and explain why just removing the sensitive column isn't enough. No heading.
+  'Proxy Risk': (bias, datasetName) => `Write ONLY the PROXY RISK section in 3-4 sentences plain English. Identify any columns with high proxy_strength or role=PROXY, explain which sensitive attribute they stand in for, and explain why just removing the sensitive column isn't enough. Reference "${datasetName}" when relevant. No heading.
 
 Dataset findings:
 ${JSON.stringify(bias, null, 2)}`,
 
-  'Recommendations': (bias, model) => `Write ONLY the RECOMMENDATIONS section as 3 bullet points starting with "* ". Each one sentence, action-oriented, specific to what's in the data below.
+  'Recommendations': (bias, model, datasetName) => `Write ONLY the RECOMMENDATIONS section as 3 bullet points starting with "* ". Each one sentence, action-oriented, specific to what's in "${datasetName}" below.
 
 Dataset findings:
 ${JSON.stringify(bias, null, 2)}
@@ -158,13 +159,13 @@ const SECTION_TOKEN_BUDGET = {
 
 // ── Public API ──────────────────────────────────────────────────────────
 
-async function generateSections(biasCompact, modelCompact) {
+async function generateSections(biasCompact, modelCompact, datasetName = 'the dataset') {
   const sections = [];
   let firstError = null;
 
   for (const [heading, promptFn] of Object.entries(SECTION_PROMPTS)) {
     try {
-      const prompt = promptFn(biasCompact, modelCompact);
+      const prompt = promptFn(biasCompact, modelCompact, datasetName);
       const text = await callGemini(prompt, { maxTokens: SECTION_TOKEN_BUDGET[heading] });
       sections.push(`## ${heading}\n\n${text.trim()}`);
     } catch (err) {
@@ -177,11 +178,11 @@ async function generateSections(biasCompact, modelCompact) {
   return { sections, firstError };
 }
 
-export async function generateAuditReport(biasReport, modelBiasReport, { forceRefresh = false } = {}) {
+export async function generateAuditReport(biasReport, modelBiasReport, { forceRefresh = false, datasetName = null } = {}) {
   const biasCompact = compactBiasReport(biasReport);
   const modelCompact = compactModelReport(modelBiasReport);
 
-  const fingerprint = JSON.stringify({ b: biasCompact, m: modelCompact });
+  const fingerprint = JSON.stringify({ b: biasCompact, m: modelCompact, d: datasetName });
   const cacheKey = `unveil_report_${hashString(fingerprint)}`;
 
   if (!forceRefresh) {
@@ -191,7 +192,7 @@ export async function generateAuditReport(biasReport, modelBiasReport, { forceRe
     } catch {}
   }
 
-  const { sections, firstError } = await generateSections(biasCompact, modelCompact);
+  const { sections, firstError } = await generateSections(biasCompact, modelCompact, datasetName || 'the dataset');
 
   const fullReport = sections.join('\n\n');
 
