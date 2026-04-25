@@ -31,8 +31,11 @@ dotenv.load_dotenv(dotenv_path=ROOT / ".env")
 
 import numpy as np
 import pandas as pd
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi import status
+from firebase_admin import auth as firebase_auth
+from firebase_admin import credentials, get_app, initialize_app
 
 # ── ensure repo root is on sys.path ───────────────────────────────────────
 sys.path.insert(0, str(ROOT))
@@ -55,6 +58,32 @@ app = FastAPI(
 )
 
 _extra_origins = [o.strip() for o in os.environ.get("CORS_ORIGINS", "").split(",") if o.strip()]
+AUTH_REQUIRED = os.environ.get("AUTH_REQUIRED", "true").strip().lower() != "false"
+ALLOW_LOCALHOST_CORS = os.environ.get("ALLOW_LOCALHOST_CORS", "true").strip().lower() != "false"
+_firebase_admin_inited = False
+
+
+def _init_firebase_admin() -> None:
+    """Initialize Firebase Admin SDK once so ID tokens can be verified."""
+    global _firebase_admin_inited
+    if _firebase_admin_inited:
+        return
+
+    try:
+        get_app()
+        _firebase_admin_inited = True
+        return
+    except ValueError:
+        pass
+
+    service_account_path = os.environ.get("FIREBASE_SERVICE_ACCOUNT_PATH", "").strip()
+    if service_account_path:
+        initialize_app(credentials.Certificate(service_account_path))
+    else:
+        initialize_app()
+    _firebase_admin_inited = True
+
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -63,7 +92,7 @@ app.add_middleware(
         "https://unbiased-ai-demo.web.app",
         "https://unbiased-ai-demo.firebaseapp.com",
     ] + _extra_origins,
-    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?$",
+    allow_origin_regex=(r"https?://(localhost|127\.0\.0\.1)(:\d+)?$" if ALLOW_LOCALHOST_CORS else None),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -158,6 +187,60 @@ def _gemini_quota_detail(action: str, exc: Exception) -> dict:
     return detail
 
 
+def _extract_bearer_token(authorization: Optional[str]) -> Optional[str]:
+    if not authorization:
+        return None
+    value = authorization.strip()
+    if not value:
+        return None
+    if not value.lower().startswith("bearer "):
+        return None
+    token = value[7:].strip()
+    return token or None
+
+
+def require_authenticated_user(
+    authorization: Optional[str] = Header(default=None),
+) -> dict:
+    if not AUTH_REQUIRED:
+        return {"uid": "anonymous", "auth_disabled": True}
+
+    token = _extract_bearer_token(authorization)
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={
+                "code": "AUTH_REQUIRED",
+                "message": "Sign in with Firebase to use this endpoint.",
+                "retryable": False,
+            },
+        )
+
+    try:
+        _init_firebase_admin()
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={
+                "code": "AUTH_CONFIG_ERROR",
+                "message": "Server authentication is not configured correctly.",
+                "retryable": False,
+            },
+        )
+
+    try:
+        return firebase_auth.verify_id_token(token)
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={
+                "code": "AUTH_INVALID_TOKEN",
+                "message": "Your session is invalid or expired. Please sign in again.",
+                "retryable": False,
+            },
+        )
+
+
 # ── routes ─────────────────────────────────────────────────────────────────
 
 @app.get("/health")
@@ -171,7 +254,10 @@ def health():
 
 
 @app.post("/analyze/dataset")
-async def analyze_dataset(file: UploadFile = File(...)):
+async def analyze_dataset(
+    file: UploadFile = File(...),
+    _claims: dict = Depends(require_authenticated_user),
+):
     contents = await file.read()
     tmp_path = _tmp_file(file, contents)
     try:
@@ -202,6 +288,7 @@ async def analyze_model(
     schema_map_json: str = Form(...),
     proxy_flags_json: str = Form(...),
     n_probes: int = Form(100),
+    _claims: dict = Depends(require_authenticated_user),
 ):
     try:
         schema_map  = json.loads(schema_map_json)
@@ -253,7 +340,10 @@ def predict(request: dict):
 
 
 @app.post("/report/gemini")
-async def gemini_report(payload: dict):
+async def gemini_report(
+    payload: dict,
+    _claims: dict = Depends(require_authenticated_user),
+):
     try:
         text = run_gemini_report(
             payload.get("bias_report", {}),

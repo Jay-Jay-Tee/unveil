@@ -8,9 +8,28 @@
  */
 
 import { mockSchemaMap, mockBiasReport, mockModelBiasReport } from './mockData';
+import { getAuthToken } from './auth';
 
 export const API_BASE = import.meta.env.VITE_API_URL || '/api';
 const USE_MOCK_FALLBACK = import.meta.env.VITE_USE_MOCK !== 'false';
+const REQUIRE_AUTH_FOR_ANALYSIS = import.meta.env.VITE_REQUIRE_AUTH_FOR_ANALYSIS !== 'false';
+
+function makeAuthRequiredError(message = 'Sign in with Firebase to run backend analysis.') {
+  const err = new Error(message);
+  err.code = 'AUTH_REQUIRED';
+  err.status = 401;
+  err.retryable = false;
+  return err;
+}
+
+async function buildAuthHeaders({ required = false } = {}) {
+  const token = await getAuthToken();
+  if (!token) {
+    if (required) throw makeAuthRequiredError();
+    return {};
+  }
+  return { Authorization: `Bearer ${token}` };
+}
 
 // ── Error classification ────────────────────────────────────────────────
 
@@ -45,6 +64,10 @@ async function toApiError(res) {
   const detailObj = detail && typeof detail === 'object' ? detail : null;
   const detailText = typeof detail === 'string' ? detail : detailObj?.message;
 
+  if (res.status === 401) {
+    throw makeAuthRequiredError(detailText || 'Your session is missing or expired. Sign in again.');
+  }
+
   if (isGeminiQuotaPayload(res.status, detailText, detailObj)) {
     const err = new Error(detailObj?.message || friendlyGeminiQuotaMessage(detailObj?.retry_after_seconds));
     err.retryable = true;
@@ -77,7 +100,12 @@ export async function analyzeDataset(file) {
   formData.append('file', file);
 
   try {
-    const res = await fetch(`${API_BASE}/analyze/dataset`, { method: 'POST', body: formData });
+    const authHeaders = await buildAuthHeaders({ required: REQUIRE_AUTH_FOR_ANALYSIS });
+    const res = await fetch(`${API_BASE}/analyze/dataset`, {
+      method: 'POST',
+      headers: authHeaders,
+      body: formData,
+    });
     if (!res.ok) await toApiError(res);
     const data = await res.json();
     return {
@@ -92,7 +120,7 @@ export async function analyzeDataset(file) {
     };
   } catch (err) {
     // Rate-limit errors propagate — the user needs to know
-    if (err?.retryable) throw err;
+    if (err?.retryable || err?.code === 'AUTH_REQUIRED' || err?.status === 401) throw err;
     if (USE_MOCK_FALLBACK) {
       console.warn('[api] Backend unreachable — using mock data:', err.message);
       return {
@@ -121,7 +149,12 @@ export async function analyzeModel(datasetFile, schemaMap, proxyFlags, modelFile
   if (modelFile) formData.append('model', modelFile);
 
   try {
-    const res = await fetch(`${API_BASE}/analyze/model`, { method: 'POST', body: formData });
+    const authHeaders = await buildAuthHeaders({ required: REQUIRE_AUTH_FOR_ANALYSIS });
+    const res = await fetch(`${API_BASE}/analyze/model`, {
+      method: 'POST',
+      headers: authHeaders,
+      body: formData,
+    });
     if (!res.ok) await toApiError(res);
     const data = await res.json();
     return {
@@ -130,7 +163,7 @@ export async function analyzeModel(datasetFile, schemaMap, proxyFlags, modelFile
       isMock: false,
     };
   } catch (err) {
-    if (err?.retryable) throw err;
+    if (err?.retryable || err?.code === 'AUTH_REQUIRED' || err?.status === 401) throw err;
     if (USE_MOCK_FALLBACK) {
       console.warn('[api] Backend unreachable — using mock model data:', err.message);
       return {
@@ -148,9 +181,13 @@ export async function analyzeModel(datasetFile, schemaMap, proxyFlags, modelFile
 export async function generateGeminiReport(biasReport, modelBiasReport, { forceRefresh = false } = {}) {
   // 1. Try backend proxy first
   try {
+    const authHeaders = await buildAuthHeaders({ required: REQUIRE_AUTH_FOR_ANALYSIS });
     const res = await fetch(`${API_BASE}/report/gemini`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeaders,
+      },
       body: JSON.stringify({
         bias_report: biasReport,
         model_bias_report: modelBiasReport,
@@ -165,6 +202,9 @@ export async function generateGeminiReport(biasReport, modelBiasReport, { forceR
     }
     await toApiError(res);
   } catch (backendErr) {
+    if (backendErr?.code === 'AUTH_REQUIRED' || backendErr?.status === 401) {
+      throw backendErr;
+    }
     // 2. Fallback: direct browser-side Gemini call
     try {
       const { generateAuditReport } = await import('./gemini');
