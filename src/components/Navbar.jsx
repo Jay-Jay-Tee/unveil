@@ -13,10 +13,10 @@ export default function Navbar() {
   if (pathname === '/') return null;
 
   async function handleSignOut() {
+    setMenuOpen(false);
     await signOutUser();
     setUser(null);
-    setMenuOpen(false);
-    navigate('/');
+    navigate('/', { replace: true });
   }
 
   return (

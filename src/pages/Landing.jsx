@@ -11,7 +11,11 @@ const fadeUp = {
 };
 
 export default function Landing() {
-  const { user } = useAudit();
+  const { user, authReady } = useAudit();
+
+  if (!authReady) {
+    return <div style={{ background: 'var(--color-surface)', minHeight: '100vh' }} />;
+  }
 
   return (
     <div style={{ background: 'var(--color-surface)', color: 'var(--color-on-surface)', minHeight: '100vh' }}>
@@ -113,17 +117,17 @@ export default function Landing() {
             >
               {[
                 {
-                  icon: '⚖',
+                  icon: null,
                   title: 'Dataset fairness',
                   desc: 'Approval gaps, disparate impact ratios, and per-group breakdowns for every sensitive attribute. Numbers, not vibes.',
                 },
                 {
-                  icon: '🔍',
+                  icon: null,
                   title: 'Proxy detection',
                   desc: "Catches columns that quietly encode a sensitive attribute — zip code for race, relationship for sex. Removing the obvious column isn't enough.",
                 },
                 {
-                  icon: '🧠',
+                  icon: null,
                   title: 'Model behavior',
                   desc: 'Black-box probing + SHAP explainability. See which features are actually driving decisions and whether any of them are proxies.',
                 },
@@ -133,7 +137,6 @@ export default function Landing() {
                   className="rounded-2xl p-7 border card-shadow"
                   style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
                 >
-                  <div className="text-3xl mb-4">{item.icon}</div>
                   <h3 className="text-xl font-bold mb-2.5">{item.title}</h3>
                   <p className="leading-relaxed" style={{ color: 'var(--color-text-mid)' }}>{item.desc}</p>
                 </motion.div>
