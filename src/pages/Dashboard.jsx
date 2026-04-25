@@ -55,9 +55,9 @@ export default function Dashboard() {
   return (
     <motion.div
       initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-      className="min-h-screen pt-20 pb-20 px-6"
+      className="min-h-screen pt-20 pb-20 px-3 sm:px-5"
     >
-      <div className="max-w-5xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="py-10 border-b mb-10 flex items-end justify-between flex-wrap gap-4"
           style={{ borderColor: 'var(--color-border)' }}>

@@ -38,7 +38,7 @@ export default function DatasetAudit() {
 
   if (!schemaMap || !biasReport) {
     return (
-      <div className="min-h-screen pt-32 flex flex-col items-center gap-5 text-center px-6">
+      <div className="min-h-screen pt-32 flex flex-col items-center gap-5 text-center px-3 sm:px-5">
         <p style={{ color: 'var(--color-text-mid)' }}>No analysis yet. Upload a dataset first.</p>
         <button onClick={() => navigate('/upload')} className="btn btn-primary">
           ← Upload dataset
@@ -95,8 +95,8 @@ export default function DatasetAudit() {
   }
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-h-screen pt-20 pb-20 px-6">
-      <div className="mx-auto max-w-5xl">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-h-screen pt-20 pb-20 px-3 sm:px-5">
+      <div className="max-w-7xl mx-auto">
 
         {/* Header */}
         <div className="py-10 border-b mb-8" style={{ borderColor: 'var(--color-border)' }}>

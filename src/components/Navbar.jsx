@@ -22,7 +22,7 @@ export default function Navbar() {
   return (
     <nav className="fixed top-0 left-0 right-0 z-40 backdrop-blur-sm border-b"
       style={{ background: 'rgba(251, 246, 238, 0.85)', borderColor: 'var(--color-border)' }}>
-      <div className="flex justify-between items-center px-6 py-3.5 max-w-6xl mx-auto w-full">
+      <div className="flex justify-between items-center px-3 sm:px-5 py-3.5 w-full">
 
         {/* Brand */}
         <Link to="/" className="flex items-center gap-2 group">

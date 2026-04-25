@@ -217,8 +217,8 @@ export default function Upload() {
   function clearModel() { setModelFileLocal(null); }
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-h-screen pb-20 px-6" style={{ background: 'var(--color-surface)' }}>
-      <div className="mx-auto max-w-3xl pt-24">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-h-screen pb-20 px-3 sm:px-5" style={{ background: 'var(--color-surface)' }}>
+      <div className="mx-auto max-w-7xl pt-24">
 
         {/* Header */}
         <div className="mb-12">

@@ -19,7 +19,7 @@ export default function Landing() {
       {/* Navbar */}
       <header className="fixed top-0 left-0 right-0 z-40 backdrop-blur-sm border-b"
         style={{ background: 'rgba(251, 246, 238, 0.85)', borderColor: 'var(--color-border)' }}>
-        <nav className="flex justify-between items-center px-6 py-3.5 max-w-6xl mx-auto w-full">
+        <nav className="flex justify-between items-center px-3 sm:px-5 py-3.5 w-full">
 
           <Link to="/" className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-md flex items-center justify-center"
@@ -57,7 +57,7 @@ export default function Landing() {
       <main className="pt-32">
 
         {/* Hero */}
-        <section className="max-w-5xl mx-auto px-6 pb-24 text-center">
+        <section className="px-3 sm:px-5 pb-24 text-center">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.8 }}>
 
             <p className="text-label-mono mb-5 inline-flex items-center gap-2 px-3 py-1 rounded-full border"
@@ -94,7 +94,7 @@ export default function Landing() {
 
         {/* Feature grid */}
         <section className="py-20" style={{ background: 'var(--color-surface-container-low)' }}>
-          <div className="max-w-6xl mx-auto px-6">
+          <div className="px-3 sm:px-5 max-w-7xl mx-auto">
             <motion.div
               initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}
               className="text-center mb-14"
@@ -143,7 +143,7 @@ export default function Landing() {
         </section>
 
         {/* Stats strip */}
-        <section className="max-w-5xl mx-auto px-6 py-20">
+        <section className="px-3 sm:px-5 py-20">
           <motion.div
             initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}
             className="grid md:grid-cols-3 gap-8 text-center"
@@ -163,7 +163,7 @@ export default function Landing() {
 
         {/* How it works */}
         <section id="how" className="py-20" style={{ background: 'var(--color-surface-container-low)' }}>
-          <div className="max-w-5xl mx-auto px-6">
+          <div className="px-3 sm:px-5 max-w-7xl mx-auto">
             <motion.div
               initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}
               className="text-center mb-14"
@@ -199,7 +199,7 @@ export default function Landing() {
         </section>
 
         {/* CTA */}
-        <section className="max-w-4xl mx-auto px-6 py-24 text-center">
+        <section className="px-3 sm:px-5 py-24 text-center">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}>
             <h2 className="text-display-lg mb-5" style={{ color: 'var(--color-on-surface)' }}>
               Ready to see what's under the hood?
@@ -217,7 +217,7 @@ export default function Landing() {
 
       {/* Footer */}
       <footer className="border-t py-10" style={{ background: 'var(--color-bg-ink)', color: '#fff', borderColor: 'var(--color-border-strong)' }}>
-        <div className="max-w-6xl mx-auto px-6 flex flex-wrap justify-between items-center gap-4">
+        <div className="px-3 sm:px-5 max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-4">
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 rounded-md flex items-center justify-center" style={{ background: 'var(--color-accent)' }}>
               <svg viewBox="0 0 24 24" className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ color: 'var(--color-bg-ink)' }}>

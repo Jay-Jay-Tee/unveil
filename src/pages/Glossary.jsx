@@ -69,8 +69,8 @@ const ENTRIES = [
 
 export default function Glossary() {
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-h-screen pt-24 pb-20 px-6">
-      <div className="max-w-3xl mx-auto">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-h-screen pt-24 pb-20 px-3 sm:px-5">
+      <div className="max-w-7xl mx-auto">
 
         <div className="py-8 mb-10">
           <p className="text-label-mono mb-2" style={{ color: 'var(--color-text-mid)' }}>
