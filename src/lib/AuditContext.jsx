@@ -63,15 +63,17 @@ export function AuditProvider({ children }) {
     setBackendOnline(null);
   }
 
-  async function saveCurrentAudit(note = '') {
+  // overrides lets callers pass fresh data directly (avoids stale React closure reads)
+  async function saveCurrentAudit(note = '', overrides = {}) {
     if (!user) throw new Error('Sign in to save audits.');
+    if (user.isGuest) throw new Error('Sign up to save audits.');
     return persistAudit(user, {
-      datasetName: datasetMeta?.name || datasetFile?.name || 'Untitled',
-      rowCount: datasetMeta?.rowCount,
-      columnCount: datasetMeta?.columnCount,
-      schemaMap,
-      biasReport,
-      modelBiasReport,
+      datasetName: overrides.datasetName ?? datasetMeta?.datasetName ?? datasetMeta?.name ?? datasetFile?.name ?? 'Untitled',
+      rowCount:    overrides.rowCount    ?? datasetMeta?.rowCount    ?? null,
+      columnCount: overrides.columnCount ?? datasetMeta?.columnCount ?? null,
+      schemaMap:   overrides.schemaMap   ?? schemaMap,
+      biasReport:  overrides.biasReport  ?? biasReport,
+      modelBiasReport: overrides.modelBiasReport ?? modelBiasReport,
       note,
       createdAt: Date.now(),
     });

@@ -2,14 +2,14 @@
 set PYTHONUTF8=1
 set PYTHONIOENCODING=utf-8
 REM ============================================
-REM UnbiasedAI - Complete App Startup Script
+REM Unveil - Complete App Startup Script
 REM ============================================
 REM This script starts both frontend and backend
 REM Press Ctrl+C to stop all processes
 
 echo.
 echo ====================================
-echo   UnbiasedAI - Starting Application
+echo   Unveil - Starting Application
 echo ====================================
 echo.
 echo Checking dependencies...

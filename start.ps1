@@ -1,5 +1,5 @@
 # ============================================
-# UnbiasedAI - Complete App Startup Script
+# Unveil - Complete App Startup Script
 # PowerShell Version for Windows
 # ============================================
 # This script starts both frontend and backend
@@ -11,7 +11,7 @@ $env:PYTHONIOENCODING = "utf-8"
 
 Write-Host ""
 Write-Host "====================================" -ForegroundColor Cyan
-Write-Host "  UnbiasedAI - Starting Application" -ForegroundColor Cyan
+Write-Host "  Unveil - Starting Application" -ForegroundColor Cyan
 Write-Host "====================================" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "Checking dependencies..." -ForegroundColor Yellow

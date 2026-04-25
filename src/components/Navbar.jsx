@@ -70,11 +70,19 @@ export default function Navbar() {
                     <div className="px-4 py-3 border-b" style={{ borderColor: 'var(--color-border)' }}>
                       <p className="text-xs font-semibold" style={{ color: 'var(--color-text-mid)' }}>Signed in as</p>
                       <p className="text-sm font-bold truncate">{user.email || user.displayName || 'Guest'}</p>
-                      {user.isGuest && (
+                      {user.isGuest ? (
                         <p className="text-xs mt-1" style={{ color: 'var(--color-accent-dark)' }}>
-                          Local device only — sign up to sync
+                          Guest — sign up to save your audits
                         </p>
-                      )}
+                      ) : !user.email?.includes('@') && user.isLocalOnly ? (
+                        <p className="text-xs mt-1" style={{ color: 'var(--color-text-mid)' }}>
+                          Local account · audits on this device only
+                        </p>
+                      ) : user.isLocalOnly ? (
+                        <p className="text-xs mt-1" style={{ color: 'var(--color-text-mid)' }}>
+                          Local account · audits on this device only
+                        </p>
+                      ) : null}
                     </div>
                     <Link
                       to="/dashboard"

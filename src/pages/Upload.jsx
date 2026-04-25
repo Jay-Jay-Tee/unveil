@@ -239,12 +239,14 @@ async function runDatasetLeg(datasetFile, audit, setStep) {
   audit.setDatasetMeta({
     datasetName: result.datasetName,
     rowCount:    result.rowCount,
+    columnCount: result.columnCount,
     warnings:    result.warnings,
   });
   audit.setIsMock(result.isMock);
   audit.setDatasetFile(datasetFile);
   setStep('dataset', 'done');
-  return { schemaMap: result.schemaMap, proxyFlags: result.proxyFlags };
+  // Return full result so caller can pass fresh data to saveCurrentAudit
+  return { schemaMap: result.schemaMap, proxyFlags: result.proxyFlags, result };
 }
 
 /**
@@ -260,14 +262,16 @@ async function runModelLeg(datasetFile, modelFile, schemaMap, proxyFlags, audit,
     modelFile,
     100,
   );
-  audit.setModelBiasReport({
+  const modelBiasReport = {
     attribute_results: result.attributeResults,
     shap_summary:      result.shapSummary,
-  });
+  };
+  audit.setModelBiasReport(modelBiasReport);
   audit.setModelMeta({ modelName: modelFile.name, isDemo: false, modelOnly: false });
   audit.setModelFile(modelFile);
   audit.setIsMock(audit.isMock || result.isMock);
   setStep('model', 'done');
+  return { modelBiasReport };
 }
 
 // ─── main component ───────────────────────────────────────────────────────
@@ -284,6 +288,31 @@ export default function Upload() {
   const [steps,       setSteps]       = useState({ backend: 'waiting', dataset: 'waiting', model: 'waiting' });
 
   const setStep = (key, val) => setSteps(prev => ({ ...prev, [key]: val }));
+
+  // ── Auth gate ─────────────────────────────────────────────────────────
+  if (!audit.authReady) {
+    return (
+      <div className="min-h-screen pt-32 flex items-center justify-center">
+        <span className="unveil-spinner" />
+      </div>
+    );
+  }
+  if (!audit.user) {
+    return (
+      <div className="min-h-screen pt-32 flex flex-col items-center gap-5 text-center px-3 sm:px-5">
+        <p className="text-lg font-semibold" style={{ color: "var(--color-on-surface)" }}>
+          Sign in to start an audit
+        </p>
+        <p className="text-sm max-w-xs" style={{ color: "var(--color-text-mid)" }}>
+          You need an account to upload datasets and run bias audits.
+        </p>
+        <div className="flex gap-3 flex-wrap justify-center">
+          <button onClick={() => navigate("/login")} className="btn btn-secondary">Sign in</button>
+          <button onClick={() => navigate("/signup")} className="btn btn-primary">Create account</button>
+        </div>
+      </div>
+    );
+  }
 
   const hasDataset = !!datasetFile;
   const hasModel   = !!modelFile;
@@ -314,20 +343,38 @@ export default function Upload() {
 
       let schemaMap  = null;
       let proxyFlags = null;
+      let datasetResult = null;
+      let modelBiasReport = null;
 
       if (hasDataset) {
-        ({ schemaMap, proxyFlags } = await runDatasetLeg(datasetFile, audit, setStep));
+        ({ schemaMap, proxyFlags, result: datasetResult } = await runDatasetLeg(datasetFile, audit, setStep));
       } else {
         setStep('dataset', 'skipped');
       }
 
       if (hasDataset && hasModel) {
-        await runModelLeg(datasetFile, modelFile, schemaMap, proxyFlags, audit, setStep);
+        ({ modelBiasReport } = await runModelLeg(datasetFile, modelFile, schemaMap, proxyFlags, audit, setStep));
       } else {
         setStep('model', 'skipped');
       }
 
       audit.setAuditMode(mode);
+
+      // Auto-save — pass fresh data DIRECTLY so we don't read stale React state
+      if (!audit.user?.isGuest && datasetResult) {
+        try {
+          await audit.saveCurrentAudit('', {
+            datasetName:    datasetResult.datasetName,
+            rowCount:       datasetResult.rowCount,
+            columnCount:    datasetResult.columnCount,
+            schemaMap:      datasetResult.schemaMap,
+            biasReport:     datasetResult.biasReport,
+            modelBiasReport: modelBiasReport ?? null,
+          });
+        } catch (saveErr) {
+          console.warn('[upload] auto-save failed:', saveErr?.message);
+        }
+      }
       setStatus('done');
 
     } catch (err) {

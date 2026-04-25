@@ -106,7 +106,7 @@ export default function DatasetAudit() {
           <div className="flex items-end justify-between gap-4 flex-wrap">
             <div>
               <h1 className="text-display-md mb-1" style={{ color: 'var(--color-on-surface)' }}>
-                {datasetMeta?.name || 'Dataset analysis'}
+                {datasetMeta?.datasetName || datasetMeta?.name || 'Dataset analysis'}
               </h1>
               <p className="text-base max-w-lg" style={{ color: 'var(--color-text-mid)' }}>
                 Approval gaps, proxy strength, and per-group breakdowns for every column.

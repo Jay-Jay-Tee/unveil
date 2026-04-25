@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ============================================
-# UnbiasedAI - Complete App Startup Script
+# Unveil - Complete App Startup Script
 # Bash Version for macOS / Linux
 # ============================================
 # This script starts both frontend and backend
@@ -16,7 +16,7 @@ NC='\033[0m' # No Color
 
 echo ""
 echo -e "${CYAN}====================================${NC}"
-echo -e "${CYAN}  UnbiasedAI - Starting Application${NC}"
+echo -e "${CYAN}  Unveil - Starting Application${NC}"
 echo -e "${CYAN}====================================${NC}"
 echo ""
 echo -e "${YELLOW}Checking dependencies...${NC}"
@@ -64,8 +64,17 @@ if [ -f "venv/bin/activate" ]; then
     source venv/bin/activate
 fi
 
-# If dependencies are missing, startup will fail with a clear import error.
-# Install manually when needed: python3 -m pip install -r requirements.txt
+# Install Python dependencies if missing
+python3 -c "import firebase_admin" > /dev/null 2>&1
+if [ $? -ne 0 ]; then
+    echo -e "${YELLOW}Installing Python dependencies from requirements.txt...${NC}"
+    python3 -m pip install -r requirements.txt
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}Error: Failed to install Python dependencies${NC}"
+        exit 1
+    fi
+fi
+echo -e "${GREEN}✓ Python dependencies ready${NC}"
 
 echo ""
 echo -e "${CYAN}====================================${NC}"

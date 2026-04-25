@@ -33,12 +33,19 @@ function getOrCreateGuest() {
 
 export async function signUp({ email, password, displayName }) {
   if (!isFirebaseConfigured()) {
-    // Local-only: pretend it worked, return a guest-style user with the chosen name
-    const guest = getOrCreateGuest();
-    guest.displayName = displayName || guest.displayName;
-    guest.email = email || null;
-    try { localStorage.setItem(LOCAL_GUEST_KEY, JSON.stringify(guest)); } catch {}
-    return guest;
+    // Local-only demo mode: create a named local account keyed by email.
+    // Each email gets its own stable uid so accounts don't bleed into each other.
+    const uid = 'local_' + btoa(email || Math.random().toString(36)).replace(/[^a-z0-9]/gi, '').slice(0, 16);
+    const user = {
+      uid,
+      email: email || null,
+      displayName: displayName || email?.split('@')[0] || 'User',
+      isGuest: false,
+      isLocalOnly: true,
+      createdAt: Date.now(),
+    };
+    try { localStorage.setItem(LOCAL_GUEST_KEY, JSON.stringify(user)); } catch {}
+    return user;
   }
 
   const { auth } = await getFirebase();
@@ -52,7 +59,21 @@ export async function signUp({ email, password, displayName }) {
 
 export async function signIn({ email, password }) {
   if (!isFirebaseConfigured()) {
-    // Local-only: just return the stored guest as though they signed in
+    // Local-only demo mode: check if a local account was created with this email.
+    try {
+      const stored = localStorage.getItem(LOCAL_GUEST_KEY);
+      if (stored) {
+        const user = JSON.parse(stored);
+        if (user.email && email && user.email.toLowerCase() === email.trim().toLowerCase()) {
+          return user;
+        }
+        if (!email && !user.email) {
+          // Guest continue (no email entered)
+          return user;
+        }
+      }
+    } catch {}
+    // No matching local account — create a temporary guest session
     return getOrCreateGuest();
   }
   const { auth } = await getFirebase();

@@ -134,9 +134,12 @@ def stub_predict(features: dict) -> float:
 
 # ─── Part A — dataset pipeline (unchanged in shape) ────────────────────────
 
-def run_dataset_pipeline(file_path: str) -> dict:
+def run_dataset_pipeline(file_path: str, original_filename: str | None = None) -> dict:
     ingest_result = ingest(file_path, max_rows=5000)
     df = ingest_result["df"]
+    # Override the tmp-path stem with the real uploaded filename
+    if original_filename:
+        ingest_result["dataset_name"] = Path(original_filename).stem
 
     with tempfile.TemporaryDirectory() as tmp:
         schema_map = classify(ingest_result, output_path=os.path.join(tmp, "schema_map.json"))

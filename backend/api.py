@@ -261,7 +261,7 @@ async def analyze_dataset(
     contents = await file.read()
     tmp_path = _tmp_file(file, contents)
     try:
-        result = run_dataset_pipeline(tmp_path)
+        result = run_dataset_pipeline(tmp_path, original_filename=file.filename)
         return safe_json(result)
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))

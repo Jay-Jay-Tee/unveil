@@ -74,9 +74,9 @@ async function callGemini(prompt, { maxTokens = 2048, attempt = 0 } = {}) {
   const finishReason = data.candidates[0].finishReason || 'STOP';
   if (!text) throw new Error(`Candidate had no text. finishReason: ${finishReason}`);
 
-  // MAX_TOKENS is not a hard failure — we return what we got with a note
+  // MAX_TOKENS is not a hard failure — return what we got
   if (finishReason === 'MAX_TOKENS') {
-    return text + '\n\n*(section truncated — regenerate if needed)*';
+    return text;
   }
   return text;
 }
@@ -151,10 +151,10 @@ ${JSON.stringify(model, null, 2)}`,
 };
 
 const SECTION_TOKEN_BUDGET = {
-  'Executive Summary': 512,
-  'Critical Findings': 2048,
-  'Proxy Risk': 1024,
-  'Recommendations': 768,
+  'Executive Summary': 1024,
+  'Critical Findings': 8192,
+  'Proxy Risk': 2048,
+  'Recommendations': 1536,
 };
 
 // ── Public API ──────────────────────────────────────────────────────────

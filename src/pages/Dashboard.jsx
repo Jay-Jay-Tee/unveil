@@ -17,6 +17,7 @@ export default function Dashboard() {
       navigate('/login');
       return;
     }
+    if (user.isGuest) return; // Guest sees the sign-up wall below — no audit fetch needed
     (async () => {
       try {
         const list = await listAudits(user);
@@ -44,11 +45,43 @@ export default function Dashboard() {
     navigate('/audit/dataset');
   }
 
-  if (!authReady || status === 'loading') {
+  if (!authReady || (status === 'loading' && !user?.isGuest)) {
     return (
       <div className="min-h-screen pt-32 flex items-center justify-center">
         <span className="unveil-spinner" />
       </div>
+    );
+  }
+
+  // Guest wall — they can browse but audits don't save without an account
+  if (user?.isGuest) {
+    return (
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+        className="min-h-screen pt-20 pb-20 px-3 sm:px-5 flex flex-col items-center justify-center text-center">
+        <div className="max-w-md">
+          <div className="w-16 h-16 mx-auto mb-5 rounded-2xl flex items-center justify-center"
+            style={{ background: 'var(--color-bg-ink)' }}>
+            <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+              <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+          </div>
+          <h1 className="text-display-md mb-3" style={{ color: 'var(--color-on-surface)' }}>
+            Sign up to save audits
+          </h1>
+          <p className="text-sm mb-6 leading-relaxed" style={{ color: 'var(--color-text-mid)' }}>
+            You're currently in guest mode. Create a free account to save your audit history,
+            revisit past results, and generate compliance reports anytime.
+          </p>
+          <div className="flex gap-3 justify-center flex-wrap">
+            <Link to="/signup" className="btn btn-primary">Create free account</Link>
+            <Link to="/login" className="btn btn-secondary">Sign in</Link>
+          </div>
+          <p className="text-xs mt-5" style={{ color: 'var(--color-text-mid)' }}>
+            You can still run audits as a guest — results just won't be saved between sessions.
+          </p>
+        </div>
+      </motion.div>
     );
   }
 
