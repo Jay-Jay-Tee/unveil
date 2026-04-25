@@ -1,0 +1,17 @@
+## Executive Summary
+
+The audit of dataset `tmpcr73dxud` reveals significant bias across all protected
+
+*(section truncated due to length — see dashboard for full detail)*
+
+## Critical Findings
+
+*(Couldn't generate this section — HTTP Error 429: Too Many Requests)*
+
+## Proxy Risk
+
+*(Couldn't generate this section — HTTP Error 429: Too Many Requests)*
+
+## Recommendations
+
+*(Couldn't generate this section — HTTP Error 429: Too Many Requests)*

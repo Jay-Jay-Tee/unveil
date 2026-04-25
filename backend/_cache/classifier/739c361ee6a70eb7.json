@@ -1,0 +1,101 @@
+{
+  "version": "1.1.0",
+  "generated_by": "unveil-hybrid-classifier",
+  "dataset": "tmpcr73dxud",
+  "used_fallback": false,
+  "columns": {
+    "protected": [
+      {
+        "name": "age",
+        "type": "PROTECTED",
+        "proxies": []
+      },
+      {
+        "name": "marital-status",
+        "type": "PROTECTED",
+        "proxies": []
+      },
+      {
+        "name": "race",
+        "type": "PROTECTED",
+        "proxies": []
+      },
+      {
+        "name": "sex",
+        "type": "PROTECTED",
+        "proxies": []
+      },
+      {
+        "name": "native-country",
+        "type": "PROTECTED",
+        "proxies": []
+      }
+    ],
+    "outcome": [
+      {
+        "name": "income",
+        "type": "OUTCOME",
+        "proxies": []
+      }
+    ],
+    "ambiguous": [
+      {
+        "name": "workclass",
+        "type": "AMBIGUOUS",
+        "proxies": [
+          "race",
+          "sex"
+        ]
+      },
+      {
+        "name": "education",
+        "type": "AMBIGUOUS",
+        "proxies": [
+          "race"
+        ]
+      },
+      {
+        "name": "occupation",
+        "type": "AMBIGUOUS",
+        "proxies": [
+          "race",
+          "sex"
+        ]
+      },
+      {
+        "name": "relationship",
+        "type": "AMBIGUOUS",
+        "proxies": [
+          "sex"
+        ]
+      }
+    ],
+    "neutral": [
+      {
+        "name": "fnlwgt",
+        "type": "NEUTRAL",
+        "proxies": []
+      },
+      {
+        "name": "education-num",
+        "type": "NEUTRAL",
+        "proxies": []
+      },
+      {
+        "name": "capital-gain",
+        "type": "NEUTRAL",
+        "proxies": []
+      },
+      {
+        "name": "capital-loss",
+        "type": "NEUTRAL",
+        "proxies": []
+      },
+      {
+        "name": "hours-per-week",
+        "type": "NEUTRAL",
+        "proxies": []
+      }
+    ]
+  }
+}

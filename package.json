@@ -1,7 +1,7 @@
 {
-  "name": "unbiased-ai",
+  "name": "unveil",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.2.2",
+    "firebase": "^10.14.1",
     "framer-motion": "^12.38.0",
     "papaparse": "^5.5.3",
     "react": "^19.2.4",

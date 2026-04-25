@@ -1,0 +1,15 @@
+## Executive Summary
+
+*(Couldn't generate this section — GEMINI_API_KEY is not set on the server.)*
+
+## Critical Findings
+
+*(Couldn't generate this section — GEMINI_API_KEY is not set on the server.)*
+
+## Proxy Risk
+
+*(Couldn't generate this section — GEMINI_API_KEY is not set on the server.)*
+
+## Recommendations
+
+*(Couldn't generate this section — GEMINI_API_KEY is not set on the server.)*
