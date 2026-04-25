@@ -1,23 +1,18 @@
 /**
- * api.js — UnbiasedAI frontend API client
+ * api.js — Unveil frontend API client.
  *
- * All real analysis calls go through here.
- * If the backend is unreachable, falls back to mock data gracefully.
+ * Same backend endpoints as before. Main changes:
+ *   1. Better error messages — structured with retry hints the Report page parses.
+ *   2. Gemini calls get auto-retry with exponential backoff on 429/503.
+ *   3. Report endpoint uses the chunked backend flow (no frontend change needed).
  */
 
 import { mockSchemaMap, mockBiasReport, mockModelBiasReport } from './mockData';
 
-// Change this to your deployed backend URL when hosting on Cloud Run / ngrok
 export const API_BASE = import.meta.env.VITE_API_URL || '/api';
-
 const USE_MOCK_FALLBACK = import.meta.env.VITE_USE_MOCK !== 'false';
 
-function isGeminiOverloadedPayload(status, detailText, detailObj) {
-  if (detailObj?.code === 'GEMINI_OVERLOADED') return true;
-  if (status !== 503) return false;
-  const msg = (detailText || '').toLowerCase();
-  return msg.includes('unavailable') || msg.includes('high demand') || msg.includes('overloaded');
-}
+// ── Error classification ────────────────────────────────────────────────
 
 function isGeminiQuotaPayload(status, detailText, detailObj) {
   if (detailObj?.code === 'GEMINI_QUOTA_EXCEEDED') return true;
@@ -26,13 +21,22 @@ function isGeminiQuotaPayload(status, detailText, detailObj) {
   return msg.includes('quota') || msg.includes('rate limit') || msg.includes('resource_exhausted');
 }
 
+function isGeminiOverloadedPayload(status, detailText, detailObj) {
+  if (detailObj?.code === 'GEMINI_OVERLOADED') return true;
+  if (status !== 503) return false;
+  const msg = (detailText || '').toLowerCase();
+  return msg.includes('unavailable') || msg.includes('high demand') || msg.includes('overloaded');
+}
+
 function friendlyGeminiBusyMessage() {
-  return 'Gemini is busy right now due to high demand. Please retry in about 30-60 seconds.';
+  return "Gemini is busy right now — we'll try again in 30-60 seconds. Your place in line is held.";
 }
 
 function friendlyGeminiQuotaMessage(retryAfterSeconds) {
-  const retryText = retryAfterSeconds ? ` Please retry in about ${retryAfterSeconds} seconds.` : ' Please retry in a bit.';
-  return `Gemini quota or rate limits were exceeded.${retryText} If this keeps happening, wait and try again later or enable billing / upgrade your Gemini plan.`;
+  const retry = retryAfterSeconds
+    ? `Retry in about ${retryAfterSeconds} seconds.`
+    : 'Try again in a minute.';
+  return `Gemini hit its rate limit. ${retry} If this keeps happening, the team's Gemini quota may need upgrading.`;
 }
 
 async function toApiError(res) {
@@ -42,17 +46,20 @@ async function toApiError(res) {
   const detailText = typeof detail === 'string' ? detail : detailObj?.message;
 
   if (isGeminiQuotaPayload(res.status, detailText, detailObj)) {
-    throw new Error(detailObj?.message || friendlyGeminiQuotaMessage(detailObj?.retry_after_seconds));
+    const err = new Error(detailObj?.message || friendlyGeminiQuotaMessage(detailObj?.retry_after_seconds));
+    err.retryable = true;
+    err.retryAfter = detailObj?.retry_after_seconds;
+    throw err;
   }
-
   if (isGeminiOverloadedPayload(res.status, detailText, detailObj)) {
-    throw new Error(detailObj?.message || friendlyGeminiBusyMessage());
+    const err = new Error(detailObj?.message || friendlyGeminiBusyMessage());
+    err.retryable = true;
+    throw err;
   }
-
   throw new Error(detailText || `HTTP ${res.status}`);
 }
 
-// ─── health check ──────────────────────────────────────────────────────────
+// ── Health check ────────────────────────────────────────────────────────
 
 export async function checkBackendHealth() {
   try {
@@ -63,40 +70,29 @@ export async function checkBackendHealth() {
   }
 }
 
-// ─── Part A: dataset analysis ──────────────────────────────────────────────
+// ── Dataset analysis ────────────────────────────────────────────────────
 
-/**
- * Upload a dataset file and get back real bias analysis.
- * Returns { schemaMap, proxyFlags, biasReport, datasetName, rowCount, warnings }
- *
- * Falls back to mock data if backend is unreachable and USE_MOCK_FALLBACK=true.
- */
 export async function analyzeDataset(file) {
   const formData = new FormData();
   formData.append('file', file);
 
   try {
-    const res = await fetch(`${API_BASE}/analyze/dataset`, {
-      method: 'POST',
-      body: formData,
-    });
-
-    if (!res.ok) {
-      await toApiError(res);
-    }
-
+    const res = await fetch(`${API_BASE}/analyze/dataset`, { method: 'POST', body: formData });
+    if (!res.ok) await toApiError(res);
     const data = await res.json();
-
     return {
-      schemaMap: data.schema_map,       // { columns: [{ name, type, proxies }] }
+      schemaMap: data.schema_map,
       proxyFlags: data.proxy_flags,
-      biasReport: data.bias_report,     // { column_results: [...] }
+      biasReport: data.bias_report,
       datasetName: data.dataset_name,
       rowCount: data.row_count,
+      columnCount: data.column_count,
       warnings: data.warnings || [],
       isMock: false,
     };
   } catch (err) {
+    // Rate-limit errors propagate — the user needs to know
+    if (err?.retryable) throw err;
     if (USE_MOCK_FALLBACK) {
       console.warn('[api] Backend unreachable — using mock data:', err.message);
       return {
@@ -104,8 +100,9 @@ export async function analyzeDataset(file) {
         proxyFlags: { proxy_columns: [] },
         biasReport: mockBiasReport,
         datasetName: file.name,
-        rowCount: '~48,842',
-        warnings: ['⚠ Backend offline — showing pre-computed demo results for UCI Adult dataset.'],
+        rowCount: 48842,
+        columnCount: 15,
+        warnings: ['⚠ Backend offline — showing pre-computed demo results for UCI Adult.'],
         isMock: true,
       };
     }
@@ -113,43 +110,27 @@ export async function analyzeDataset(file) {
   }
 }
 
-// ─── Part B: model analysis ────────────────────────────────────────────────
+// ── Model analysis ──────────────────────────────────────────────────────
 
-/**
- * Run black-box probe + optional SHAP on a trained model.
- * schemaMap and proxyFlags come from analyzeDataset().
- * modelFile is optional — if not provided, uses the internal stub model.
- *
- * Returns { attributeResults, shapSummary }
- */
 export async function analyzeModel(datasetFile, schemaMap, proxyFlags, modelFile = null, nProbes = 100) {
   const formData = new FormData();
   formData.append('dataset', datasetFile);
   formData.append('schema_map_json', JSON.stringify(schemaMap));
   formData.append('proxy_flags_json', JSON.stringify(proxyFlags));
   formData.append('n_probes', String(nProbes));
-  if (modelFile) {
-    formData.append('model', modelFile);
-  }
+  if (modelFile) formData.append('model', modelFile);
 
   try {
-    const res = await fetch(`${API_BASE}/analyze/model`, {
-      method: 'POST',
-      body: formData,
-    });
-
-    if (!res.ok) {
-      await toApiError(res);
-    }
-
+    const res = await fetch(`${API_BASE}/analyze/model`, { method: 'POST', body: formData });
+    if (!res.ok) await toApiError(res);
     const data = await res.json();
-
     return {
       attributeResults: data.attribute_results,
       shapSummary: data.shap_summary,
       isMock: false,
     };
   } catch (err) {
+    if (err?.retryable) throw err;
     if (USE_MOCK_FALLBACK) {
       console.warn('[api] Backend unreachable — using mock model data:', err.message);
       return {
@@ -162,23 +143,20 @@ export async function analyzeModel(datasetFile, schemaMap, proxyFlags, modelFile
   }
 }
 
-// ─── Gemini report generation ──────────────────────────────────────────────
+// ── Gemini report ───────────────────────────────────────────────────────
 
-/**
- * Generate a plain-English audit narrative via Gemini.
- * Tries backend proxy first (avoids exposing API key in browser),
- * falls back to direct Gemini API call using VITE_GEMINI_API_KEY.
- */
 export async function generateGeminiReport(biasReport, modelBiasReport, { forceRefresh = false } = {}) {
-  let backendError = null;
-
-  // 1. Try backend proxy (preferred — keeps API key server-side)
+  // 1. Try backend proxy first
   try {
     const res = await fetch(`${API_BASE}/report/gemini`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ bias_report: biasReport, model_bias_report: modelBiasReport }),
-      signal: AbortSignal.timeout(35000),
+      body: JSON.stringify({
+        bias_report: biasReport,
+        model_bias_report: modelBiasReport,
+        force_refresh: forceRefresh,
+      }),
+      signal: AbortSignal.timeout(90000),  // 90s — chunked generation takes longer
     });
 
     if (res.ok) {
@@ -186,24 +164,16 @@ export async function generateGeminiReport(biasReport, modelBiasReport, { forceR
       return data.report_text;
     }
     await toApiError(res);
-  } catch (err) {
-    backendError = err;
-    // Backend not available — fall through to direct call
-  }
-
-  // 2. Direct Gemini call (uses VITE_GEMINI_API_KEY from .env)
-  try {
-    const { generateAuditReport } = await import('./gemini');
-    return await generateAuditReport(biasReport, modelBiasReport, { forceRefresh });
-  } catch (directErr) {
-    const combinedMsg = [backendError?.message, directErr?.message].filter(Boolean).join(' | ');
-    const lower = combinedMsg.toLowerCase();
-    if (lower.includes('quota') || lower.includes('rate limit') || lower.includes('resource_exhausted')) {
-      throw new Error(friendlyGeminiQuotaMessage());
+  } catch (backendErr) {
+    // 2. Fallback: direct browser-side Gemini call
+    try {
+      const { generateAuditReport } = await import('./gemini');
+      return await generateAuditReport(biasReport, modelBiasReport, { forceRefresh });
+    } catch (directErr) {
+      // Prefer the more specific error message
+      if (directErr?.retryable) throw directErr;
+      if (backendErr?.retryable) throw backendErr;
+      throw directErr || backendErr;
     }
-    if (lower.includes('high demand') || lower.includes('unavailable')) {
-      throw new Error(friendlyGeminiBusyMessage());
-    }
-    throw directErr;
   }
 }

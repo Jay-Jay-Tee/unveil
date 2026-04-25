@@ -19,12 +19,15 @@ import traceback
 from pathlib import Path
 from typing import Optional
 
+# ── resolve repo root early so env loading is cwd-independent ─────────────
+ROOT = Path(__file__).resolve().parent.parent
+
 # ── stdout encoding fix for Windows ───────────────────────────────────────
 if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 
 import dotenv
-dotenv.load_dotenv()
+dotenv.load_dotenv(dotenv_path=ROOT / ".env")
 
 import numpy as np
 import pandas as pd
@@ -32,7 +35,6 @@ from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
 # ── ensure repo root is on sys.path ───────────────────────────────────────
-ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from backend.pipeline import (
@@ -256,6 +258,7 @@ async def gemini_report(payload: dict):
         text = run_gemini_report(
             payload.get("bias_report", {}),
             payload.get("model_bias_report", {}),
+            force_refresh=bool(payload.get("force_refresh", False)),
         )
         return {"report_text": text}
     except EnvironmentError as e:

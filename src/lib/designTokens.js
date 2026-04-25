@@ -54,7 +54,7 @@ export const animations = {
   // Easing functions
   easing: {
     standard: [0.22, 1, 0.36, 1],
-    smooth: [0.4, 0.0, 0.2, 1],
+    smooth: [0.4, 0, 0.2, 1],
     bounce: [0.34, 1.56, 0.64, 1],
     elastic: [0.68, -0.55, 0.265, 1.55],
   },
