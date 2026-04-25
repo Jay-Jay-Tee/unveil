@@ -5,7 +5,8 @@ import { signIn, isFirebaseConfigured } from '../lib/auth';
 import { useAudit } from '../lib/AuditContext';
 
 export default function Login() {
-  const AUTH_TRANSITION_MS = 520;
+  const AUTH_TRANSITION_MS_SIGNIN = 220;
+  const AUTH_TRANSITION_MS_GUEST = 260;
   const navigate = useNavigate();
   const { setUser } = useAudit();
   const [email, setEmail] = useState('');
@@ -20,7 +21,7 @@ export default function Login() {
     setAuthAction('signin');
     try {
       const user = await signIn({ email: email.trim(), password });
-      await new Promise((resolve) => setTimeout(resolve, AUTH_TRANSITION_MS));
+      await new Promise((resolve) => setTimeout(resolve, AUTH_TRANSITION_MS_SIGNIN));
       setUser(user);
       navigate('/dashboard');
     } catch (err) {
@@ -34,7 +35,7 @@ export default function Login() {
     try {
       // In non-Firebase mode, signIn just returns the local guest
       const user = await signIn({ email: '', password: '' });
-      await new Promise((resolve) => setTimeout(resolve, AUTH_TRANSITION_MS));
+      await new Promise((resolve) => setTimeout(resolve, AUTH_TRANSITION_MS_GUEST));
       setUser(user);
       navigate('/upload');
     } catch {
@@ -46,7 +47,7 @@ export default function Login() {
     e.preventDefault();
     if (authAction || switchingToSignup) return;
     setSwitchingToSignup(true);
-    await new Promise((resolve) => setTimeout(resolve, AUTH_TRANSITION_MS));
+    await new Promise((resolve) => setTimeout(resolve, AUTH_TRANSITION_MS_GUEST));
     navigate('/signup');
   }
 

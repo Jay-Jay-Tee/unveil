@@ -50,7 +50,7 @@ export default function Landing() {
                   Sign in
                 </Link>
                 <Link to="/upload" className="btn btn-primary text-sm">
-                  Start auditing
+                  Sign up
                 </Link>
               </>
             )}
@@ -212,7 +212,7 @@ export default function Landing() {
               textbook example of gender and racial bias in income prediction.
             </p>
             <Link to="/upload" className="btn btn-primary text-base px-8 py-3.5">
-              Start auditing →
+              Sign up →
             </Link>
           </motion.div>
         </section>

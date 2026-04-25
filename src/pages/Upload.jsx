@@ -278,7 +278,8 @@ async function runModelLeg(datasetFile, modelFile, schemaMap, proxyFlags, audit,
 // ─── main component ───────────────────────────────────────────────────────
 
 export default function Upload() {
-  const AUTH_TRANSITION_MS = 520;
+  const AUTH_TRANSITION_MS_SIGNUP_SIGNIN = 220; // a little less than sign out
+  const AUTH_TRANSITION_MS_GUEST = 260; // same as sign out
   const navigate = useNavigate();
   const audit    = useAudit();
 
@@ -311,7 +312,7 @@ export default function Upload() {
       if (guestLoading || authNavTarget) return;
       setAuthNavTarget(target);
       setGuestExiting(true);
-      await new Promise((resolve) => setTimeout(resolve, AUTH_TRANSITION_MS));
+      await new Promise((resolve) => setTimeout(resolve, AUTH_TRANSITION_MS_SIGNUP_SIGNIN));
       navigate(path);
     }
 
@@ -321,7 +322,7 @@ export default function Upload() {
         setAuthNavTarget('guest');
         setGuestExiting(true);
         // Give the interstitial time to animate out before switching screens.
-        await new Promise((resolve) => setTimeout(resolve, AUTH_TRANSITION_MS));
+        await new Promise((resolve) => setTimeout(resolve, AUTH_TRANSITION_MS_GUEST));
         const guest = await signIn({ email: '', password: '' });
         audit.setUser(guest);
       } catch (e) {
