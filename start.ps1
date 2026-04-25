@@ -42,8 +42,22 @@ if (Test-Path "venv\Scripts\Activate.ps1") {
     & "venv\Scripts\Activate.ps1"
 }
 
-# If dependencies are missing, startup will fail with a clear import error.
-# Install manually when needed: python -m pip install -r requirements.txt
+$pythonCmd = "python"
+if (Test-Path "venv\Scripts\python.exe") {
+    $pythonCmd = "venv\Scripts\python.exe"
+}
+
+# Ensure backend Python dependencies are present before starting services.
+& $pythonCmd -c "import firebase_admin" 1>$null 2>$null
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Installing Python dependencies from requirements.txt..." -ForegroundColor Yellow
+    & $pythonCmd -m pip install -r requirements.txt
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Error: Failed to install Python dependencies" -ForegroundColor Red
+        Read-Host "Press Enter to exit"
+        exit 1
+    }
+}
 
 Write-Host "✓ Node.js found" -ForegroundColor Green
 Write-Host "✓ Python found: $pythonCheck" -ForegroundColor Green
