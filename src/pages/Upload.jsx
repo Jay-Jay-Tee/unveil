@@ -353,8 +353,7 @@ export default function Upload() {
 
         {/* Header */}
         <div className="mb-12">
-          <h1 className="text-4xl font-black mb-3"
-            style={{ fontFamily: 'var(--font-sans)', color: 'var(--color-on-surface)' }}>
+          <h1 className="text-display-lg mb-3" style={{ color: 'var(--color-on-surface)' }}>
             Upload your data
           </h1>
           <p className="text-lg text-on-surface-variant">

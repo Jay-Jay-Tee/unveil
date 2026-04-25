@@ -1,6 +1,6 @@
 """
 backend/api.py
-FastAPI routing layer for UnbiasedAI.
+FastAPI routing layer for Unveil.
 
 This file owns only HTTP concerns: request parsing, response shaping,
 error mapping, and CORS. All business logic lives in pipeline.py.
@@ -52,7 +52,7 @@ from backend.pipeline import (
 
 # ── app ────────────────────────────────────────────────────────────────────
 app = FastAPI(
-    title="UnbiasedAI API",
+    title="Unveil API",
     description="Bias detection API — Part A (dataset) + Part B (model)",
     version="1.0.0",
 )
