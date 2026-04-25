@@ -135,7 +135,7 @@ function AuditCard({ audit, onOpen, onDelete }) {
         </div>
         <button
           onClick={(e) => { e.stopPropagation(); onDelete(); }}
-          className="p-1.5 rounded-md opacity-60 hover:opacity-100 hover:bg-[var(--color-surface-container)] transition-all"
+          className="p-1.5 rounded-md opacity-60 hover:opacity-100 hover:bg-surface-container transition-all"
           title="Delete audit"
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"

@@ -48,7 +48,7 @@ export default function Navbar() {
             <div className="relative">
               <button
                 onClick={() => setMenuOpen((v) => !v)}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg transition-colors hover:bg-[var(--color-surface-container)]"
+                className="flex items-center gap-2 px-3 py-2 rounded-lg transition-colors hover:bg-surface-container"
               >
                 <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold"
                   style={{ background: 'var(--color-bg-ink)', color: '#fff' }}>
@@ -79,20 +79,20 @@ export default function Navbar() {
                     <Link
                       to="/dashboard"
                       onClick={() => setMenuOpen(false)}
-                      className="block px-4 py-2.5 text-sm hover:bg-[var(--color-surface-container)]"
+                      className="block px-4 py-2.5 text-sm hover:bg-surface-container"
                     >
                       My audits
                     </Link>
                     <Link
                       to="/upload"
                       onClick={() => setMenuOpen(false)}
-                      className="block px-4 py-2.5 text-sm hover:bg-[var(--color-surface-container)]"
+                      className="block px-4 py-2.5 text-sm hover:bg-surface-container"
                     >
                       New audit
                     </Link>
                     <button
                       onClick={handleSignOut}
-                      className="block w-full text-left px-4 py-2.5 text-sm border-t hover:bg-[var(--color-surface-container)]"
+                      className="block w-full text-left px-4 py-2.5 text-sm border-t hover:bg-surface-container"
                       style={{ borderColor: 'var(--color-border)', color: 'var(--color-status-unfair)' }}
                     >
                       Sign out
