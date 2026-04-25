@@ -228,7 +228,7 @@ export default function Landing() {
             <span className="font-bold">Unveil</span>
           </div>
           <p className="text-sm" style={{ color: 'rgba(255,255,255,0.55)' }}>
-            Uncovering algorithmic bias · GDSC Hackathon 2026
+            Uncovering algorithmic bias · Build with AI Solution Challenge 
           </p>
         </div>
       </footer>
