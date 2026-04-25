@@ -12,7 +12,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.pipeline import Pipeline
 
-df = pd.read_csv("adult_fixed.csv")
+df = pd.read_csv("data/adult_fixed.csv")
 
 df_enc = df.copy()
 for col in df_enc.select_dtypes(include="object").columns:

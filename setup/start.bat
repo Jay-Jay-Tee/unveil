@@ -46,7 +46,7 @@ REM Ensure backend Python dependencies are present before starting services.
 %PY_CMD% -c "import firebase_admin" >nul 2>&1
 if errorlevel 1 (
     echo Installing Python dependencies from requirements.txt...
-    %PY_CMD% -m pip install -r requirements.txt
+    %PY_CMD% -m pip install -r docs/requirements.txt
     if errorlevel 1 (
         echo Error: Failed to install Python dependencies
         pause

@@ -51,7 +51,7 @@ if (Test-Path "venv\Scripts\python.exe") {
 & $pythonCmd -c "import firebase_admin" 1>$null 2>$null
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Installing Python dependencies from requirements.txt..." -ForegroundColor Yellow
-    & $pythonCmd -m pip install -r requirements.txt
+    & $pythonCmd -m pip install -r docs/requirements.txt
     if ($LASTEXITCODE -ne 0) {
         Write-Host "Error: Failed to install Python dependencies" -ForegroundColor Red
         Read-Host "Press Enter to exit"

@@ -37,8 +37,8 @@ import pandas as pd
 
 # Allow running from repo root
 sys.path.insert(0, str(Path(__file__).parent))
-from probe_generator import ProbeGenerator
-from shap_explainer import SHAPExplainer
+from backend.probe_generator import ProbeGenerator
+from backend.shap_explainer import SHAPExplainer
 
 
 def load_schema(schema_path: str) -> dict:

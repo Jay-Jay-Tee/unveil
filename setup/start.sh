@@ -68,7 +68,7 @@ fi
 python3 -c "import firebase_admin" > /dev/null 2>&1
 if [ $? -ne 0 ]; then
     echo -e "${YELLOW}Installing Python dependencies from requirements.txt...${NC}"
-    python3 -m pip install -r requirements.txt
+    python3 -m pip install -r docs/requirements.txt
     if [ $? -ne 0 ]; then
         echo -e "${RED}Error: Failed to install Python dependencies${NC}"
         exit 1
