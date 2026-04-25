@@ -66,7 +66,7 @@ function FileSlot({ label, sublabel, accept, file, onFile, onClear, disabled }) 
               </p>
             </div>
             <button
-              onClick={e => { e.stopPropagation(); onClear(); }}
+              onClick={e => { e.stopPropagation(); ref.current.value = ''; onClear(); }}
               className="text-xs font-semibold px-4 py-1.5 rounded-lg border-2 transition-all hover:opacity-70 mt-1"
               style={{ borderColor: 'var(--color-outline-variant)', color: 'var(--color-on-surface-variant)' }}>
               Remove
@@ -374,7 +374,7 @@ export default function Upload() {
             <p className="text-xs text-on-surface-variant mb-3">CSV, JSON, or XLSX</p>
             <FileSlot
               label="Drop dataset" sublabel="CSV, JSON, or XLSX"
-              accept=".csv,.json,.xlsx,.xls,.data,.txt"
+              accept=".csv,.json,.xlsx"
               file={datasetFile} onFile={setDatasetFile} onClear={() => setDatasetFile(null)}
               disabled={status === 'analyzing'}
             />
