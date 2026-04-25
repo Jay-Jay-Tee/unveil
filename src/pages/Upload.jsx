@@ -25,7 +25,7 @@ const RUN_BUTTON_LABEL = {
   both:      'Run Full Audit',
   dataset:   'Analyze Dataset',
   model:     'Analyze Model',
-  none:      'Upload at least one file',
+  none:      'Upload a dataset to start',
 };
 
 // ─── sub-components ───────────────────────────────────────────────────────
