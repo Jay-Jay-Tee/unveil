@@ -203,8 +203,12 @@ Create `.env` file in project root if needed:
 ```env
 GEMINI_API_KEY=your_key_here
 VITE_API_URL=http://localhost:8001
+VITE_REQUIRE_AUTH_FOR_ANALYSIS=true
+AUTH_REQUIRED=true
 NODE_ENV=development
 ```
+
+For local demo mode without Firebase auth enforcement, set both `VITE_REQUIRE_AUTH_FOR_ANALYSIS=false` and `AUTH_REQUIRED=false`.
 
 ---
 

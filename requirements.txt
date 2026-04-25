@@ -19,6 +19,7 @@ pydantic
 
 # Gemini / Google AI
 google-genai
+firebase-admin
 python-dotenv
 
 # Utilities

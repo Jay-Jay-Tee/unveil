@@ -332,7 +332,11 @@ export default function Upload() {
 
     } catch (err) {
       setStatus('error');
-      setErrorMsg(getErrorText(err));
+      if (err?.code === 'AUTH_REQUIRED' || err?.status === 401) {
+        setErrorMsg('Sign in with Firebase to run server-side analysis. Guest mode is limited to local browsing and saved local data.');
+      } else {
+        setErrorMsg(getErrorText(err));
+      }
     }
   }
 

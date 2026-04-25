@@ -84,6 +84,13 @@ export async function getCurrentUser() {
   return auth.currentUser ? serializeUser(auth.currentUser) : null;
 }
 
+export async function getAuthToken(forceRefresh = false) {
+  if (!isFirebaseConfigured()) return null;
+  const { auth } = await getFirebase();
+  if (!auth.currentUser) return null;
+  return auth.currentUser.getIdToken(forceRefresh);
+}
+
 export async function onAuthChange(callback) {
   if (!isFirebaseConfigured()) {
     // No realtime events in local mode — just fire once with current state
