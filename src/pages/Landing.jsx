@@ -202,7 +202,7 @@ export default function Landing() {
         <div className="max-w-6xl mx-auto px-6 text-center">
           <p className="text-on-surface-variant mb-2">UnbiasedAI — Algorithmic Integrity</p>
           <p className="text-sm text-on-surface-variant">
-            Making AI fair for everyone · GDSC Hackathon 2026
+            Making AI fair for everyone · Solution Challenge 2026
           </p>
         </div>
       </footer>
