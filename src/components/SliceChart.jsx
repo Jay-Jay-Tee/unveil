@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from 'react';
+﻿import { useRef, useEffect, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ReferenceLine, Cell } from 'recharts';
 
 const FLAG_THRESHOLD  = 0.10;
@@ -37,7 +37,7 @@ export default function SliceChart({ slices, columnName, binning }) {
   const yAxisWidth   = Math.min(Y_AXIS_MAX, Math.max(Y_AXIS_MIN, longestLabel * CHAR_WIDTH + 12));
   const chartHeight  = Math.max(CHART_MIN_H, data.length * BAR_ROW_HEIGHT + 40);
 
-  // On mobile containerWidth will be small — use it directly (no scroll needed).
+  // On mobile containerWidth will be small - use it directly (no scroll needed).
   // On desktop use the container width but floor it at CHART_MIN_W so bars stay readable.
   const chartWidth = containerWidth
     ? Math.max(CHART_MIN_W, containerWidth)
@@ -72,7 +72,7 @@ export default function SliceChart({ slices, columnName, binning }) {
         <LegendSwatch color="var(--color-status-unfair)"     label="False negative" />
       </div>
 
-      {/* Chart — fills container width, no horizontal page scroll */}
+      {/* Chart - fills container width, no horizontal page scroll */}
       {chartWidth && (
         <BarChart
           width={chartWidth}
@@ -155,7 +155,7 @@ function CustomTooltip({ active, payload, label }) {
       <p className="font-bold mb-2" style={{ fontFamily: 'var(--font-mono)' }}>{label}</p>
       <Row color="rgba(255,255,255,0.9)"           label="Approved" value={fmt(row?.positive_rate)} />
       <Row color="var(--color-status-borderline)"  label="False +"  value={fmt(row?.fpr)} flagged={row?.fprFlagged} />
-      <Row color="var(--color-status-unfair)"      label="False −"  value={fmt(row?.fnr)} flagged={row?.fnrFlagged} />
+      <Row color="var(--color-status-unfair)"      label="False -"  value={fmt(row?.fnr)} flagged={row?.fnrFlagged} />
       {row?.count != null && (
         <p className="mt-2 pt-2 border-t text-[11px]"
           style={{ color: 'rgba(255,255,255,0.55)', borderColor: 'rgba(255,255,255,0.15)' }}>
@@ -187,6 +187,7 @@ function LegendSwatch({ color, label }) {
 }
 
 function fmt(v) {
-  if (v == null) return '—';
+  if (v == null) return '-';
   return `${(v * 100).toFixed(1)}%`;
 }
+

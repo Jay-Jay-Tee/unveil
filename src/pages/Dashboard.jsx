@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { listAudits, deleteAudit } from '../lib/storage';
@@ -17,7 +17,7 @@ export default function Dashboard() {
       navigate('/login');
       return;
     }
-    if (user.isGuest) return; // Guest sees the sign-up wall below — no audit fetch needed
+    if (user.isGuest) return; // Guest sees the sign-up wall below - no audit fetch needed
     (async () => {
       try {
         const list = await listAudits(user);
@@ -53,7 +53,7 @@ export default function Dashboard() {
     );
   }
 
-  // Guest wall — they can browse but audits don't save without an account
+  // Guest wall - they can browse but audits don't save without an account
   if (user?.isGuest) {
     return (
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
@@ -77,8 +77,13 @@ export default function Dashboard() {
             <Link to="/signup" className="btn btn-primary">Create free account</Link>
             <Link to="/login" className="btn btn-secondary">Sign in</Link>
           </div>
+          <div className="mt-3">
+            <Link to="/upload" className="btn btn-ghost text-sm">
+              No, continue as guest
+            </Link>
+          </div>
           <p className="text-xs mt-5" style={{ color: 'var(--color-text-mid)' }}>
-            You can still run audits as a guest — results just won't be saved between sessions.
+            You can still run audits as a guest - results just won't be saved between sessions.
           </p>
         </div>
       </motion.div>
@@ -103,7 +108,7 @@ export default function Dashboard() {
             </h1>
             <p className="text-sm" style={{ color: 'var(--color-text-mid)' }}>
               {audits.length === 0
-                ? 'No audits yet — run your first one to get started.'
+                ? 'No audits yet - run your first one to get started.'
                 : `${audits.length} saved audit${audits.length === 1 ? '' : 's'}`}
             </p>
           </div>
@@ -141,6 +146,56 @@ export default function Dashboard() {
   );
 }
 
+function safeFileSlug(value) {
+  return String(value || 'audit')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 48) || 'audit';
+}
+
+function downloadJsonFile(filename, data) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function exportAuditJson(audit) {
+  const stamp = new Date(audit.createdAt || Date.now()).toISOString().slice(0, 10);
+  const prefix = `${safeFileSlug(audit.datasetName)}-${stamp}`;
+  downloadJsonFile(`${prefix}.audit.json`, audit);
+}
+
+function exportAuditArtifacts(audit) {
+  const stamp = new Date(audit.createdAt || Date.now()).toISOString().slice(0, 10);
+  const prefix = `${safeFileSlug(audit.datasetName)}-${stamp}`;
+  const files = [
+    { name: `${prefix}.summary.json`, data: {
+      id: audit.id,
+      datasetName: audit.datasetName,
+      rowCount: audit.rowCount,
+      columnCount: audit.columnCount,
+      createdAt: audit.createdAt,
+      summary: audit.summary,
+      note: audit.note || '',
+    } },
+    { name: `${prefix}.schema_map.json`, data: audit.schemaMap || { columns: [] } },
+    { name: `${prefix}.bias_report.json`, data: audit.biasReport || { column_results: [] } },
+  ];
+
+  if (audit.modelBiasReport) {
+    files.push({ name: `${prefix}.model_bias_report.json`, data: audit.modelBiasReport });
+  }
+
+  files.forEach((f) => downloadJsonFile(f.name, f.data));
+}
+
 function AuditCard({ audit, onOpen, onDelete }) {
   const verdict = overallDatasetVerdict(audit.biasReport);
   const verdictInfo = VERDICT[verdict] || VERDICT.SKIPPED;
@@ -163,7 +218,7 @@ function AuditCard({ audit, onOpen, onDelete }) {
         <div className="min-w-0 flex-1">
           <h3 className="font-bold truncate mb-1">{audit.datasetName}</h3>
           <p className="text-xs" style={{ color: 'var(--color-text-mid)' }}>
-            {audit.rowCount?.toLocaleString() || '—'} rows · {audit.columnCount || '—'} columns
+            {audit.rowCount?.toLocaleString() || '-'} rows · {audit.columnCount || '-'} columns
           </p>
         </div>
         <button
@@ -194,6 +249,31 @@ function AuditCard({ audit, onOpen, onDelete }) {
           "{audit.note}"
         </p>
       )}
+
+      <div className="mt-3 flex gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
+        <button
+          onClick={() => exportAuditJson(audit)}
+          className="px-2.5 py-1.5 rounded-md text-xs font-semibold transition-all"
+          style={{
+            background: 'var(--color-surface-container-low)',
+            color: 'var(--color-on-surface)',
+          }}
+          title="Download this audit as one JSON file"
+        >
+          Download JSON
+        </button>
+        <button
+          onClick={() => exportAuditArtifacts(audit)}
+          className="px-2.5 py-1.5 rounded-md text-xs font-semibold transition-all"
+          style={{
+            background: 'var(--color-surface-container-high)',
+            color: 'var(--color-on-surface)',
+          }}
+          title="Download this audit as separate files"
+        >
+          Download files
+        </button>
+      </div>
 
       <p className="text-[11px] mt-3" style={{ color: 'var(--color-text-faint)' }}>
         {formatTimeAgo(audit.createdAt)}
@@ -244,3 +324,4 @@ function formatTimeAgo(ts) {
   if (seconds < 604800) return `${Math.floor(seconds / 86400)} day${Math.floor(seconds / 86400) === 1 ? '' : 's'} ago`;
   return new Date(ts).toLocaleDateString();
 }
+

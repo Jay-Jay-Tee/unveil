@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+﻿import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // ── Inline helpers mirrored from api.js so we can unit-test error logic
 // without triggering ESM / Firebase / fetch side-effects. ─────────────────
@@ -25,7 +25,7 @@ function friendlyGeminiQuotaMessage(retryAfterSeconds) {
 }
 
 function friendlyGeminiBusyMessage() {
-  return "Gemini is busy right now — we'll try again in 30-60 seconds. Your place in line is held.";
+  return "Gemini is busy right now - we'll try again in 30-60 seconds. Your place in line is held.";
 }
 
 // ── Tests ──────────────────────────────────────────────────────────────────
@@ -91,3 +91,4 @@ describe('friendlyGeminiBusyMessage', () => {
     expect(friendlyGeminiBusyMessage()).toContain('30-60 seconds');
   });
 });
+

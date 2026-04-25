@@ -1,8 +1,8 @@
-/**
- * gemini.js — Browser-side Gemini client (fallback when backend is offline).
+﻿/**
+ * gemini.js - Browser-side Gemini client (fallback when backend is offline).
  *
  * Main changes vs old version:
- *   1. Report is generated in 4 sections instead of one call — if one section
+ *   1. Report is generated in 4 sections instead of one call - if one section
  *      hits a rate limit, we still ship the others.
  *   2. Each section has its own max_output_tokens budget (no more cut-offs).
  *   3. Auto-retry with exponential backoff on transient errors.
@@ -74,7 +74,7 @@ async function callGemini(prompt, { maxTokens = 2048, attempt = 0 } = {}) {
   const finishReason = data.candidates[0].finishReason || 'STOP';
   if (!text) throw new Error(`Candidate had no text. finishReason: ${finishReason}`);
 
-  // MAX_TOKENS is not a hard failure — return what we got
+  // MAX_TOKENS is not a hard failure - return what we got
   if (finishReason === 'MAX_TOKENS') {
     return text;
   }
@@ -126,9 +126,9 @@ ${JSON.stringify(bias, null, 2)}
 Model findings:
 ${JSON.stringify(model, null, 2)}
 
-A fairness ratio below 0.80 fails the legal 80% rule. Don't use the word "PROTECTED" — say "sensitive attributes" instead.`,
+A fairness ratio below 0.80 fails the legal 80% rule. Don't use the word "PROTECTED" - say "sensitive attributes" instead.`,
 
-  'Critical Findings': (bias, model, datasetName) => `Write ONLY the CRITICAL FINDINGS section — one short paragraph (2-3 sentences) per "Unfair" or "Borderline" column. State the column name, worst-affected group, fairness ratio, and why it matters. Reference "${datasetName}" when relevant. No section heading.
+  'Critical Findings': (bias, model, datasetName) => `Write ONLY the CRITICAL FINDINGS section - one short paragraph (2-3 sentences) per "Unfair" or "Borderline" column. State the column name, worst-affected group, fairness ratio, and why it matters. Reference "${datasetName}" when relevant. No section heading.
 
 Dataset findings:
 ${JSON.stringify(bias, null, 2)}
@@ -170,7 +170,7 @@ async function generateSections(biasCompact, modelCompact, datasetName = 'the da
       sections.push(`## ${heading}\n\n${text.trim()}`);
     } catch (err) {
       console.error(`[gemini] section '${heading}' failed:`, err);
-      sections.push(`## ${heading}\n\n*(Couldn't generate this section — ${err.message || 'error'})*`);
+      sections.push(`## ${heading}\n\n*(Couldn't generate this section - ${err.message || 'error'})*`);
       if (!firstError) firstError = err;
     }
   }
@@ -208,3 +208,4 @@ export async function generateAuditReport(biasReport, modelBiasReport, { forceRe
 
   return fullReport;
 }
+

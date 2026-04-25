@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+﻿import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import ColumnCard from '../components/ColumnCard';
@@ -127,13 +127,13 @@ export default function DatasetAudit() {
           {isMock && (
             <p className="text-xs mt-4 inline-block px-3 py-1.5 rounded-lg"
               style={{ color: 'var(--color-accent-dark)', background: 'var(--color-accent-light)', fontFamily: 'var(--font-mono)' }}>
-              Demo mode — start the backend for live results
+              Demo mode - start the backend for live results
             </p>
           )}
           {schemaMap.used_fallback && (
             <p className="text-xs mt-2 inline-block px-3 py-1.5 rounded-lg ml-2"
               style={{ color: 'var(--color-accent-dark)', background: 'var(--color-accent-light)', fontFamily: 'var(--font-mono)' }}>
-              Gemini was rate-limited — some columns were classified using built-in rules instead.
+              Gemini was rate-limited - some columns were classified using built-in rules instead.
             </p>
           )}
         </div>
@@ -244,3 +244,4 @@ export default function DatasetAudit() {
     </motion.div>
   );
 }
+

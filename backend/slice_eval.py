@@ -1,9 +1,9 @@
-"""
-Unveil — slice_eval.py  (REVAMPED)
+﻿"""
+Unveil - slice_eval.py  (REVAMPED)
 
 Critical fix: numeric columns (age) and high-cardinality categoricals
 (native-country, occupation) are now BINNED before slicing. The old version
-produced one bar per unique value — 73 age bars, 41 country bars — which
+produced one bar per unique value - 73 age bars, 41 country bars - which
 was useless for the user AND bad for the chi-squared test.
 
 Binning strategy:
@@ -13,8 +13,8 @@ Binning strategy:
     collapse the rest into "Other".
   - Categorical with < 6 unique values: leave as-is.
 
-The output shape is unchanged — each slice row still has group/count/
-positive_rate/fpr/fnr/tp/tn/fp/fn — so nothing downstream breaks.
+The output shape is unchanged - each slice row still has group/count/
+positive_rate/fpr/fnr/tp/tn/fp/fn - so nothing downstream breaks.
 """
 
 from __future__ import annotations
@@ -35,7 +35,7 @@ MIN_BIN_SIZE = 20  # don't keep groups with fewer than this many rows
 
 
 # ─────────────────────────────────────────────────────────────
-# Binning — this is the part that fixes "every age shown as a bar"
+# Binning - this is the part that fixes "every age shown as a bar"
 # ─────────────────────────────────────────────────────────────
 
 def _col_is_age_like(name: str) -> bool:
@@ -82,7 +82,7 @@ def _apply_binning(df: pd.DataFrame, column: str) -> pd.Series:
         return _bin_age(series)
 
     if is_numeric:
-        # e.g. hours-per-week, capital-gain — bin if high cardinality
+        # e.g. hours-per-week, capital-gain - bin if high cardinality
         nunique = series.nunique(dropna=True)
         if nunique > MAX_CATEGORICAL_GROUPS:
             return _bin_numeric_quantile(series)
@@ -186,7 +186,7 @@ def evaluate_slices(
     if working.empty:
         return empty_result
 
-    # ★ BINNING HAPPENS HERE — this is the key fix
+    # ★ BINNING HAPPENS HERE - this is the key fix
     binning_used = "none"
     original_nunique = working[group_column].nunique(dropna=True)
     working["_binned_group"] = _apply_binning(working, group_column)
@@ -206,7 +206,7 @@ def evaluate_slices(
     results: list[dict] = []
     for group_value, group_df in working.groupby("_binned_group", dropna=False):
         if len(group_df) < MIN_BIN_SIZE:
-            # Still include it but mark it as small — the UI can grey it out
+            # Still include it but mark it as small - the UI can grey it out
             pass
 
         y_true = _binary_series(group_df[label_column], positive_label)
@@ -239,7 +239,7 @@ def evaluate_slices(
     if not results:
         return empty_result
 
-    # Pick reference group — biggest by count, ties broken by highest positive_rate
+    # Pick reference group - biggest by count, ties broken by highest positive_rate
     if reference_group is None:
         ref_entry = max(results, key=lambda r: (r["count"], r["positive_rate"]))
         reference_group = ref_entry["group"]
@@ -316,3 +316,4 @@ def load_reportable_slice(path: Optional[str] = None) -> dict:
     slice_path = Path(path) if path else Path(__file__).resolve().parents[1] / "schemas" / "slice_eval.json"
     with open(slice_path, "r", encoding="utf-8") as handle:
         return json.load(handle)
+

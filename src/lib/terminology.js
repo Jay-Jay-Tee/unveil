@@ -1,8 +1,8 @@
-/**
- * terminology.js — Unveil's single source of truth for user-facing language.
+﻿/**
+ * terminology.js - Unveil's single source of truth for user-facing language.
  *
  * Why this file exists: the backend produces JSON with terms like
- * "PROTECTED", "AMBIGUOUS", "BIASED", "CLEAN" — these are statistically
+ * "PROTECTED", "AMBIGUOUS", "BIASED", "CLEAN" - these are statistically
  * correct but nobody knows what they mean. This module maps every such
  * term into plain English, with a one-line explanation the UI can show.
  *
@@ -27,7 +27,7 @@ export const COLUMN_ROLE = {
   },
   AMBIGUOUS: {
     label: 'Possible proxy',
-    description: 'Not itself sensitive, but often encodes a sensitive attribute — e.g. zip code for race.',
+    description: 'Not itself sensitive, but often encodes a sensitive attribute - e.g. zip code for race.',
     color: 'var(--color-role-proxy)',
     icon: '⚠',
   },
@@ -79,9 +79,9 @@ export const VERDICT = {
   },
   SKIPPED: {
     label: 'Not analyzed',
-    shortLabel: '—',
+    shortLabel: '-',
     description: 'Bias analysis didn\'t apply to this attribute.',
-    icon: '—',
+    icon: '-',
     tone: 'neutral',
     color: 'var(--color-text-faint)',
     bgColor: 'var(--color-surface-container)',
@@ -104,7 +104,7 @@ export function verdictBg(v) {
   return VERDICT[v]?.bgColor || 'var(--color-surface-container)';
 }
 
-// ── Metric explanations — what each number actually means ───────────────
+// ── Metric explanations - what each number actually means ───────────────
 
 export const METRIC = {
   disparate_impact: {
@@ -112,7 +112,7 @@ export const METRIC = {
     shortLabel: 'FR',
     description: 'How often the worst-off group gets a positive outcome, as a fraction of the best-off group. 1.0 = perfectly equal. Below 0.80 = legally concerning (EEOC 80% rule).',
     legalThreshold: 0.80,
-    format: (v) => v == null ? '—' : v.toFixed(2),
+    format: (v) => v == null ? '-' : v.toFixed(2),
     // Reverse-direction metric: LOWER is worse
     isWorseWhenLower: true,
   },
@@ -121,7 +121,7 @@ export const METRIC = {
     shortLabel: 'Gap',
     description: 'Absolute percentage-point gap between the most- and least-approved groups. 0.22 means 22 percentage points.',
     flagThreshold: 0.10,
-    format: (v) => v == null ? '—' : `${(v * 100).toFixed(1)}pp`,
+    format: (v) => v == null ? '-' : `${(v * 100).toFixed(1)}pp`,
     isWorseWhenLower: false,
   },
   p_value: {
@@ -129,7 +129,7 @@ export const METRIC = {
     shortLabel: 'p',
     description: 'Probability that the observed gap is due to random chance. Below 0.05 means the gap is statistically real.',
     flagThreshold: 0.05,
-    format: (v) => v == null ? '—' : (v < 0.001 ? '<0.001' : v.toFixed(3)),
+    format: (v) => v == null ? '-' : (v < 0.001 ? '<0.001' : v.toFixed(3)),
     isWorseWhenLower: false,
   },
   proxy_strength: {
@@ -137,19 +137,19 @@ export const METRIC = {
     shortLabel: 'Proxy',
     description: 'How strongly this column encodes a sensitive attribute. 0 = independent, 1 = perfectly predicts it. Above 0.3 is notable.',
     flagThreshold: 0.30,
-    format: (v) => v == null ? '—' : v.toFixed(2),
+    format: (v) => v == null ? '-' : v.toFixed(2),
     isWorseWhenLower: false,
   },
   positive_rate: {
     label: 'Approval rate',
     shortLabel: 'Approved',
     description: 'Share of this group that received a positive outcome.',
-    format: (v) => v == null ? '—' : `${(v * 100).toFixed(0)}%`,
+    format: (v) => v == null ? '-' : `${(v * 100).toFixed(0)}%`,
     isWorseWhenLower: false,
   },
 };
 
-// ── Plain-English findings — lightweight templates for inline explanation ──
+// ── Plain-English findings - lightweight templates for inline explanation ──
 
 export function summarizeColumnFinding({ name, role, verdict, disparate_impact, parity_gap, slices, proxy_strength, proxy_targets }) {
   const v = VERDICT[verdict];
@@ -169,7 +169,7 @@ export function summarizeColumnFinding({ name, role, verdict, disparate_impact, 
     const target = proxy_targets?.[0];
     const strengthText = proxy_strength != null ? ` (${proxy_strength.toFixed(2)} proxy strength)` : '';
     if (target) {
-      return `${name} strongly encodes ${target}${strengthText}. Removing ${target} alone won't fix this — a model could still pick up the same bias through ${name}.`;
+      return `${name} strongly encodes ${target}${strengthText}. Removing ${target} alone won't fix this - a model could still pick up the same bias through ${name}.`;
     }
     return `${name} may be acting as a stand-in for a sensitive attribute${strengthText}.`;
   }
@@ -177,7 +177,7 @@ export function summarizeColumnFinding({ name, role, verdict, disparate_impact, 
   // Protected column with a verdict
   if (worst && disparate_impact != null && disparate_impact < 0.80) {
     const worstPct = Math.round((worst.positive_rate || 0) * 100);
-    return `Group "${worst.group}" receives positive outcomes only ${worstPct}% of the time — a fairness ratio of ${disparate_impact.toFixed(2)}, below the 0.80 legal threshold.`;
+    return `Group "${worst.group}" receives positive outcomes only ${worstPct}% of the time - a fairness ratio of ${disparate_impact.toFixed(2)}, below the 0.80 legal threshold.`;
   }
 
   if (parity_gap != null && parity_gap > 0.10) {
@@ -201,8 +201,9 @@ export function overallDatasetVerdict(biasReport) {
 export function overallVerdictHeadline(v) {
   return {
     BIASED: 'Unfair patterns detected',
-    AMBIGUOUS: 'Borderline — inspect closely',
+    AMBIGUOUS: 'Borderline - inspect closely',
     CLEAN: 'No significant bias detected',
     SKIPPED: 'Not enough data to analyze',
   }[v];
 }
+

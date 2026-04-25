@@ -1,5 +1,5 @@
-"""
-Unveil — gemini_classifier.py  (REVAMPED)
+﻿"""
+Unveil - gemini_classifier.py  (REVAMPED)
 
 What changed vs the old version:
   1. Rules-based fallback fires FIRST for obvious column names (sex, race, age,
@@ -11,7 +11,7 @@ What changed vs the old version:
   3. Retry-with-exponential-backoff on 429/503 transient errors. If every
      retry fails, we fall through to a pure rules-based classification and
      mark the result as fallback=True so the UI can show a warning.
-  4. Output JSON is the same shape as before — no schema changes downstream.
+  4. Output JSON is the same shape as before - no schema changes downstream.
 """
 
 from __future__ import annotations
@@ -39,10 +39,10 @@ _CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
 
 # ─────────────────────────────────────────────────────────────
-# Rules-based pass — runs FIRST, catches the obvious cases
+# Rules-based pass - runs FIRST, catches the obvious cases
 # ─────────────────────────────────────────────────────────────
 
-# Order matters — PROTECTED patterns check first, OUTCOME next, then proxies.
+# Order matters - PROTECTED patterns check first, OUTCOME next, then proxies.
 # We match on normalized names (lowercase, underscores/hyphens stripped).
 
 _PROTECTED_PATTERNS = [
@@ -82,7 +82,7 @@ _PROXY_PATTERNS: list[tuple[str, list[str]]] = [
     (r"^(education|degree|school|institution)$", ["race"]),
 ]
 
-# Known-safe features — skip Gemini entirely.
+# Known-safe features - skip Gemini entirely.
 _NEUTRAL_PATTERNS = [
     r"^(hours.*per.*week|weekly.*hours|work.*hours)$",
     r"^(capital.*gain|capital.*loss)$",
@@ -101,13 +101,13 @@ def _rules_classify(column_meta: list[dict]) -> tuple[dict[str, dict], list[str]
     Return (classified_dict, unresolved_column_names).
 
     classified_dict maps name -> { name, type, proxies, confidence }.
-    Unresolved columns are those the rules couldn't decide on confidently —
+    Unresolved columns are those the rules couldn't decide on confidently -
     these are the only ones we'll actually send to Gemini.
     """
     classified: dict[str, dict] = {}
     unresolved: list[str] = []
 
-    # First pass — detect protected columns (needed as proxy targets)
+    # First pass - detect protected columns (needed as proxy targets)
     protected_names: list[str] = []
     for col in column_meta:
         nname = _norm(col["name"])
@@ -116,7 +116,7 @@ def _rules_classify(column_meta: list[dict]) -> tuple[dict[str, dict], list[str]
                 protected_names.append(col["name"])
                 break
 
-    # Second pass — full classification
+    # Second pass - full classification
     for col in column_meta:
         name = col["name"]
         nname = _norm(name)
@@ -215,7 +215,7 @@ def _call_gemini_for_unresolved(
     """
     Ask Gemini to classify ONLY the columns we couldn't resolve from rules.
     Retries up to 3 times on transient errors with exponential backoff.
-    Raises on permanent failure — the caller decides whether to fall back.
+    Raises on permanent failure - the caller decides whether to fall back.
     """
     from google import genai
     from google.genai import types
@@ -246,12 +246,12 @@ Classify ONLY these columns (others have already been handled):
 {known_protected_hint}
 
 For each column, return one of:
-  PROTECTED   — demographic attribute (age, race, sex, religion, disability, etc.)
-  OUTCOME     — the label a model would predict (income, approved, hired, score)
-  AMBIGUOUS   — correlates with a protected attribute (list which one in "proxies")
-  NEUTRAL     — no demographic correlation (hours worked, education years, etc.)
+  PROTECTED   - demographic attribute (age, race, sex, religion, disability, etc.)
+  OUTCOME     - the label a model would predict (income, approved, hired, score)
+  AMBIGUOUS   - correlates with a protected attribute (list which one in "proxies")
+  NEUTRAL     - no demographic correlation (hours worked, education years, etc.)
 
-Return ONLY this JSON — no markdown, no prose:
+Return ONLY this JSON - no markdown, no prose:
 {{"columns":[{{"name":"...","type":"...","proxies":["..."]}}]}}"""
 
     last_err: Optional[Exception] = None
@@ -295,7 +295,7 @@ Return ONLY this JSON — no markdown, no prose:
 def classify(ingest_result: dict, output_path: Optional[str] = None) -> dict:
     """
     Classify columns. Tries: (1) disk cache, (2) rules-based, (3) Gemini for leftovers.
-    Falls back gracefully on every failure — we never leave the user staring at
+    Falls back gracefully on every failure - we never leave the user staring at
     a rate-limit error when we could have done the obvious parts ourselves.
     """
     cache_key = _cache_key(ingest_result)
@@ -310,7 +310,7 @@ def classify(ingest_result: dict, output_path: Optional[str] = None) -> dict:
 
     column_meta = ingest_result["column_meta"]
 
-    # Step 1 — rules first
+    # Step 1 - rules first
     rules_classified, unresolved = _rules_classify(column_meta)
     print(f"  [classifier] rules resolved {len(rules_classified)}/{len(column_meta)} columns")
 
@@ -326,7 +326,7 @@ def classify(ingest_result: dict, output_path: Optional[str] = None) -> dict:
             )
             print(f"  [classifier] Gemini classified {len(gemini_classified)} leftover columns")
         except Exception as e:
-            print(f"  [classifier] Gemini failed ({e}) — using NEUTRAL fallback for unresolved columns")
+            print(f"  [classifier] Gemini failed ({e}) - using NEUTRAL fallback for unresolved columns")
             used_fallback = True
             gemini_classified = [
                 {"name": n, "type": "NEUTRAL", "proxies": []} for n in unresolved
@@ -416,3 +416,4 @@ def summarize(schema_map: dict) -> None:
             for e in entries:
                 proxy_str = f"  → proxies: {e['proxies']}" if e["proxies"] else ""
                 print(f"    • {e['name']}{proxy_str}")
+

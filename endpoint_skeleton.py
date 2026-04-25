@@ -1,10 +1,10 @@
-"""
-M3 — endpoint_skeleton.py  (complete implementation)
+﻿"""
+M3 - endpoint_skeleton.py  (complete implementation)
 
 Routes:
-  GET  /health    — liveness check
-  POST /predict   — single-row model prediction (stub or real model)
-  POST /analyze   — full M3 bias analysis: probes + SHAP → model_bias_report.json
+  GET  /health    - liveness check
+  POST /predict   - single-row model prediction (stub or real model)
+  POST /analyze   - full M3 bias analysis: probes + SHAP → model_bias_report.json
 
 Run with:  uvicorn endpoint_skeleton:app --reload --port 8001
 """
@@ -28,7 +28,7 @@ from backend.probe_generator import ProbeGenerator
 from backend.shap_explainer import SHAPExplainer
 
 app = FastAPI(
-    title="UnbiasedAI — M3 Model Analyzer",
+    title="UnbiasedAI - M3 Model Analyzer",
     description="Black-box probe + SHAP explainability interface for bias analysis",
     version="1.0.0"
 )
@@ -55,7 +55,7 @@ class PredictResponse(BaseModel):
 
 class AnalyzeRequest(BaseModel):
     """
-    Full bias analysis request — called by M4's dashboard.
+    Full bias analysis request - called by M4's dashboard.
 
     mode: 'http_endpoint' (black-box via URL) | 'local' (loaded model in memory)
     model_endpoint: URL to POST to (used when mode='http_endpoint')
@@ -124,7 +124,7 @@ def predict(request: PredictRequest):
     if _loaded_model is not None:
         try:
             row = pd.DataFrame([features])
-            # Align columns — model may need specific ordering
+            # Align columns - model may need specific ordering
             if hasattr(_loaded_model, "feature_names_in_"):
                 for col in _loaded_model.feature_names_in_:
                     if col not in row.columns:
@@ -141,7 +141,7 @@ def predict(request: PredictRequest):
             # Fall through to stub on error so probing doesn't break
             print(f"  [predict] Model error ({e}), using stub")
 
-    # Stub — deterministic-ish based on features so probes see variance
+    # Stub - deterministic-ish based on features so probes see variance
     seed = abs(hash(str(sorted(features.items())))) % 10000
     rng = np.random.default_rng(seed)
     prob = float(rng.uniform(0.2, 0.85))
@@ -152,8 +152,8 @@ def predict(request: PredictRequest):
 def analyze(request: AnalyzeRequest):
     """
     Full M3 bias analysis pipeline:
-      1. ProbeGenerator — black-box probe pairs → mean_diff + p-value per protected column
-      2. SHAPExplainer   — global feature importance → shap_rank cross-referenced with protected/proxy
+      1. ProbeGenerator - black-box probe pairs → mean_diff + p-value per protected column
+      2. SHAPExplainer   - global feature importance → shap_rank cross-referenced with protected/proxy
       3. Merge results → model_bias_report.json schema for M4
     """
     global _loaded_model, _loaded_X_background
@@ -192,9 +192,9 @@ def analyze(request: AnalyzeRequest):
             shap_summary = explainer.get_summary_for_m4()
             shap_rank_lookup = {e["feature"]: e["shap_rank"] for e in shap_summary}
         except Exception as e:
-            print(f"  [analyze] SHAP failed ({e}) — continuing without SHAP ranks")
+            print(f"  [analyze] SHAP failed ({e}) - continuing without SHAP ranks")
     elif request.run_shap and _loaded_model is None:
-        print("  [analyze] No model loaded — skipping SHAP. Upload a model via POST /upload-model")
+        print("  [analyze] No model loaded - skipping SHAP. Upload a model via POST /upload-model")
 
     # ── Step 3: Merge shap_rank into probe results ────────
     attribute_results = []

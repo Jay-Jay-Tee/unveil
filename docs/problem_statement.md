@@ -1,10 +1,10 @@
-# Problem Statement — UnbiasedAI
+﻿# Problem Statement - UnbiasedAI
 
 ## The Problem
 
-Algorithmic bias is one of the most consequential and least visible failures in modern AI systems. Machine learning models used in hiring, loan approvals, healthcare triage, and criminal sentencing routinely produce systematically worse outcomes for women, racial minorities, older applicants, and other protected groups — not because of explicit discrimination, but because the training data and learned feature weights encode historical inequality.
+Algorithmic bias is one of the most consequential and least visible failures in modern AI systems. Machine learning models used in hiring, loan approvals, healthcare triage, and criminal sentencing routinely produce systematically worse outcomes for women, racial minorities, older applicants, and other protected groups - not because of explicit discrimination, but because the training data and learned feature weights encode historical inequality.
 
-The harm is concrete and measurable. Studies of hiring algorithms have shown that résumés with traditionally female names receive callback rates 30–40% lower than identical résumés with male names. COMPAS, a widely deployed recidivism prediction tool used by US courts, was found to misclassify Black defendants as high-risk at nearly twice the rate it misclassified white defendants. Credit scoring models trained on historical repayment data continue to penalize applicants from zip codes that correlate with race due to decades of redlining — even when race is explicitly excluded as an input feature.
+The harm is concrete and measurable. Studies of hiring algorithms have shown that résumés with traditionally female names receive callback rates 30-40% lower than identical résumés with male names. COMPAS, a widely deployed recidivism prediction tool used by US courts, was found to misclassify Black defendants as high-risk at nearly twice the rate it misclassified white defendants. Credit scoring models trained on historical repayment data continue to penalize applicants from zip codes that correlate with race due to decades of redlining - even when race is explicitly excluded as an input feature.
 
 **The core problem has three dimensions:**
 
@@ -12,7 +12,7 @@ The harm is concrete and measurable. Studies of hiring algorithms have shown tha
 
 **2. Bias hides behind proxy features.** Removing a protected attribute like race or gender from a model does not remove bias. Features like zip code, relationship status, occupation category, or years of experience encode protected attributes indirectly with high mutual information. A model trained without race but with zip code is still making race-correlated predictions.
 
-**3. Non-technical stakeholders cannot interrogate model decisions.** Compliance officers, legal teams, HR leads, and regulators must understand and act on bias findings — but raw SHAP values, p-values, and disparate impact ratios are inaccessible without data science training. The gap between technical findings and actionable compliance decisions leaves organizations exposed.
+**3. Non-technical stakeholders cannot interrogate model decisions.** Compliance officers, legal teams, HR leads, and regulators must understand and act on bias findings - but raw SHAP values, p-values, and disparate impact ratios are inaccessible without data science training. The gap between technical findings and actionable compliance decisions leaves organizations exposed.
 
 ## Who It Harms
 
@@ -30,7 +30,7 @@ Current tools available to organizations are either academic research libraries 
 
 ## Why Automated Systems Perpetuate Bias
 
-**Historical data encodes historical inequality.** A model trained to predict loan repayment on data from 1990–2010 learns that certain zip codes, employment types, and demographic proxies correlate with default — because those correlations existed in a world shaped by discriminatory lending practices. The model doesn't know this context. It finds the pattern and uses it.
+**Historical data encodes historical inequality.** A model trained to predict loan repayment on data from 1990-2010 learns that certain zip codes, employment types, and demographic proxies correlate with default - because those correlations existed in a world shaped by discriminatory lending practices. The model doesn't know this context. It finds the pattern and uses it.
 
 **Proxy amplification.** Once a model learns a proxy relationship (e.g., occupation → gender), it can exploit it at scale across millions of decisions. A human loan officer might unconsciously favor male applicants in a fraction of their decisions; a deployed model applies that bias consistently to every application it scores.
 
@@ -40,8 +40,8 @@ Current tools available to organizations are either academic research libraries 
 
 UnbiasedAI provides a two-part automated fairness audit covering every known attack surface for algorithmic bias:
 
-- **Part A — Dataset Bias Auditor**: Detects disparate impact, demographic parity gaps, and proxy column risk in training data before a model is built — when bias is cheapest to fix.
-- **Part B — Model Behavior Analyzer**: Audits a trained model's actual decision-making via counterfactual probing and SHAP feature attribution — revealing what the model learned, not just what it was told to learn.
-- **Gemini Compliance Report**: Converts technical findings into a plain-English audit narrative that any compliance officer can read, understand, and act on — without a data science background.
+- **Part A - Dataset Bias Auditor**: Detects disparate impact, demographic parity gaps, and proxy column risk in training data before a model is built - when bias is cheapest to fix.
+- **Part B - Model Behavior Analyzer**: Audits a trained model's actual decision-making via counterfactual probing and SHAP feature attribution - revealing what the model learned, not just what it was told to learn.
+- **Gemini Compliance Report**: Converts technical findings into a plain-English audit narrative that any compliance officer can read, understand, and act on - without a data science background.
 
-The system ties every finding to a concrete legal threshold (the 80% disparate impact rule), provides slice-level evidence (e.g., "Female applicants approved at 61% vs 83% for male — a 22-point gap"), and surfaces proxy features the model is using to discriminate indirectly even when protected attributes are excluded from training.
+The system ties every finding to a concrete legal threshold (the 80% disparate impact rule), provides slice-level evidence (e.g., "Female applicants approved at 61% vs 83% for male - a 22-point gap"), and surfaces proxy features the model is using to discriminate indirectly even when protected attributes are excluded from training.

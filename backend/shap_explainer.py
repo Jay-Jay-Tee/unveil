@@ -1,9 +1,9 @@
-import sys, io
+﻿import sys, io
 if sys.stdout.encoding and sys.stdout.encoding.lower() != 'utf-8':
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 
 """
-M3 — shap_explainer.py  (complete implementation)
+M3 - shap_explainer.py  (complete implementation)
 
 What this does:
 - Accept a trained model (sklearn pickle OR any callable)
@@ -51,7 +51,7 @@ class SHAPExplainer:
                     raise RuntimeError(f"TreeExplainer failed: {e}") from e
                 print(f"  [SHAP] TreeExplainer not available ({e}), falling back to KernelExplainer")
 
-        # KernelExplainer — summarise background to 10 centroids for speed
+        # KernelExplainer - summarise background to 10 centroids for speed
         background = shap.kmeans(self.X_background, min(10, len(self.X_background)))
         predict_fn = self.model.predict_proba if hasattr(self.model, "predict_proba") else self.model.predict
         explainer = shap.KernelExplainer(predict_fn, background)
@@ -150,7 +150,7 @@ if __name__ == "__main__":
     from sklearn.datasets import load_breast_cancer, load_iris
 
     print("=" * 55)
-    print("SHAPExplainer — self-test")
+    print("SHAPExplainer - self-test")
     print("=" * 55)
 
     print("\nTEST 1: TreeExplainer (RandomForest)")
@@ -185,4 +185,4 @@ if __name__ == "__main__":
         "shap_summary": explainer.get_summary_for_m4()[:3]
     }
     print(json.dumps(mock_report, indent=2))
-    print("\nAll tests passed — shap_explainer.py ready")
+    print("\nAll tests passed - shap_explainer.py ready")

@@ -1,5 +1,5 @@
-/**
- * AuditContext — global audit state + authenticated user.
+﻿/**
+ * AuditContext - global audit state + authenticated user.
  *
  * New: tracks `user` and exposes `saveCurrentAudit()` so any page can
  * persist the in-progress audit to the user's dashboard.
@@ -43,7 +43,7 @@ export function AuditProvider({ children }) {
       // Initial read
       setUser(await getCurrentUser());
       setAuthReady(true);
-      // Subscribe for changes (Firebase only — no-op in local mode)
+      // Subscribe for changes (Firebase only - no-op in local mode)
       unsub = await onAuthChange((u) => setUser(u));
     })();
     return () => { try { unsub(); } catch {} };
@@ -119,3 +119,4 @@ export function useAudit() {
   if (!ctx) throw new Error('useAudit must be used inside <AuditProvider>');
   return ctx;
 }
+

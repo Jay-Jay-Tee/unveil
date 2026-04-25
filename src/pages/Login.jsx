@@ -1,41 +1,53 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { signIn, isFirebaseConfigured } from '../lib/auth';
 import { useAudit } from '../lib/AuditContext';
 
 export default function Login() {
+  const AUTH_TRANSITION_MS = 520;
   const navigate = useNavigate();
   const { setUser } = useAudit();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [busy, setBusy] = useState(false);
+  const [authAction, setAuthAction] = useState(null); // null | signin | guest
+  const [switchingToSignup, setSwitchingToSignup] = useState(false);
   const [error, setError] = useState('');
 
   async function handleSubmit(e) {
     e?.preventDefault();
     setError('');
-    setBusy(true);
+    setAuthAction('signin');
     try {
       const user = await signIn({ email: email.trim(), password });
+      await new Promise((resolve) => setTimeout(resolve, AUTH_TRANSITION_MS));
       setUser(user);
       navigate('/dashboard');
     } catch (err) {
       setError(friendlyAuthError(err));
-      setBusy(false);
+      setAuthAction(null);
     }
   }
 
   async function handleGuestContinue() {
-    setBusy(true);
+    setAuthAction('guest');
     try {
       // In non-Firebase mode, signIn just returns the local guest
       const user = await signIn({ email: '', password: '' });
+      await new Promise((resolve) => setTimeout(resolve, AUTH_TRANSITION_MS));
       setUser(user);
       navigate('/upload');
     } catch {
-      setBusy(false);
+      setAuthAction(null);
     }
+  }
+
+  async function handleToSignup(e) {
+    e.preventDefault();
+    if (authAction || switchingToSignup) return;
+    setSwitchingToSignup(true);
+    await new Promise((resolve) => setTimeout(resolve, AUTH_TRANSITION_MS));
+    navigate('/signup');
   }
 
   return (
@@ -64,7 +76,7 @@ export default function Login() {
               <input
                 id="email" type="email" required autoFocus
                 value={email} onChange={(e) => setEmail(e.target.value)}
-                disabled={busy}
+                  disabled={!!authAction}
                 placeholder="you@example.com"
                 className="input"
               />
@@ -77,7 +89,7 @@ export default function Login() {
               <input
                 id="password" type="password" required
                 value={password} onChange={(e) => setPassword(e.target.value)}
-                disabled={busy}
+                  disabled={!!authAction}
                 placeholder="••••••••"
                 className="input"
               />
@@ -90,8 +102,8 @@ export default function Login() {
               </div>
             )}
 
-            <button type="submit" disabled={busy} className="btn btn-primary justify-center">
-              {busy ? <><span className="unveil-spinner" /> Signing in…</> : 'Sign in'}
+            <button type="submit" disabled={!!authAction} className="btn btn-primary justify-center">
+              {authAction === 'signin' ? <><span className="unveil-spinner" /> Signing in…</> : 'Sign in'}
             </button>
           </form>
 
@@ -105,10 +117,10 @@ export default function Login() {
 
               <button
                 onClick={handleGuestContinue}
-                disabled={busy}
+                disabled={!!authAction}
                 className="btn btn-secondary w-full justify-center"
               >
-                Continue as guest
+                {authAction === 'guest' ? <><span className="unveil-spinner" /> Continuing as guest…</> : 'Continue as guest'}
               </button>
               <p className="text-xs text-center mt-2" style={{ color: 'var(--color-text-mid)' }}>
                 Audits stored locally on this device only.
@@ -119,9 +131,14 @@ export default function Login() {
 
         <p className="text-sm text-center mt-6" style={{ color: 'var(--color-text-mid)' }}>
           New to Unveil?{' '}
-          <Link to="/signup" className="font-semibold underline" style={{ color: 'var(--color-on-surface)' }}>
-            Create an account
-          </Link>
+          <a
+            href="/signup"
+            onClick={handleToSignup}
+            className="font-semibold underline"
+            style={{ color: 'var(--color-on-surface)' }}
+          >
+            {switchingToSignup ? 'Opening sign up…' : 'Create an account'}
+          </a>
         </p>
       </div>
     </motion.div>
@@ -133,7 +150,8 @@ function friendlyAuthError(err) {
   if (msg.includes('user-not-found') || msg.includes('wrong-password') || msg.includes('invalid-credential')) {
     return 'Wrong email or password.';
   }
-  if (msg.includes('too-many-requests')) return 'Too many attempts — wait a minute and try again.';
-  if (msg.includes('network')) return 'Network issue — check your connection.';
+  if (msg.includes('too-many-requests')) return 'Too many attempts - wait a minute and try again.';
+  if (msg.includes('network')) return 'Network issue - check your connection.';
   return err?.message || 'Sign-in failed.';
 }
+

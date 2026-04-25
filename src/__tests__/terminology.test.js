@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+﻿import { describe, it, expect } from 'vitest';
 import {
   COLUMN_ROLE,
   VERDICT,
@@ -161,8 +161,9 @@ describe('overallDatasetVerdict', () => {
 describe('overallVerdictHeadline', () => {
   it('returns a headline string for each known verdict', () => {
     expect(overallVerdictHeadline('BIASED')).toBe('Unfair patterns detected');
-    expect(overallVerdictHeadline('AMBIGUOUS')).toBe('Borderline — inspect closely');
+    expect(overallVerdictHeadline('AMBIGUOUS')).toBe('Borderline - inspect closely');
     expect(overallVerdictHeadline('CLEAN')).toBe('No significant bias detected');
     expect(overallVerdictHeadline('SKIPPED')).toBe('Not enough data to analyze');
   });
 });
+

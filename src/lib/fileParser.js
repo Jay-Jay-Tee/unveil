@@ -1,7 +1,7 @@
-import Papa from 'papaparse';
+﻿import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
 
-// UCI Adult dataset columns — the .data file has no header row
+// UCI Adult dataset columns - the .data file has no header row
 const UCI_ADULT_COLUMNS = [
   'age', 'workclass', 'fnlwgt', 'education', 'education-num',
   'marital-status', 'occupation', 'relationship', 'race', 'sex',
@@ -86,3 +86,4 @@ export function parseFile(file) {
     }
   });
 }
+

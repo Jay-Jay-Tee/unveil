@@ -1,9 +1,9 @@
-import sys, io
+﻿import sys, io
 if sys.stdout.encoding and sys.stdout.encoding.lower() != 'utf-8':
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 
 """
-M1 — proxy_detection.py
+M1 - proxy_detection.py
 Location: backend/part_a/proxy_detection.py
 
 Responsibilities:
@@ -56,10 +56,10 @@ from sklearn.preprocessing import LabelEncoder
 # Thresholds
 # ─────────────────────────────────────────────────────────────
 
-PROXY_CV_THRESHOLD      = 0.30   # Cramér's V — strong association
-PROXY_MI_THRESHOLD      = 0.10   # mutual information — strong
-WEAK_PROXY_CV_THRESHOLD = 0.10   # Cramér's V — moderate association
-WEAK_PROXY_MI_THRESHOLD = 0.05   # mutual information — moderate
+PROXY_CV_THRESHOLD      = 0.30   # Cramér's V - strong association
+PROXY_MI_THRESHOLD      = 0.10   # mutual information - strong
+WEAK_PROXY_CV_THRESHOLD = 0.10   # Cramér's V - moderate association
+WEAK_PROXY_MI_THRESHOLD = 0.05   # mutual information - moderate
 
 SCHEMA_VERSION = "1.0.0"
 
@@ -85,12 +85,12 @@ def detect(ingest_result: dict, schema_map: dict, output_path: str | None = None
     protected_cols = _get_protected_columns(schema_map)
     outcome_cols   = _get_outcome_columns(schema_map)
 
-    # Only probe categorical columns — Cramér's V and MI are defined for categories.
+    # Only probe categorical columns - Cramér's V and MI are defined for categories.
     # Exclude OUTCOME columns from being flagged as proxies.
     categorical_cols = _get_categorical_columns(ingest_result, exclude=outcome_cols)
 
     if not protected_cols:
-        print("  [WARN] No PROTECTED columns found in schema_map — proxy detection skipped.")
+        print("  [WARN] No PROTECTED columns found in schema_map - proxy detection skipped.")
         return _empty_result(ingest_result["dataset_name"])
 
     # ── encode all categorical columns to integers for MI computation ──
@@ -100,7 +100,7 @@ def detect(ingest_result: dict, schema_map: dict, output_path: str | None = None
 
     for protected in protected_cols:
         if protected not in categorical_cols:
-            print(f"  [SKIP] Protected column '{protected}' is not categorical — skipping MI/CV.")
+            print(f"  [SKIP] Protected column '{protected}' is not categorical - skipping MI/CV.")
             continue
 
         for candidate in categorical_cols:
@@ -112,7 +112,7 @@ def detect(ingest_result: dict, schema_map: dict, output_path: str | None = None
             verdict = _verdict(cv, mi)
 
             if verdict == "NONE":
-                continue  # drop clean pairs — proxy_flags.json only lists flagged ones
+                continue  # drop clean pairs - proxy_flags.json only lists flagged ones
 
             proxy_entries.append({
                 "column":             candidate,
@@ -326,8 +326,8 @@ def summarize(proxy_flags: dict) -> None:
 
 
 # ─────────────────────────────────────────────────────────────
-# Self-test — run directly: python proxy_detection.py
-# Does NOT require GEMINI_API_KEY — uses a hardcoded mock schema_map.
+# Self-test - run directly: python proxy_detection.py
+# Does NOT require GEMINI_API_KEY - uses a hardcoded mock schema_map.
 # ─────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
@@ -379,7 +379,7 @@ if __name__ == "__main__":
         "income": income,
     }
 
-    # Mock schema_map — what gemini_classifier would produce for this data
+    # Mock schema_map - what gemini_classifier would produce for this data
     mock_schema_map = {
         "version": "1.0.0",
         "generated_by": "gemini-column-classifier",
@@ -435,3 +435,4 @@ if __name__ == "__main__":
             assert e["verdict"] in ("PROXY", "WEAK_PROXY"), f"Invalid verdict: {e['verdict']}"
 
         print("✅ All proxy_detection tests passed 🚀")
+

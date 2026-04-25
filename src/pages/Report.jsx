@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAudit } from '../lib/AuditContext';
@@ -235,7 +235,7 @@ export default function Report() {
                   <span key={col.name} className={`status-pill ${cls}`}>
                     <span className="font-mono text-[10px] opacity-80">{col.name}</span>
                     <span className="opacity-60">·</span>
-                    <span>{v?.shortLabel || '—'}</span>
+                    <span>{v?.shortLabel || '-'}</span>
                     {col.disparate_impact != null && (
                       <span className="opacity-60 font-mono">{col.disparate_impact.toFixed(2)}</span>
                     )}
@@ -323,3 +323,4 @@ export default function Report() {
     </motion.div>
   );
 }
+

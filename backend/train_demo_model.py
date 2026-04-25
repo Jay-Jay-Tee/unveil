@@ -1,9 +1,9 @@
-# backend/train_demo_model.py
+﻿# backend/train_demo_model.py
 # Run once from repo root to generate the demo model pickle:
 #   python backend/train_demo_model.py
 #
 # Trains a logistic regression on UCI Adult (adult_fixed.csv).
-# Output: backend/demo_model.pkl — used as fallback in /analyze/model
+# Output: backend/demo_model.pkl - used as fallback in /analyze/model
 # when no model file is uploaded by the user.
 
 import pickle
@@ -30,4 +30,4 @@ model.fit(X, y)
 with open("backend/demo_model.pkl", "wb") as f:
     pickle.dump(model, f)
 
-print("Done — backend/demo_model.pkl written")
+print("Done - backend/demo_model.pkl written")

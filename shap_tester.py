@@ -1,5 +1,5 @@
-"""
-M3 — Day 1: SHAP Environment Sanity Check
+﻿"""
+M3 - Day 1: SHAP Environment Sanity Check
 Run this to verify your environment is ready before Day 3.
 Tests both TreeExplainer and KernelExplainer.
 """
@@ -33,7 +33,7 @@ explainer = shap.TreeExplainer(model)
 shap_values = explainer.shap_values(X_test)
 
 # For binary classification, shap_values is a list of 2 arrays (one per class)
-# We use class 1 (positive outcome) — same pattern you'll use in probe_generator.py
+# We use class 1 (positive outcome) - same pattern you'll use in probe_generator.py
 # shap_values can be a 3D array (samples, features, classes) in newer SHAP versions
 # or a list of 2D arrays (one per class) in older versions
 if isinstance(shap_values, list):
@@ -57,7 +57,7 @@ print(f"\nshap_values shape: {shap_class1.shape}")
 # This is what you'll use when you only have an HTTP endpoint
 # ─────────────────────────────────────────────
 print("\n" + "=" * 50)
-print("TEST 2: shap.KernelExplainer (LogisticRegression — black-box mode)")
+print("TEST 2: shap.KernelExplainer (LogisticRegression - black-box mode)")
 print("=" * 50)
 
 # Use a smaller dataset so KernelExplainer doesn't time out
@@ -74,7 +74,7 @@ lr_model.fit(X2_train, y2[:80])
 background = shap.kmeans(X2_train, 10)
 kernel_explainer = shap.KernelExplainer(lr_model.predict_proba, background)
 
-# Only explain a few rows — KernelExplainer is slow
+# Only explain a few rows - KernelExplainer is slow
 shap_values_kernel = kernel_explainer.shap_values(X2_test[:5])
 
 print("\n✅ KernelExplainer OK")
@@ -101,7 +101,7 @@ mock_report = {
         {
             "name": "gender",
             "mean_diff": 0.14,       # mean output difference across 100+ probes
-            "p_value": 0.003,        # from t-test — < 0.05 = significant
+            "p_value": 0.003,        # from t-test - < 0.05 = significant
             "shap_rank": 2,          # rank in global SHAP importance list
             "verdict": "BIASED"      # BIASED | CLEAN | AMBIGUOUS
         },
@@ -121,9 +121,9 @@ mock_report = {
 }
 
 print(json.dumps(mock_report, indent=2))
-print("\n✅ Schema looks correct — this is what you'll output to M4")
+print("\n✅ Schema looks correct - this is what you'll output to M4")
 
 
 print("\n" + "=" * 50)
-print("ALL TESTS PASSED — M3 environment is ready for Day 3 🚀")
+print("ALL TESTS PASSED - M3 environment is ready for Day 3 🚀")
 print("=" * 50)

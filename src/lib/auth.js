@@ -1,5 +1,5 @@
-/**
- * auth.js — Authentication helpers.
+﻿/**
+ * auth.js - Authentication helpers.
  *
  * Uses Firebase Auth when configured. Otherwise exposes a local-only
  * "guest" mode where the user has a persistent uuid in localStorage but
@@ -73,7 +73,7 @@ export async function signIn({ email, password }) {
         }
       }
     } catch {}
-    // No matching local account — create a temporary guest session
+    // No matching local account - create a temporary guest session
     return getOrCreateGuest();
   }
   const { auth } = await getFirebase();
@@ -114,7 +114,7 @@ export async function getAuthToken(forceRefresh = false) {
 
 export async function onAuthChange(callback) {
   if (!isFirebaseConfigured()) {
-    // No realtime events in local mode — just fire once with current state
+    // No realtime events in local mode - just fire once with current state
     const user = await getCurrentUser();
     callback(user);
     return () => {};
@@ -135,3 +135,4 @@ function serializeUser(u) {
 }
 
 export { isFirebaseConfigured };
+

@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+﻿import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAudit } from '../lib/AuditContext';
 import { VERDICT } from '../lib/terminology';
@@ -56,7 +56,7 @@ export default function ModelAudit() {
           {isMock && (
             <p className="text-xs mt-4 inline-block px-3 py-1.5 rounded-lg"
               style={{ color: 'var(--color-accent-dark)', background: 'var(--color-accent-light)', fontFamily: 'var(--font-mono)' }}>
-              Demo mode — start the backend for live model analysis
+              Demo mode - start the backend for live model analysis
             </p>
           )}
         </div>
@@ -90,9 +90,9 @@ export default function ModelAudit() {
                     </span>
                   </div>
                   <div className="grid grid-cols-3 gap-2">
-                    <Metric label="Mean shift" value={attr.mean_diff?.toFixed(3) ?? '—'} />
-                    <Metric label="p-value" value={attr.p_value != null ? (attr.p_value < 0.001 ? '<0.001' : attr.p_value.toFixed(3)) : '—'} />
-                    <Metric label="SHAP rank" value={attr.shap_rank ?? '—'} />
+                    <Metric label="Mean shift" value={attr.mean_diff?.toFixed(3) ?? '-'} />
+                    <Metric label="p-value" value={attr.p_value != null ? (attr.p_value < 0.001 ? '<0.001' : attr.p_value.toFixed(3)) : '-'} />
+                    <Metric label="SHAP rank" value={attr.shap_rank ?? '-'} />
                   </div>
                 </motion.div>
               );
@@ -154,7 +154,7 @@ export default function ModelAudit() {
             </p>
             <p className="text-sm" style={{ color: 'var(--color-text-mid)' }}>
               Your model's decisions shift significantly when these attributes change, even with all other features held constant.
-              This is the clearest sign of bias — and the hardest to claim is accidental.
+              This is the clearest sign of bias - and the hardest to claim is accidental.
             </p>
           </div>
         )}
@@ -183,3 +183,4 @@ function Metric({ label, value }) {
     </div>
   );
 }
+
