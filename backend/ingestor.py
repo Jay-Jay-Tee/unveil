@@ -1,9 +1,9 @@
-import sys, io
+﻿import sys, io
 if sys.stdout.encoding and sys.stdout.encoding.lower() != 'utf-8':
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 
 """
-M1 — ingestor.py
+M1 - ingestor.py
 Location: backend/part_a/ingestor.py
 
 Responsibilities:
@@ -53,7 +53,7 @@ def ingest(file_path: str, max_rows: int = 5000) -> dict:
 
     Args:
         file_path : path to the file (CSV, TSV, JSON, JSONL, or XLSX)
-        max_rows  : hard cap on rows loaded — keeps downstream bias stats fast.
+        max_rows  : hard cap on rows loaded - keeps downstream bias stats fast.
                     Set to None to load everything (not recommended for large files).
 
     Returns:
@@ -93,7 +93,7 @@ def ingest(file_path: str, max_rows: int = 5000) -> dict:
     # ── row cap ──
     if max_rows is not None and len(df) > max_rows:
         warnings.append(
-            f"Dataset has {len(df)} rows — sampled to {max_rows} for performance. "
+            f"Dataset has {len(df)} rows - sampled to {max_rows} for performance. "
             "Set max_rows=None to load all rows."
         )
         df = df.sample(n=max_rows, random_state=42).reset_index(drop=True)
@@ -118,7 +118,7 @@ def ingest(file_path: str, max_rows: int = 5000) -> dict:
 
 
 # ─────────────────────────────────────────────────────────────
-# Format-specific loaders — each returns (df, warnings)
+# Format-specific loaders - each returns (df, warnings)
 # ─────────────────────────────────────────────────────────────
 
 def _load_csv(path: Path) -> tuple[pd.DataFrame, list]:
@@ -128,7 +128,7 @@ def _load_csv(path: Path) -> tuple[pd.DataFrame, list]:
         try:
             df = pd.read_csv(path, encoding=encoding)
             if encoding != "utf-8":
-                warnings.append(f"File is not UTF-8 — loaded with '{encoding}' encoding.")
+                warnings.append(f"File is not UTF-8 - loaded with '{encoding}' encoding.")
             return df, warnings
         except UnicodeDecodeError:
             continue
@@ -141,7 +141,7 @@ def _load_tsv(path: Path) -> tuple[pd.DataFrame, list]:
         try:
             df = pd.read_csv(path, sep="\t", encoding=encoding)
             if encoding != "utf-8":
-                warnings.append(f"File is not UTF-8 — loaded with '{encoding}' encoding.")
+                warnings.append(f"File is not UTF-8 - loaded with '{encoding}' encoding.")
             return df, warnings
         except UnicodeDecodeError:
             continue
@@ -161,7 +161,7 @@ def _load_json(path: Path) -> tuple[pd.DataFrame, list]:
 
     if isinstance(raw, list):
         if len(raw) == 0:
-            raise ValueError("JSON file contains an empty array — nothing to ingest.")
+            raise ValueError("JSON file contains an empty array - nothing to ingest.")
         df = pd.DataFrame(raw)
 
     elif isinstance(raw, dict):
@@ -170,7 +170,7 @@ def _load_json(path: Path) -> tuple[pd.DataFrame, list]:
             df = pd.DataFrame(raw["data"], columns=raw["columns"])
         else:
             # Treat as a single row
-            warnings.append("JSON is a single object — loaded as a one-row DataFrame.")
+            warnings.append("JSON is a single object - loaded as a one-row DataFrame.")
             df = pd.DataFrame([raw])
     else:
         raise ValueError(f"Unexpected JSON root type: {type(raw).__name__}. Expected list or object.")
@@ -212,17 +212,17 @@ def _load_xlsx(path: Path) -> tuple[pd.DataFrame, list]:
     except Exception as e:
         raise ValueError(f"Could not read Excel file '{path.name}': {e}")
 
-    # If file has multiple sheets, we only take the first — warn about it
+    # If file has multiple sheets, we only take the first - warn about it
     try:
         import openpyxl
         wb = openpyxl.load_workbook(path, read_only=True)
         if len(wb.sheetnames) > 1:
             warnings.append(
                 f"Excel file has {len(wb.sheetnames)} sheets "
-                f"({', '.join(wb.sheetnames)}) — only the first sheet was loaded."
+                f"({', '.join(wb.sheetnames)}) - only the first sheet was loaded."
             )
     except Exception:
-        pass  # Non-critical — don't fail the whole ingest for this
+        pass  # Non-critical - don't fail the whole ingest for this
 
     return df, warnings
 
@@ -235,7 +235,7 @@ def _normalize_columns(df: pd.DataFrame) -> tuple[pd.DataFrame, list]:
     """
     Strip whitespace from column names.
     Deduplicate columns that become identical after stripping (rare but possible).
-    Does NOT lowercase or snake_case — preserves original names for Gemini classification.
+    Does NOT lowercase or snake_case - preserves original names for Gemini classification.
     """
     warnings = []
     original_cols = list(df.columns)
@@ -259,7 +259,7 @@ def _normalize_columns(df: pd.DataFrame) -> tuple[pd.DataFrame, list]:
 
     df.columns = deduped
 
-    # Strip whitespace from string cell values — common in CSVs like UCI Adult
+    # Strip whitespace from string cell values - common in CSVs like UCI Adult
     # include both "object" (pandas 2) and "str" (pandas 3 StringDtype)
     str_cols = df.select_dtypes(include=["object", "str"]).columns
     for col in str_cols:
@@ -300,7 +300,7 @@ def _infer_kind(series: pd.Series) -> str:
 
 def _build_column_meta(df: pd.DataFrame) -> list:
     """
-    Build the column_meta list — one dict per column.
+    Build the column_meta list - one dict per column.
     sample_values are fed directly into the Gemini classification prompt.
     """
     meta = []
@@ -332,7 +332,7 @@ def _build_column_meta(df: pd.DataFrame) -> list:
 
 
 # ─────────────────────────────────────────────────────────────
-# Utility — pretty-print a summary (useful for quick CLI checks)
+# Utility - pretty-print a summary (useful for quick CLI checks)
 # ─────────────────────────────────────────────────────────────
 
 def summarize(result: dict) -> None:
@@ -357,7 +357,7 @@ def summarize(result: dict) -> None:
 
 
 # ─────────────────────────────────────────────────────────────
-# Quick self-test — run directly: python ingestor.py
+# Quick self-test - run directly: python ingestor.py
 # ─────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
@@ -439,7 +439,7 @@ if __name__ == "__main__":
         gender_meta = next(m for m in meta if m["name"] == "gender")
         assert gender_meta["kind"] == "categorical"
         age_meta = next(m for m in meta if m["name"] == "age")
-        # age has 5 unique values in 5 rows — ≤ 20 → categorical
+        # age has 5 unique values in 5 rows - ≤ 20 → categorical
         assert age_meta["kind"] == "categorical"
         print("✅ column_meta shape and kinds: PASS")
 
@@ -462,4 +462,5 @@ if __name__ == "__main__":
             pass
         print("✅ FileNotFoundError: PASS")
 
-    print("\n✅ All ingestor tests passed — ready for gemini_classifier.py 🚀")
+    print("\n✅ All ingestor tests passed - ready for gemini_classifier.py 🚀")
+

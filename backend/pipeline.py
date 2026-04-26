@@ -1,15 +1,15 @@
-"""
-Unveil — pipeline.py (REVAMPED)
+﻿"""
+Unveil - pipeline.py (REVAMPED)
 
 Changes from the old version:
   1. run_gemini_report now generates the report in SECTIONS, each with its
      own max_output_tokens budget. The old single-call 2048-token cap was
      exactly why reports got truncated mid-sentence.
-  2. Each section is requested separately — if one fails (rate limit), we
+  2. Each section is requested separately - if one fails (rate limit), we
      return what we have so far instead of nothing.
-  3. Reports are cached by hash of the input — regenerating the same audit
+  3. Reports are cached by hash of the input - regenerating the same audit
      doesn't burn fresh Gemini quota.
-  4. All other functions unchanged in behavior — schema/JSON shapes stable.
+  4. All other functions unchanged in behavior - schema/JSON shapes stable.
 """
 
 import hashlib
@@ -132,11 +132,14 @@ def stub_predict(features: dict) -> float:
     return float(np.random.default_rng(seed).uniform(0.2, 0.85))
 
 
-# ─── Part A — dataset pipeline (unchanged in shape) ────────────────────────
+# ─── Part A - dataset pipeline (unchanged in shape) ────────────────────────
 
-def run_dataset_pipeline(file_path: str) -> dict:
+def run_dataset_pipeline(file_path: str, original_filename: str | None = None) -> dict:
     ingest_result = ingest(file_path, max_rows=5000)
     df = ingest_result["df"]
+    # Override the tmp-path stem with the real uploaded filename
+    if original_filename:
+        ingest_result["dataset_name"] = Path(original_filename).stem
 
     with tempfile.TemporaryDirectory() as tmp:
         schema_map = classify(ingest_result, output_path=os.path.join(tmp, "schema_map.json"))
@@ -190,10 +193,10 @@ def _attach_counterfactuals(df, schema_map, proxy_flags, label_col, positive_lab
                 "status": cf.get("status"),
             }
     except Exception as e:
-        print(f"  [counterfactual] Failed: {e} — skipping")
+        print(f"  [counterfactual] Failed: {e} - skipping")
 
 
-# ─── Part B — model pipeline (unchanged) ───────────────────────────────────
+# ─── Part B - model pipeline (unchanged) ───────────────────────────────────
 
 def run_model_pipeline(dataset_path, schema_map, proxy_flags, model_path=None, n_probes=100):
     global _cached_model
@@ -266,11 +269,11 @@ def _run_shap(model, feature_df, encoded_sample, protected_cols, proxy_col_names
         rank_lookup = {e["feature"]: e["shap_rank"] for e in summary}
         return summary, rank_lookup
     except Exception as e:
-        print(f"  [SHAP] Failed: {e} — skipping")
+        print(f"  [SHAP] Failed: {e} - skipping")
         return [], {}
 
 
-# ─── Gemini report — NOW CHUNKED SO IT DOESN'T GET CUT OFF ─────────────────
+# ─── Gemini report - NOW CHUNKED SO IT DOESN'T GET CUT OFF ─────────────────
 
 def _report_cache_key(bias_report: dict, model_bias_report: dict) -> str:
     payload = json.dumps({"b": bias_report, "m": model_bias_report}, sort_keys=True, default=str)
@@ -298,7 +301,7 @@ def _report_cache_put(key: str, value: str) -> None:
 
 
 def _gemini_call_raw(prompt: str, max_tokens: int = 4096) -> str:
-    """Single Gemini call. No retries here — the caller handles failures."""
+    """Single Gemini call. No retries here - the caller handles failures."""
     import urllib.request
 
     api_key = os.environ.get("GEMINI_API_KEY")
@@ -324,15 +327,15 @@ def _gemini_call_raw(prompt: str, max_tokens: int = 4096) -> str:
         text = data["candidates"][0]["content"]["parts"][0]["text"]
         finish_reason = data["candidates"][0].get("finishReason", "STOP")
         if finish_reason == "MAX_TOKENS":
-            # Token cap hit — the text is real but truncated. Caller should
+            # Token cap hit - the text is real but truncated. Caller should
             # handle this (e.g. continue) rather than treating it as an error.
-            text += "\n\n*(section truncated due to length — see dashboard for full detail)*"
+            text += "\n\n*(section truncated due to length - see dashboard for full detail)*"
         return text
     except (KeyError, IndexError) as e:
         raise RuntimeError(f"Gemini returned malformed response: {e}\nBody: {data}")
 
 
-# Section prompts — each runs independently so a single quota blip doesn't kill
+# Section prompts - each runs independently so a single quota blip doesn't kill
 # the whole report.
 
 _EXEC_SUMMARY_PROMPT = """You are a bias compliance officer. Write ONLY the EXECUTIVE SUMMARY section
@@ -348,12 +351,12 @@ Model findings:
 {model}
 
 The legal threshold for the fairness ratio (disparate impact) is 0.80. Below that fails the legal 80% rule.
-Just write the 3-4 sentence summary. Don't add any section heading — the caller will add that."""
+Just write the 3-4 sentence summary. Don't add any section heading - the caller will add that."""
 
 _FINDINGS_PROMPT = """You are a bias compliance officer. Write ONLY the CRITICAL FINDINGS section.
 For each unfair or borderline column in the data below, write ONE short paragraph (2-3 sentences)
 in plain English. State the column name, the worst-off group, the fairness ratio, and why it matters.
-Reference "{dataset}" when relevant. Do NOT include a heading — the caller will add that.
+Reference "{dataset}" when relevant. Do NOT include a heading - the caller will add that.
 
 Dataset findings:
 {bias}
@@ -384,7 +387,7 @@ def run_gemini_report(bias_report: dict, model_bias_report: dict, force_refresh:
     """
     Generate the compliance narrative in 4 chunks so we don't hit the
     max_output_tokens ceiling and get cut off mid-sentence.
-    Cached by content hash — regenerating the same audit is free.
+    Cached by content hash - regenerating the same audit is free.
     """
     if not dataset_name:
         dataset_name = "the dataset"
@@ -416,7 +419,7 @@ def run_gemini_report(bias_report: dict, model_bias_report: dict, force_refresh:
         except Exception as e:
             failed_sections += 1
             print(f"  [report] Section '{heading}' failed: {e}")
-            sections.append(f"## {heading}\n\n*(Couldn't generate this section — {e})*")
+            sections.append(f"## {heading}\n\n*(Couldn't generate this section - {e})*")
 
     _try_section("Executive Summary", _EXEC_SUMMARY_PROMPT, max_tokens=512)
     _try_section("Critical Findings", _FINDINGS_PROMPT, max_tokens=2048)
@@ -430,7 +433,7 @@ def run_gemini_report(bias_report: dict, model_bias_report: dict, force_refresh:
 
 
 def _compact_bias_report(br: dict) -> dict:
-    """Strip slice payloads etc. down to what the LLM needs — saves input tokens."""
+    """Strip slice payloads etc. down to what the LLM needs - saves input tokens."""
     if not br:
         return {}
     compact_cols = []
@@ -463,3 +466,4 @@ def _pick_worst_group(slices: list[dict]) -> Optional[dict]:
         return None
     worst = min(slices, key=lambda s: s.get("positive_rate", 1.0))
     return {"group": worst.get("group"), "positive_rate": worst.get("positive_rate"), "count": worst.get("count")}
+

@@ -1,17 +1,18 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import SliceChart from './SliceChart';
+import Tooltip from './Tooltip';
 import {
   COLUMN_ROLE, VERDICT, METRIC,
   summarizeColumnFinding,
 } from '../lib/terminology';
 
 /**
- * ColumnCard — shows bias findings for ONE column.
+ * ColumnCard - shows bias findings for ONE column.
  *
  * Major improvements over the old card:
  *  1. Plain-English role labels (Sensitive / Possible proxy / Regular feature)
- *  2. Every column shows SOMETHING meaningful — no more "No bias metrics"
+ *  2. Every column shows SOMETHING meaningful - no more "No bias metrics"
  *     dead-ends. Neutral columns get a clear "not applicable" note.
  *     Proxy columns show proxy strength.
  *  3. One-sentence plain-English finding summarizes what actually matters.
@@ -88,7 +89,7 @@ export default function ColumnCard(props) {
           </p>
         )}
 
-        {/* Metrics strip — shown when we have real bias stats */}
+        {/* Metrics strip - shown when we have real bias stats */}
         {hasStats && (
           <div className="grid grid-cols-3 gap-2 mb-3">
             <Metric
@@ -115,7 +116,7 @@ export default function ColumnCard(props) {
           </div>
         )}
 
-        {/* Proxy strength meter — only for proxy-role columns */}
+        {/* Proxy strength meter - only for proxy-role columns */}
         {role === 'PROXY' && proxyStrength != null && (
           <div className="mb-3 p-3 rounded-lg" style={{ background: 'var(--color-role-proxy-bg)' }}>
             <div className="flex items-center justify-between mb-1.5">
@@ -141,7 +142,7 @@ export default function ColumnCard(props) {
         {/* Neutral columns: clear message, not "No bias metrics" */}
         {!hasStats && type === 'NEUTRAL' && (
           <div className="text-sm py-2" style={{ color: 'var(--color-text-mid)' }}>
-            Regular feature — no demographic correlation expected, bias analysis doesn't apply.
+            Regular feature - no demographic correlation expected, bias analysis doesn't apply.
           </div>
         )}
 
@@ -156,7 +157,7 @@ export default function ColumnCard(props) {
         {!hasStats && type === 'AMBIGUOUS' && proxies?.length > 0 && (
           <div className="text-sm py-2" style={{ color: 'var(--color-text-mid)' }}>
             Possible proxy for: <span className="font-mono font-semibold">{proxies.join(', ')}</span>.
-            Full analysis unavailable — the sensitive column isn't present in the dataset.
+            Full analysis unavailable - the sensitive column isn't present in the dataset.
           </div>
         )}
 
@@ -232,19 +233,21 @@ function VerdictPill({ verdict }) {
 
 function Metric({ label, fullLabel, value, flagged, tooltip }) {
   return (
-    <div
-      className="rounded-lg p-2 text-center cursor-help transition-colors"
-      title={tooltip}
-      style={{
-        background: flagged ? 'var(--color-status-unfair-bg)' : 'var(--color-surface-container-low)',
-      }}
-    >
-      <div className="text-base font-bold text-metric" style={{ color: flagged ? 'var(--color-status-unfair)' : 'var(--color-on-surface)' }}>
-        {value}
+    <Tooltip text={tooltip} position="top">
+      <div
+        className="rounded-lg p-2 text-center cursor-help transition-colors hover:opacity-80 active:scale-95"
+        style={{
+          background: flagged ? 'var(--color-status-unfair-bg)' : 'var(--color-surface-container-low)',
+        }}
+      >
+        <div className="text-base font-bold text-metric" style={{ color: flagged ? 'var(--color-status-unfair)' : 'var(--color-on-surface)' }}>
+          {value}
+        </div>
+        <div className="text-[10px] font-semibold uppercase tracking-wider mt-0.5" style={{ color: flagged ? 'var(--color-status-unfair)' : 'var(--color-text-mid)' }}>
+          {label} <span style={{ opacity: 0.6 }}>ℹ️</span>
+        </div>
       </div>
-      <div className="text-[10px] font-semibold uppercase tracking-wider mt-0.5" style={{ color: flagged ? 'var(--color-status-unfair)' : 'var(--color-text-mid)' }}>
-        {label}
-      </div>
-    </div>
+    </Tooltip>
   );
 }
+

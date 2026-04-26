@@ -1,22 +1,29 @@
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+﻿import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { useAudit } from '../lib/AuditContext';
 import { signOutUser } from '../lib/auth';
 
 export default function Navbar() {
+  const AUTH_TRANSITION_MS = 260;
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { user, setUser } = useAudit();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
 
   // On home, the Landing page provides its own navbar
   if (pathname === '/') return null;
 
   async function handleSignOut() {
-    setMenuOpen(false);
-    await signOutUser();
-    setUser(null);
-    navigate('/', { replace: true });
+    setSigningOut(true);
+    try {
+      await new Promise((resolve) => setTimeout(resolve, AUTH_TRANSITION_MS));
+      await signOutUser();
+      setUser(null);
+      navigate('/', { replace: true });
+    } finally {
+      setSigningOut(false);
+    }
   }
 
   return (
@@ -47,7 +54,8 @@ export default function Navbar() {
           {user ? (
             <div className="relative">
               <button
-                onClick={() => setMenuOpen((v) => !v)}
+                onClick={() => { if (!signingOut) setMenuOpen((v) => !v); }}
+                disabled={signingOut}
                 className="flex items-center gap-2 px-3 py-2 rounded-lg transition-colors hover:bg-surface-container"
               >
                 <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold"
@@ -64,17 +72,25 @@ export default function Navbar() {
 
               {menuOpen && (
                 <>
-                  <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
+                  <div className="fixed inset-0 z-10" onClick={() => { if (!signingOut) setMenuOpen(false); }} />
                   <div className="absolute right-0 top-full mt-2 w-56 rounded-xl border overflow-hidden card-shadow-lg z-20"
                     style={{ background: 'var(--color-surface-container-lowest)', borderColor: 'var(--color-border)' }}>
                     <div className="px-4 py-3 border-b" style={{ borderColor: 'var(--color-border)' }}>
                       <p className="text-xs font-semibold" style={{ color: 'var(--color-text-mid)' }}>Signed in as</p>
                       <p className="text-sm font-bold truncate">{user.email || user.displayName || 'Guest'}</p>
-                      {user.isGuest && (
+                      {user.isGuest ? (
                         <p className="text-xs mt-1" style={{ color: 'var(--color-accent-dark)' }}>
-                          Local device only — sign up to sync
+                          Guest - sign up to save your audits
                         </p>
-                      )}
+                      ) : !user.email?.includes('@') && user.isLocalOnly ? (
+                        <p className="text-xs mt-1" style={{ color: 'var(--color-text-mid)' }}>
+                          Local account · audits on this device only
+                        </p>
+                      ) : user.isLocalOnly ? (
+                        <p className="text-xs mt-1" style={{ color: 'var(--color-text-mid)' }}>
+                          Local account · audits on this device only
+                        </p>
+                      ) : null}
                     </div>
                     <Link
                       to="/dashboard"
@@ -92,10 +108,16 @@ export default function Navbar() {
                     </Link>
                     <button
                       onClick={handleSignOut}
-                      className="block w-full text-left px-4 py-2.5 text-sm border-t hover:bg-surface-container"
+                      disabled={signingOut}
+                      className="block w-full text-left px-4 py-2.5 text-sm border-t transition-all hover:bg-surface-container"
                       style={{ borderColor: 'var(--color-border)', color: 'var(--color-status-unfair)' }}
                     >
-                      Sign out
+                      {signingOut ? (
+                        <span className="inline-flex items-center gap-2">
+                          <span className="unveil-spinner" />
+                          Signing out...
+                        </span>
+                      ) : 'Sign out'}
                     </button>
                   </div>
                 </>
@@ -104,7 +126,7 @@ export default function Navbar() {
           ) : (
             <>
               <Link to="/login" className="btn btn-ghost text-sm">Sign in</Link>
-              <Link to="/signup" className="btn btn-primary text-sm">Get started</Link>
+              <Link to="/signup" className="btn btn-primary text-sm">Sign up</Link>
             </>
           )}
         </div>
@@ -112,3 +134,4 @@ export default function Navbar() {
     </nav>
   );
 }
+

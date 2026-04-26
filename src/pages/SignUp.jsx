@@ -1,10 +1,11 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { signUp, isFirebaseConfigured } from '../lib/auth';
 import { useAudit } from '../lib/AuditContext';
 
 export default function SignUp() {
+  const AUTH_TRANSITION_MS = 260;
   const navigate = useNavigate();
   const { setUser } = useAudit();
   const [displayName, setDisplayName] = useState('');
@@ -29,6 +30,7 @@ export default function SignUp() {
         password,
         displayName: displayName.trim() || null,
       });
+      await new Promise((resolve) => setTimeout(resolve, AUTH_TRANSITION_MS));
       setUser(user);
       navigate('/upload');
     } catch (err) {
@@ -108,7 +110,7 @@ export default function SignUp() {
             {!isFirebaseConfigured() && (
               <div className="text-xs px-3 py-2 rounded-lg"
                 style={{ color: 'var(--color-accent-dark)', background: 'var(--color-accent-light)' }}>
-                Running without Firebase — your account lives on this device only.
+                Running without Firebase - your account lives on this device only.
               </div>
             )}
 
@@ -131,9 +133,10 @@ export default function SignUp() {
 
 function friendlySignupError(err) {
   const msg = String(err?.message || err || '').toLowerCase();
-  if (msg.includes('email-already-in-use')) return 'That email is already registered — try signing in instead.';
+  if (msg.includes('email-already-in-use')) return 'That email is already registered - try signing in instead.';
   if (msg.includes('weak-password')) return 'That password is too weak. Use at least 6 characters.';
   if (msg.includes('invalid-email')) return 'That email address looks invalid.';
-  if (msg.includes('network')) return 'Network issue — check your connection.';
+  if (msg.includes('network')) return 'Network issue - check your connection.';
   return err?.message || 'Sign-up failed.';
 }
+

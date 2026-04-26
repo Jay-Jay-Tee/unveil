@@ -1,11 +1,11 @@
-import { Link } from 'react-router-dom';
+﻿import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
 const ENTRIES = [
   {
     term: 'Fairness ratio (disparate impact)',
     short: 'How equally outcomes are distributed',
-    body: "The ratio of positive-outcome rates between the worst-off group and the best-off group. 1.0 means perfectly equal. Below 0.80 fails the EEOC \"four-fifths rule\" — the US legal benchmark for employment discrimination.",
+    body: "The ratio of positive-outcome rates between the worst-off group and the best-off group. 1.0 means perfectly equal. Below 0.80 fails the EEOC \"four-fifths rule\" - the US legal benchmark for employment discrimination.",
     example: "If men are approved 83% of the time and women only 61%, the fairness ratio is 0.61 / 0.83 = 0.73. Below 0.80 means trouble.",
     tone: 'var(--color-status-unfair)',
   },
@@ -26,7 +26,7 @@ const ENTRIES = [
   {
     term: 'Possible proxy',
     short: 'A column that quietly stands in for a sensitive attribute',
-    body: "Not sensitive itself, but correlates strongly with one that is. This is the tricky case — removing the sensitive column doesn't help if a proxy is still there.",
+    body: "Not sensitive itself, but correlates strongly with one that is. This is the tricky case - removing the sensitive column doesn't help if a proxy is still there.",
     example: "In UCI Adult, \"relationship\" status is ~75% correlated with sex. A model that can't see sex will pick up the same bias through relationship.",
     tone: 'var(--color-role-proxy)',
   },
@@ -113,10 +113,11 @@ export default function Glossary() {
 
         <div className="mt-10 text-center">
           <Link to="/upload" className="btn btn-primary">
-            Got it — let's audit a dataset
+            Got it - let's audit a dataset
           </Link>
         </div>
       </div>
     </motion.div>
   );
 }
+

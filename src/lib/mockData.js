@@ -1,4 +1,4 @@
-// mockData.js — matches real M1/M2/M3 JSON output schemas exactly
+﻿// mockData.js - matches real M1/M2/M3 JSON output schemas exactly
 
 export const mockSchemaMap = {
   columns: [

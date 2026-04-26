@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+﻿import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAudit } from '../lib/AuditContext';
 
@@ -50,7 +50,7 @@ export default function Landing() {
                   Sign in
                 </Link>
                 <Link to="/upload" className="btn btn-primary text-sm">
-                  Start auditing
+                  Sign up
                 </Link>
               </>
             )}
@@ -124,7 +124,7 @@ export default function Landing() {
                 {
                   icon: null,
                   title: 'Proxy detection',
-                  desc: "Catches columns that quietly encode a sensitive attribute — zip code for race, relationship for sex. Removing the obvious column isn't enough.",
+                  desc: "Catches columns that quietly encode a sensitive attribute - zip code for race, relationship for sex. Removing the obvious column isn't enough.",
                 },
                 {
                   icon: null,
@@ -152,9 +152,9 @@ export default function Landing() {
             className="grid md:grid-cols-3 gap-8 text-center"
           >
             {[
-              { num: '80%', label: 'The legal fairness threshold — the EEOC four-fifths rule' },
+              { num: '80%', label: 'The legal fairness threshold - the EEOC four-fifths rule' },
               { num: '60%+', label: 'Of AI hiring systems demonstrate measurable gender bias' },
-              { num: '2–3×', label: 'Higher denial rates for underrepresented groups in lending' },
+              { num: '2-3×', label: 'Higher denial rates for underrepresented groups in lending' },
             ].map((stat, i) => (
               <motion.div key={stat.num} custom={i} variants={fadeUp}>
                 <div className="text-display-lg mb-2" style={{ color: 'var(--color-accent-dark)' }}>{stat.num}</div>
@@ -187,7 +187,7 @@ export default function Landing() {
                 { n: '01', t: 'Upload', d: 'Drag in a CSV, JSON, or XLSX file. Or use our included UCI Adult sample.' },
                 { n: '02', t: 'Classify', d: 'Unveil identifies sensitive attributes, targets, and potential proxies.' },
                 { n: '03', t: 'Audit', d: 'Three-layer analysis: fairness gaps, proxy strength, and model SHAP behavior.' },
-                { n: '04', t: 'Report', d: 'Plain-English compliance narrative — ready to share with a non-technical team.' },
+                { n: '04', t: 'Report', d: 'Plain-English compliance narrative - ready to share with a non-technical team.' },
               ].map((step, i) => (
                 <motion.div key={step.n} custom={i} variants={fadeUp} className="text-center">
                   <div className="font-mono text-sm font-bold mb-3" style={{ color: 'var(--color-accent-dark)' }}>
@@ -208,11 +208,11 @@ export default function Landing() {
               Ready to see what's under the hood?
             </h2>
             <p className="text-lg max-w-2xl mx-auto mb-8" style={{ color: 'var(--color-text-mid)' }}>
-              Audit a dataset you already have. Or try our included UCI Adult Income sample — a
+              Audit a dataset you already have. Or try our included UCI Adult Income sample - a
               textbook example of gender and racial bias in income prediction.
             </p>
             <Link to="/upload" className="btn btn-primary text-base px-8 py-3.5">
-              Start auditing →
+              Sign up →
             </Link>
           </motion.div>
         </section>
@@ -238,3 +238,4 @@ export default function Landing() {
     </div>
   );
 }
+

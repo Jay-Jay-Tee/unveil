@@ -1,5 +1,5 @@
-/**
- * storage.js — Per-user audit storage.
+﻿/**
+ * storage.js - Per-user audit storage.
  *
  * Saves audit results (schemaMap, biasReport, modelBiasReport, metadata)
  * keyed by user. Falls back to localStorage if Firestore is not configured.
@@ -33,7 +33,7 @@ function localWrite(uid, audits) {
 export async function saveAudit(user, audit) {
   if (!user?.uid) throw new Error('Must be signed in to save audits.');
 
-  // Strip heavy slice payloads if the audit is huge — just keep summary + metadata
+  // Strip heavy slice payloads if the audit is huge - just keep summary + metadata
   const compact = {
     id: audit.id || `audit_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
     datasetName: audit.datasetName || 'Untitled dataset',
@@ -118,3 +118,4 @@ function derivedSummary(biasReport) {
   }
   return { unfair, borderline, fair };
 }
+

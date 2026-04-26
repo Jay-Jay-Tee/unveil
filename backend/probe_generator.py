@@ -1,9 +1,9 @@
-import sys, io
+﻿import sys, io
 if sys.stdout.encoding and sys.stdout.encoding.lower() != 'utf-8':
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 
 """
-M3 — probe_generator.py  (Day 3 — complete implementation)
+M3 - probe_generator.py  (Day 3 - complete implementation)
 
 What this does:
 - Generates synthetic persona pairs differing only in one protected attribute
@@ -36,7 +36,7 @@ class ProbeGenerator:
             model_endpoint: URL string to POST feature rows to (e.g. http://localhost:8001/predict)
         """
         if model_fn is None and model_endpoint is None:
-            raise ValueError("ProbeGenerator requires either model_fn or model_endpoint — neither was provided.")
+            raise ValueError("ProbeGenerator requires either model_fn or model_endpoint - neither was provided.")
 
         self.model_fn = model_fn
         self.model_endpoint = model_endpoint
@@ -98,7 +98,7 @@ class ProbeGenerator:
             unique_vals = list({row[col] for row in sample_data if col in row})
 
             if len(unique_vals) < 2:
-                print(f"  [SKIP] '{col}' has fewer than 2 unique values in sample_data — cannot probe.")
+                print(f"  [SKIP] '{col}' has fewer than 2 unique values in sample_data - cannot probe.")
                 results.append({
                     "name": col,
                     "mean_diff": None,
@@ -107,7 +107,7 @@ class ProbeGenerator:
                 })
                 continue
 
-            # Run all probes in parallel — 20 threads, I/O bound so threading is ideal
+            # Run all probes in parallel - 20 threads, I/O bound so threading is ideal
             with ThreadPoolExecutor(max_workers=20) as executor:
                 futures = [
                     executor.submit(self._probe_pair, random.choice(sample_data).copy(), col, unique_vals)
@@ -122,9 +122,9 @@ class ProbeGenerator:
             p_val = float(np.asarray(p_value).item())
 
             # Verdict logic:
-            # BIASED    — statistically significant (p < 0.05) AND meaningful difference (mean_diff > 0.05)
-            # AMBIGUOUS — significant but small difference, or borderline p-value
-            # CLEAN     — not significant or negligible difference
+            # BIASED    - statistically significant (p < 0.05) AND meaningful difference (mean_diff > 0.05)
+            # AMBIGUOUS - significant but small difference, or borderline p-value
+            # CLEAN     - not significant or negligible difference
             if p_val < 0.05 and mean_diff > 0.05:
                 verdict = "BIASED"
             elif p_val < 0.10 or mean_diff > 0.03:
@@ -139,13 +139,13 @@ class ProbeGenerator:
                 "verdict": verdict
             })
 
-            print(f"  [{verdict}] '{col}' — mean_diff={mean_diff:.4f}, p={p_val:.4f}")
+            print(f"  [{verdict}] '{col}' - mean_diff={mean_diff:.4f}, p={p_val:.4f}")
 
         return results
 
 
 # ─────────────────────────────────────────────
-# Quick self-test — run directly to verify
+# Quick self-test - run directly to verify
 # Uses the live endpoint_skeleton.py stub at port 8001
 # ─────────────────────────────────────────────
 if __name__ == "__main__":
@@ -178,7 +178,7 @@ if __name__ == "__main__":
     ]
 
     print("=" * 50)
-    print("ProbeGenerator — self-test against endpoint stub")
+    print("ProbeGenerator - self-test against endpoint stub")
     print("Make sure endpoint_skeleton.py is running on port 8001")
     print("  →  uvicorn endpoint_skeleton:app --reload --port 8001")
     print("=" * 50)
@@ -192,5 +192,5 @@ if __name__ == "__main__":
         print("\n✅ probe_generator.py working correctly")
 
     except requests.exceptions.ConnectionError:
-        print("\n⚠️  Could not connect to endpoint — is endpoint_skeleton.py running?")
+        print("\n⚠️  Could not connect to endpoint - is endpoint_skeleton.py running?")
         print("  Run: uvicorn endpoint_skeleton:app --reload --port 8001")

@@ -1,5 +1,5 @@
-/**
- * AuditContext — global audit state + authenticated user.
+﻿/**
+ * AuditContext - global audit state + authenticated user.
  *
  * New: tracks `user` and exposes `saveCurrentAudit()` so any page can
  * persist the in-progress audit to the user's dashboard.
@@ -29,6 +29,9 @@ export function AuditProvider({ children }) {
   const [modelBiasReport, setModelBiasReport] = useState(null);
   const [modelMeta, setModelMeta] = useState(null);
 
+  // Report
+  const [reportText, setReportText] = useState('');
+
   // UI state
   const [isMock, setIsMock] = useState(false);
   const [backendOnline, setBackendOnline] = useState(null);
@@ -43,7 +46,7 @@ export function AuditProvider({ children }) {
       // Initial read
       setUser(await getCurrentUser());
       setAuthReady(true);
-      // Subscribe for changes (Firebase only — no-op in local mode)
+      // Subscribe for changes (Firebase only - no-op in local mode)
       unsub = await onAuthChange((u) => setUser(u));
     })();
     return () => { try { unsub(); } catch {} };
@@ -61,17 +64,21 @@ export function AuditProvider({ children }) {
     setModelMeta(null);
     setIsMock(false);
     setBackendOnline(null);
+    setReportText('');
   }
 
-  async function saveCurrentAudit(note = '') {
+  // overrides lets callers pass fresh data directly (avoids stale React closure reads)
+  async function saveCurrentAudit(note = '', overrides = {}) {
     if (!user) throw new Error('Sign in to save audits.');
+    if (user.isGuest) throw new Error('Sign up to save audits.');
     return persistAudit(user, {
-      datasetName: datasetMeta?.name || datasetFile?.name || 'Untitled',
-      rowCount: datasetMeta?.rowCount,
-      columnCount: datasetMeta?.columnCount,
-      schemaMap,
-      biasReport,
-      modelBiasReport,
+      datasetName: overrides.datasetName ?? datasetMeta?.datasetName ?? datasetMeta?.name ?? datasetFile?.name ?? 'Untitled',
+      rowCount:    overrides.rowCount    ?? datasetMeta?.rowCount    ?? null,
+      columnCount: overrides.columnCount ?? datasetMeta?.columnCount ?? null,
+      schemaMap:   overrides.schemaMap   ?? schemaMap,
+      biasReport:  overrides.biasReport  ?? biasReport,
+      modelBiasReport: overrides.modelBiasReport ?? modelBiasReport,
+      reportText:  overrides.reportText  ?? reportText ?? '',
       note,
       createdAt: Date.now(),
     });
@@ -81,6 +88,7 @@ export function AuditProvider({ children }) {
     setSchemaMap(audit.schemaMap || null);
     setBiasReport(audit.biasReport || null);
     setModelBiasReport(audit.modelBiasReport || null);
+    setReportText(audit.reportText || '');
     setDatasetMeta({
       name: audit.datasetName,
       rowCount: audit.rowCount,
@@ -100,6 +108,7 @@ export function AuditProvider({ children }) {
       datasetMeta, setDatasetMeta,
       modelBiasReport, setModelBiasReport,
       modelMeta, setModelMeta,
+      reportText, setReportText,
       isMock, setIsMock,
       backendOnline, setBackendOnline,
       user, authReady, setUser,
@@ -117,3 +126,4 @@ export function useAudit() {
   if (!ctx) throw new Error('useAudit must be used inside <AuditProvider>');
   return ctx;
 }
+

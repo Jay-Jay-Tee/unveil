@@ -1,16 +1,8 @@
 /**
- * gemini.js — Browser-side Gemini client (fallback when backend is offline).
- *
- * Main changes vs old version:
- *   1. Report is generated in 4 sections instead of one call — if one section
- *      hits a rate limit, we still ship the others.
- *   2. Each section has its own max_output_tokens budget (no more cut-offs).
- *   3. Auto-retry with exponential backoff on transient errors.
- *   4. Cache by content hash so regeneration is free.
+ * gemini.js - Report generation using Claude API.
+ * Uses ONE single API call for the full report to avoid rate-limit cascades.
+ * Falls back gracefully with retry logic.
  */
-
-const GEMINI_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-const MODEL = 'gemini-2.5-flash';
 
 function hashString(s = '') {
   let h = 5381;
@@ -21,64 +13,58 @@ function hashString(s = '') {
   return (h >>> 0).toString(36);
 }
 
-function isRetryable(status, message = '') {
-  const m = String(message).toLowerCase();
-  if (status === 429 || status === 503) return true;
-  return m.includes('quota') || m.includes('rate limit') || m.includes('overloaded')
-      || m.includes('unavailable') || m.includes('resource_exhausted');
+async function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function parseRetryAfter(message = '') {
-  const m = String(message).match(/retry(?:\s+in|delay)?[^0-9]*(\d+(?:\.\d+)?)\s*s/i);
-  return m ? Math.max(1, Math.ceil(parseFloat(m[1]))) : null;
-}
+async function callClaude(prompt, { maxTokens = 3000, retries = 2 } = {}) {
+  let lastErr;
 
-async function callGemini(prompt, { maxTokens = 2048, attempt = 0 } = {}) {
-  if (!GEMINI_KEY) throw new Error('VITE_GEMINI_API_KEY is not set.');
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    if (attempt > 0) {
+      // Exponential backoff: 8s, 16s
+      const waitMs = 8000 * Math.pow(2, attempt - 1);
+      await sleep(waitMs);
+    }
 
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${GEMINI_KEY}`,
-    {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.3, maxOutputTokens: maxTokens },
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: maxTokens,
+        messages: [{ role: 'user', content: prompt }],
       }),
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (response.status === 429 || response.status === 503) {
+      const msg = data?.error?.message || `Rate limited (HTTP ${response.status})`;
+      lastErr = new Error(msg);
+      lastErr.retryable = true;
+      // If the API tells us how long to wait, respect it (plus a buffer)
+      const retryMatch = msg.match(/retry.*?(\d+)\s*s/i);
+      if (retryMatch && attempt === 0) {
+        const waitSec = Math.min(parseInt(retryMatch[1], 10) + 2, 30);
+        await sleep(waitSec * 1000);
+      }
+      continue; // retry
     }
-  );
 
-  const data = await res.json().catch(() => ({}));
-
-  if (!res.ok) {
-    const msg = data?.error?.message || `HTTP ${res.status}`;
-    if (isRetryable(res.status, msg) && attempt < 2) {
-      const retryAfter = parseRetryAfter(msg) ?? (2 ** attempt + 1);
-      await new Promise((r) => setTimeout(r, retryAfter * 1000));
-      return callGemini(prompt, { maxTokens, attempt: attempt + 1 });
+    if (!response.ok) {
+      const msg = data?.error?.message || `HTTP ${response.status}`;
+      const err = new Error(msg);
+      err.retryable = false;
+      throw err;
     }
-    const err = new Error(msg);
-    err.retryable = isRetryable(res.status, msg);
-    err.retryAfter = parseRetryAfter(msg);
-    throw err;
+
+    const text = data.content?.find(b => b.type === 'text')?.text;
+    if (!text) throw new Error('No text in response.');
+    return text;
   }
 
-  if (!data.candidates?.length) {
-    const reason = data.promptFeedback?.blockReason
-      ? `Blocked: ${data.promptFeedback.blockReason}`
-      : 'Empty response.';
-    throw new Error(`Gemini returned no candidates. ${reason}`);
-  }
-
-  const text = data.candidates[0].content?.parts?.[0]?.text;
-  const finishReason = data.candidates[0].finishReason || 'STOP';
-  if (!text) throw new Error(`Candidate had no text. finishReason: ${finishReason}`);
-
-  // MAX_TOKENS is not a hard failure — we return what we got with a note
-  if (finishReason === 'MAX_TOKENS') {
-    return text + '\n\n*(section truncated — regenerate if needed)*';
-  }
-  return text;
+  throw lastErr || new Error('Request failed after retries.');
 }
 
 // ── Compact payloads to save input tokens ──────────────────────────────
@@ -113,98 +99,60 @@ function pickWorstGroup(slices) {
   return { group: worst.group, approval_rate: worst.positive_rate, n: worst.count };
 }
 
-// ── Section prompts ─────────────────────────────────────────────────────
+// ── Single unified prompt ───────────────────────────────────────────────
 
-const SECTION_PROMPTS = {
-  'Executive Summary': (bias, model, datasetName) => `You're a bias compliance officer writing for a non-technical reader.
-Write ONLY the EXECUTIVE SUMMARY (3-4 sentences, plain English, no jargon, no heading).
-Reference the dataset as "${datasetName}" in your summary.
+function buildFullReportPrompt(biasCompact, modelCompact, datasetName) {
+  return `You are a bias compliance officer writing a full audit report for a non-technical reader.
+
+Write a complete compliance report for the dataset "${datasetName}" with exactly these four sections. Use markdown headings (## Section Name) for each. Be thorough and specific - this is the FULL report, not a summary.
+
+## Executive Summary
+3-4 sentences. Plain English, no jargon. State what dataset was analyzed, what was found overall, and the most urgent issue.
+
+## Critical Findings
+One short paragraph (2-3 sentences) per column with verdict "BIASED" or "AMBIGUOUS". State the column name, worst-affected group, fairness ratio, and why it matters. If no issues, say so clearly.
+
+## Proxy Risk
+3-4 sentences. Identify columns with high proxy_strength or role=PROXY. Explain which sensitive attribute they encode and why removing the obvious column is not enough.
+
+## Recommendations
+Exactly 3 bullet points starting with "* ". One sentence each, action-oriented and specific to what's in this dataset.
+
+Rules:
+- A fairness ratio below 0.80 fails the legal 80% rule
+- Say "sensitive attributes" instead of "PROTECTED"
+- Reference the dataset as "${datasetName}"
+- Do NOT add any preamble, intro, or closing remarks outside the four sections
+- Write ALL four sections even if data is sparse
 
 Dataset findings:
-${JSON.stringify(bias, null, 2)}
+${JSON.stringify(biasCompact, null, 2)}
 
 Model findings:
-${JSON.stringify(model, null, 2)}
-
-A fairness ratio below 0.80 fails the legal 80% rule. Don't use the word "PROTECTED" — say "sensitive attributes" instead.`,
-
-  'Critical Findings': (bias, model, datasetName) => `Write ONLY the CRITICAL FINDINGS section — one short paragraph (2-3 sentences) per "Unfair" or "Borderline" column. State the column name, worst-affected group, fairness ratio, and why it matters. Reference "${datasetName}" when relevant. No section heading.
-
-Dataset findings:
-${JSON.stringify(bias, null, 2)}
-
-Model findings:
-${JSON.stringify(model, null, 2)}`,
-
-  'Proxy Risk': (bias, datasetName) => `Write ONLY the PROXY RISK section in 3-4 sentences plain English. Identify any columns with high proxy_strength or role=PROXY, explain which sensitive attribute they stand in for, and explain why just removing the sensitive column isn't enough. Reference "${datasetName}" when relevant. No heading.
-
-Dataset findings:
-${JSON.stringify(bias, null, 2)}`,
-
-  'Recommendations': (bias, model, datasetName) => `Write ONLY the RECOMMENDATIONS section as 3 bullet points starting with "* ". Each one sentence, action-oriented, specific to what's in "${datasetName}" below.
-
-Dataset findings:
-${JSON.stringify(bias, null, 2)}
-
-Model findings:
-${JSON.stringify(model, null, 2)}`,
-};
-
-const SECTION_TOKEN_BUDGET = {
-  'Executive Summary': 512,
-  'Critical Findings': 2048,
-  'Proxy Risk': 1024,
-  'Recommendations': 768,
-};
+${JSON.stringify(modelCompact, null, 2)}`;
+}
 
 // ── Public API ──────────────────────────────────────────────────────────
-
-async function generateSections(biasCompact, modelCompact, datasetName = 'the dataset') {
-  const sections = [];
-  let firstError = null;
-
-  for (const [heading, promptFn] of Object.entries(SECTION_PROMPTS)) {
-    try {
-      const prompt = promptFn(biasCompact, modelCompact, datasetName);
-      const text = await callGemini(prompt, { maxTokens: SECTION_TOKEN_BUDGET[heading] });
-      sections.push(`## ${heading}\n\n${text.trim()}`);
-    } catch (err) {
-      console.error(`[gemini] section '${heading}' failed:`, err);
-      sections.push(`## ${heading}\n\n*(Couldn't generate this section — ${err.message || 'error'})*`);
-      if (!firstError) firstError = err;
-    }
-  }
-
-  return { sections, firstError };
-}
 
 export async function generateAuditReport(biasReport, modelBiasReport, { forceRefresh = false, datasetName = null } = {}) {
   const biasCompact = compactBiasReport(biasReport);
   const modelCompact = compactModelReport(modelBiasReport);
+  const name = datasetName || 'the dataset';
 
-  const fingerprint = JSON.stringify({ b: biasCompact, m: modelCompact, d: datasetName });
+  const fingerprint = JSON.stringify({ b: biasCompact, m: modelCompact, d: name });
   const cacheKey = `unveil_report_${hashString(fingerprint)}`;
 
   if (!forceRefresh) {
     try {
-      const cached = localStorage.getItem(cacheKey);
+      const cached = sessionStorage.getItem(cacheKey);
       if (cached) return cached;
     } catch {}
   }
 
-  const { sections, firstError } = await generateSections(biasCompact, modelCompact, datasetName || 'the dataset');
+  const prompt = buildFullReportPrompt(biasCompact, modelCompact, name);
+  const fullReport = await callClaude(prompt, { maxTokens: 3000, retries: 2 });
 
-  const fullReport = sections.join('\n\n');
-
-  // Only cache if we got a real result from every section (no error placeholders)
-  const allSucceeded = !firstError;
-  if (allSucceeded) {
-    try { localStorage.setItem(cacheKey, fullReport); } catch {}
-  }
-
-  // If every section failed, surface the error
-  const allFailed = sections.every((s) => s.includes("(Couldn't generate"));
-  if (allFailed && firstError) throw firstError;
+  try { sessionStorage.setItem(cacheKey, fullReport); } catch {}
 
   return fullReport;
 }

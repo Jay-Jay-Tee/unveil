@@ -1,5 +1,5 @@
-/**
- * firebase.js — Lazy-loaded Firebase client.
+﻿/**
+ * firebase.js - Lazy-loaded Firebase client.
  *
  * Firebase config comes from .env (VITE_FIREBASE_API_KEY etc).
  * If not configured, app falls back to localStorage.
@@ -52,3 +52,4 @@ export function getFirebase() {
   if (!_initPromise) _initPromise = initFirebase();
   return _initPromise;
 }
+

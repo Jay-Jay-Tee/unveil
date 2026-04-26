@@ -1,8 +1,9 @@
-import { useState, useRef } from 'react';
+﻿import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAudit } from '../lib/AuditContext';
 import { analyzeDataset, analyzeModel, checkBackendHealth } from '../lib/api';
+import { signIn } from '../lib/auth';
 
 // ─── helpers ──────────────────────────────────────────────────────────────
 
@@ -174,32 +175,25 @@ function SuccessBanner({ mode, hasModel, onNavigate }) {
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
       className="mt-8 rounded-xl border p-6"
       style={{ background: 'var(--color-success-light)', borderColor: 'var(--color-status-clean)' }}>
-      <div className="flex items-center gap-3 mb-5">
+      <div className="flex items-center gap-3 mb-2">
         <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white"
           style={{ background: 'var(--color-status-clean)' }}>
           <CheckIcon className="w-5 h-5" />
         </div>
         <p className="text-sm font-black text-status-clean">Analysis complete</p>
       </div>
+      <p className="text-xs mb-4" style={{ color: 'var(--color-text-mid)' }}>
+        {mode === 'both'
+          ? 'Dataset audit → Model audit → Report'
+          : mode === 'model'
+          ? 'Model audit → Report'
+          : 'Dataset audit → Report'}
+      </p>
       <div className="flex flex-wrap gap-3">
-        {(mode === 'dataset' || mode === 'both') && (
-          <button onClick={() => onNavigate('/audit/dataset')}
-            className="px-6 py-3 text-sm font-bold rounded-lg text-white transition-all"
-            style={{ background: 'var(--color-bg-ink)' }}>
-            View Dataset
-          </button>
-        )}
-        {hasModel && mode === 'both' && (
-          <button onClick={() => onNavigate('/audit/model')}
-            className="px-6 py-3 text-sm font-bold rounded-lg text-white transition-all"
-            style={{ background: 'var(--color-bg-ink)' }}>
-            View Model
-          </button>
-        )}
-        <button onClick={() => onNavigate('/report')}
-          className="px-6 py-3 text-sm font-bold rounded-lg border-2 transition-all"
-          style={{ borderColor: 'var(--color-outline-variant)', color: 'var(--color-on-surface)' }}>
-          View Report
+        <button onClick={() => onNavigate(mode === 'model' ? '/audit/model' : '/audit/dataset')}
+          className="px-6 py-3 text-sm font-bold rounded-lg text-white transition-all"
+          style={{ background: 'var(--color-bg-ink)' }}>
+          {mode === 'model' ? 'View Model Audit →' : 'View Dataset Audit →'}
         </button>
       </div>
     </motion.div>
@@ -239,12 +233,14 @@ async function runDatasetLeg(datasetFile, audit, setStep) {
   audit.setDatasetMeta({
     datasetName: result.datasetName,
     rowCount:    result.rowCount,
+    columnCount: result.columnCount,
     warnings:    result.warnings,
   });
   audit.setIsMock(result.isMock);
   audit.setDatasetFile(datasetFile);
   setStep('dataset', 'done');
-  return { schemaMap: result.schemaMap, proxyFlags: result.proxyFlags };
+  // Return full result so caller can pass fresh data to saveCurrentAudit
+  return { schemaMap: result.schemaMap, proxyFlags: result.proxyFlags, result };
 }
 
 /**
@@ -260,19 +256,23 @@ async function runModelLeg(datasetFile, modelFile, schemaMap, proxyFlags, audit,
     modelFile,
     100,
   );
-  audit.setModelBiasReport({
+  const modelBiasReport = {
     attribute_results: result.attributeResults,
     shap_summary:      result.shapSummary,
-  });
+  };
+  audit.setModelBiasReport(modelBiasReport);
   audit.setModelMeta({ modelName: modelFile.name, isDemo: false, modelOnly: false });
   audit.setModelFile(modelFile);
   audit.setIsMock(audit.isMock || result.isMock);
   setStep('model', 'done');
+  return { modelBiasReport };
 }
 
 // ─── main component ───────────────────────────────────────────────────────
 
 export default function Upload() {
+  const AUTH_TRANSITION_MS_SIGNUP_SIGNIN = 220; // a little less than sign out
+  const AUTH_TRANSITION_MS_GUEST = 260; // same as sign out
   const navigate = useNavigate();
   const audit    = useAudit();
 
@@ -281,9 +281,128 @@ export default function Upload() {
   const [showPkl,     setShowPkl]     = useState(false);
   const [status,      setStatus]      = useState('idle');   // idle | analyzing | done | error
   const [errorMsg,    setErrorMsg]    = useState('');
+  const [guestLoading, setGuestLoading] = useState(false);
+  const [guestExiting, setGuestExiting] = useState(false);
+  const [authNavTarget, setAuthNavTarget] = useState(null);
   const [steps,       setSteps]       = useState({ backend: 'waiting', dataset: 'waiting', model: 'waiting' });
 
   const setStep = (key, val) => setSteps(prev => ({ ...prev, [key]: val }));
+
+  // ── Auth gate ─────────────────────────────────────────────────────────
+  if (!audit.authReady) {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="min-h-screen pt-32 flex items-center justify-center"
+      >
+        <span className="unveil-spinner" />
+      </motion.div>
+    );
+  }
+  if (!audit.user) {
+    async function handleAuthNavigate(path, target) {
+      if (guestLoading || authNavTarget) return;
+      setAuthNavTarget(target);
+      setGuestExiting(true);
+      await new Promise((resolve) => setTimeout(resolve, AUTH_TRANSITION_MS_SIGNUP_SIGNIN));
+      navigate(path);
+    }
+
+    async function handleContinueAsGuest() {
+      setGuestLoading(true);
+      try {
+        setAuthNavTarget('guest');
+        setGuestExiting(true);
+        // Give the interstitial time to animate out before switching screens.
+        await new Promise((resolve) => setTimeout(resolve, AUTH_TRANSITION_MS_GUEST));
+        const guest = await signIn({ email: '', password: '' });
+        audit.setUser(guest);
+      } catch (e) {
+        console.error('[upload] continue as guest failed:', e);
+        setGuestExiting(false);
+        setAuthNavTarget(null);
+      } finally {
+        setGuestLoading(false);
+      }
+    }
+
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 12, scale: 1 }}
+        animate={guestExiting ? { opacity: 0, y: -8, scale: 0.99 } : { opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: guestExiting ? 0.22 : 0.35, ease: [0.22, 1, 0.36, 1] }}
+        className="min-h-screen pt-20 pb-20 px-3 sm:px-5 flex flex-col items-center justify-center text-center"
+      >
+        <div className="max-w-md">
+          <div className="w-16 h-16 mx-auto mb-5 rounded-2xl flex items-center justify-center"
+            style={{ background: 'var(--color-bg-ink)' }}>
+            <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+              <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+          </div>
+        <motion.p
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05, duration: 0.3 }}
+          className="text-display-md mb-3"
+          style={{ color: "var(--color-on-surface)" }}
+        >
+          Sign up to save audits
+        </motion.p>
+        <motion.p
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1, duration: 0.3 }}
+          className="text-sm mb-6 leading-relaxed"
+          style={{ color: "var(--color-text-mid)" }}
+        >
+          You're currently in guest mode. Create a free account to save your audit history,
+          revisit past results, and generate compliance reports anytime.
+        </motion.p>
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15, duration: 0.3 }}
+          className="flex gap-3 flex-wrap justify-center"
+        >
+          <button
+            onClick={() => handleAuthNavigate('/signup', 'signup')}
+            className="btn btn-primary"
+            disabled={guestLoading || !!authNavTarget}
+          >
+            {authNavTarget === 'signup' ? 'Opening sign up…' : 'Create free account'}
+          </button>
+          <button
+            onClick={() => handleAuthNavigate('/login', 'login')}
+            className="btn btn-secondary"
+            disabled={guestLoading || !!authNavTarget}
+          >
+            {authNavTarget === 'login' ? 'Opening sign in…' : 'Sign in'}
+          </button>
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.3 }}
+          className="mt-4"
+        >
+          <button
+            onClick={handleContinueAsGuest}
+            disabled={guestLoading || !!authNavTarget}
+            className="btn btn-ghost text-sm"
+          >
+            {guestLoading ? 'Continuing as guest…' : 'No, continue as guest'}
+          </button>
+        </motion.div>
+        <p className="text-xs mt-5" style={{ color: 'var(--color-text-mid)' }}>
+          You can still run audits as a guest - results just won't be saved between sessions.
+        </p>
+        </div>
+      </motion.div>
+    );
+  }
 
   const hasDataset = !!datasetFile;
   const hasModel   = !!modelFile;
@@ -303,31 +422,49 @@ export default function Upload() {
       audit.setBackendOnline(await checkBackendHealth());
       setStep('backend', 'done');
 
-      // Model-only is unsupported — we need rows to probe against
+      // Model-only is unsupported - we need rows to probe against
       if (hasModel && !hasDataset) {
         audit.setModelFile(modelFile);
         audit.setModelMeta({ modelName: modelFile.name, isDemo: false, modelOnly: true });
         setStep('dataset', 'skipped');
         setStep('model', 'skipped');
-        throw new Error('Upload a dataset too — we need data rows to probe the model against.');
+        throw new Error('Upload a dataset too - we need data rows to probe the model against.');
       }
 
       let schemaMap  = null;
       let proxyFlags = null;
+      let datasetResult = null;
+      let modelBiasReport = null;
 
       if (hasDataset) {
-        ({ schemaMap, proxyFlags } = await runDatasetLeg(datasetFile, audit, setStep));
+        ({ schemaMap, proxyFlags, result: datasetResult } = await runDatasetLeg(datasetFile, audit, setStep));
       } else {
         setStep('dataset', 'skipped');
       }
 
       if (hasDataset && hasModel) {
-        await runModelLeg(datasetFile, modelFile, schemaMap, proxyFlags, audit, setStep);
+        ({ modelBiasReport } = await runModelLeg(datasetFile, modelFile, schemaMap, proxyFlags, audit, setStep));
       } else {
         setStep('model', 'skipped');
       }
 
       audit.setAuditMode(mode);
+
+      // Auto-save - pass fresh data DIRECTLY so we don't read stale React state
+      if (!audit.user?.isGuest && datasetResult) {
+        try {
+          await audit.saveCurrentAudit('', {
+            datasetName:    datasetResult.datasetName,
+            rowCount:       datasetResult.rowCount,
+            columnCount:    datasetResult.columnCount,
+            schemaMap:      datasetResult.schemaMap,
+            biasReport:     datasetResult.biasReport,
+            modelBiasReport: modelBiasReport ?? null,
+          });
+        } catch (saveErr) {
+          console.warn('[upload] auto-save failed:', saveErr?.message);
+        }
+      }
       setStatus('done');
 
     } catch (err) {
@@ -383,9 +520,17 @@ export default function Upload() {
           <div>
             <div className="flex items-center gap-3 mb-3">
               <h3 className="font-bold">Model</h3>
-              <button onClick={() => setShowPkl(true)} className="text-xs px-2 py-1 rounded"
-                style={{ background: 'var(--color-surface-container-high)', color: 'var(--color-on-surface-variant)' }}>
-                How to export?
+              <button 
+                onClick={() => setShowPkl(true)} 
+                className="text-xs px-3 py-1.5 rounded-lg font-semibold transition-all hover:-translate-y-0.5"
+                style={{ 
+                  background: 'var(--color-surface-container-high)', 
+                  color: 'var(--color-on-surface)',
+                  border: '1px solid var(--color-outline-variant)',
+                  cursor: 'pointer',
+                }}
+                title="Click to learn how to export a model">
+                ℹ️ How to export?
               </button>
             </div>
             <p className="text-xs text-on-surface-variant mb-3">Scikit-learn .pkl file</p>
@@ -444,3 +589,4 @@ export default function Upload() {
     </motion.div>
   );
 }
+

@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+﻿import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import ColumnCard from '../components/ColumnCard';
@@ -106,7 +106,7 @@ export default function DatasetAudit() {
           <div className="flex items-end justify-between gap-4 flex-wrap">
             <div>
               <h1 className="text-display-md mb-1" style={{ color: 'var(--color-on-surface)' }}>
-                {datasetMeta?.name || 'Dataset analysis'}
+                {datasetMeta?.datasetName || datasetMeta?.name || 'Dataset analysis'}
               </h1>
               <p className="text-base max-w-lg" style={{ color: 'var(--color-text-mid)' }}>
                 Approval gaps, proxy strength, and per-group breakdowns for every column.
@@ -127,13 +127,13 @@ export default function DatasetAudit() {
           {isMock && (
             <p className="text-xs mt-4 inline-block px-3 py-1.5 rounded-lg"
               style={{ color: 'var(--color-accent-dark)', background: 'var(--color-accent-light)', fontFamily: 'var(--font-mono)' }}>
-              Demo mode — start the backend for live results
+              Demo mode - start the backend for live results
             </p>
           )}
           {schemaMap.used_fallback && (
             <p className="text-xs mt-2 inline-block px-3 py-1.5 rounded-lg ml-2"
               style={{ color: 'var(--color-accent-dark)', background: 'var(--color-accent-light)', fontFamily: 'var(--font-mono)' }}>
-              Gemini was rate-limited — some columns were classified using built-in rules instead.
+              Gemini was rate-limited - some columns were classified using built-in rules instead.
             </p>
           )}
         </div>
@@ -227,20 +227,38 @@ export default function DatasetAudit() {
         </div>
 
         {/* CTA row */}
-        <div className="mt-12 flex flex-wrap gap-3">
-          {(modelBiasReport || modelFile) && (
+        <div className="mt-12 flex flex-wrap gap-3 items-center">
+          <button onClick={() => navigate('/upload')} className="btn btn-ghost">
+            ← Back
+          </button>
+          <button
+            onClick={() => {
+              const data = { biasReport, schemaMap, datasetMeta };
+              const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json;charset=utf-8' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              const name = (datasetMeta?.name || datasetMeta?.datasetName || 'dataset').replace(/[^a-z0-9]+/gi, '-').toLowerCase();
+              a.download = `${name}-dataset-audit.json`;
+              document.body.appendChild(a); a.click(); a.remove();
+              URL.revokeObjectURL(url);
+            }}
+            className="btn btn-ghost"
+          >
+            ↓ Download dataset audit
+          </button>
+          {(modelBiasReport || modelFile) ? (
             <button onClick={() => navigate('/audit/model')} className="btn btn-primary">
-              View model analysis →
+              Next: model audit →
+            </button>
+          ) : (
+            <button onClick={() => navigate('/report')} className="btn btn-primary">
+              Next: compliance report →
             </button>
           )}
-          <button onClick={() => navigate('/report')} className="btn btn-secondary">
-            Generate plain-English report
-          </button>
-          <button onClick={() => navigate('/upload')} className="btn btn-ghost">
-            ↺ Start new audit
-          </button>
         </div>
       </div>
     </motion.div>
   );
 }
+

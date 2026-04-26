@@ -1,4 +1,4 @@
-"""
+﻿"""
 backend/api.py
 FastAPI routing layer for Unveil.
 
@@ -53,7 +53,7 @@ from backend.pipeline import (
 # ── app ────────────────────────────────────────────────────────────────────
 app = FastAPI(
     title="Unveil API",
-    description="Bias detection API — Part A (dataset) + Part B (model)",
+    description="Bias detection API - Part A (dataset) + Part B (model)",
     version="1.0.0",
 )
 
@@ -261,7 +261,7 @@ async def analyze_dataset(
     contents = await file.read()
     tmp_path = _tmp_file(file, contents)
     try:
-        result = run_dataset_pipeline(tmp_path)
+        result = run_dataset_pipeline(tmp_path, original_filename=file.filename)
         return safe_json(result)
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
@@ -371,3 +371,4 @@ async def gemini_report(
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("backend.api:app", host="0.0.0.0", port=8001, reload=True)
+

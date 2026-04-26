@@ -1,9 +1,9 @@
-import sys, io
+﻿import sys, io
 if sys.stdout.encoding and sys.stdout.encoding.lower() != 'utf-8':
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 
 """
-M3 — generate_model_bias_report.py
+M3 - generate_model_bias_report.py
 
 Standalone runner that:
   1. Loads a trained sklearn model (pickle)
@@ -22,7 +22,7 @@ Usage:
       --out    schemas/model_bias_report.json \
       --n-probes 100
 
-For UCI Adult demo (no model pkl — uses HTTP stub):
+For UCI Adult demo (no model pkl - uses HTTP stub):
   # Terminal 1: uvicorn endpoint_skeleton:app --port 8001
   # Terminal 2: python backend/generate_model_bias_report.py --endpoint http://localhost:8001/predict ...
 """
@@ -37,8 +37,8 @@ import pandas as pd
 
 # Allow running from repo root
 sys.path.insert(0, str(Path(__file__).parent))
-from probe_generator import ProbeGenerator
-from shap_explainer import SHAPExplainer
+from backend.probe_generator import ProbeGenerator
+from backend.shap_explainer import SHAPExplainer
 
 
 def load_schema(schema_path: str) -> dict:
@@ -66,7 +66,7 @@ def build_sample_data(df: pd.DataFrame, n: int = 200) -> list[dict]:
 
 def run(args):
     print("=" * 55)
-    print("M3 — generate_model_bias_report.py")
+    print("M3 - generate_model_bias_report.py")
     print("=" * 55)
 
     # Load schemas
@@ -134,9 +134,9 @@ def run(args):
             shap_summary = explainer.get_summary_for_m4()
             shap_rank_lookup = {e["feature"]: e["shap_rank"] for e in shap_summary}
         except Exception as e:
-            print(f"  SHAP failed: {e} — continuing without SHAP ranks")
+            print(f"  SHAP failed: {e} - continuing without SHAP ranks")
     else:
-        print("\n[2/2] SHAP skipped (no model pickle — HTTP endpoint mode)")
+        print("\n[2/2] SHAP skipped (no model pickle - HTTP endpoint mode)")
 
     # ── Step 3: Merge → model_bias_report.json ────────────
     attribute_results = []

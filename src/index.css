@@ -1,4 +1,4 @@
-@import "tailwindcss";
+﻿@import "tailwindcss";
 
 @theme {
   /* ── Unveil palette ── warm paper + ink, with semantic status colors ── */
@@ -21,13 +21,13 @@
   --color-text-mid: #4a4540;
   --color-text-faint: #a19a8c;
 
-  /* Primary — deep ink, used for buttons */
+  /* Primary - deep ink, used for buttons */
   --color-primary: #1a1712;
   --color-on-primary: #ffffff;
   --color-primary-container: #ebe2d5;
   --color-on-primary-container: #1a1712;
 
-  /* Accent — warm amber, used sparingly */
+  /* Accent - warm amber, used sparingly */
   --color-accent: #b87a10;
   --color-accent-light: #fff0d0;
   --color-accent-dark: #8f5d00;
@@ -42,17 +42,17 @@
 
   /* ── Semantic status colors (replaces BIASED/AMBIGUOUS/CLEAN codes) ── */
 
-  /* Unfair — was 'BIASED'. Red-orange, used for failed audits */
+  /* Unfair - was 'BIASED'. Red-orange, used for failed audits */
   --color-status-unfair: #c94527;
   --color-status-unfair-bg: #fdeae4;
   --color-status-unfair-border: #f2b9aa;
 
-  /* Borderline — was 'AMBIGUOUS'. Warm amber */
+  /* Borderline - was 'AMBIGUOUS'. Warm amber */
   --color-status-borderline: #c08010;
   --color-status-borderline-bg: #fff3d6;
   --color-status-borderline-border: #ebcb89;
 
-  /* Fair — was 'CLEAN'. Deep green */
+  /* Fair - was 'CLEAN'. Deep green */
   --color-status-fair: #198a5d;
   --color-status-fair-bg: #e0f2e9;
   --color-status-fair-border: #a8d5bf;
@@ -67,7 +67,7 @@
   --color-role-neutral: #6b6456;
   --color-role-neutral-bg: #efe9dc;
 
-  /* ── Legacy aliases — keeps old components compiling ── */
+  /* ── Legacy aliases - keeps old components compiling ── */
   --color-ink: var(--color-on-surface);
   --color-ink-mid: var(--color-text-mid);
   --color-ink-muted: var(--color-on-surface-variant);
@@ -108,7 +108,7 @@ body {
 
 #root { min-height: 100vh; }
 
-/* subtle noise overlay — keeps "warm paper" feel */
+/* subtle noise overlay - keeps "warm paper" feel */
 body::after {
   content: '';
   position: fixed;
@@ -200,3 +200,4 @@ body::after {
   border: 2px solid var(--color-border-strong); border-top-color: var(--color-on-surface);
   animation: unveil-spin 0.7s linear infinite; display: inline-block;
 }
+

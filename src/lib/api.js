@@ -1,8 +1,8 @@
-/**
- * api.js — Unveil frontend API client.
+﻿/**
+ * api.js - Unveil frontend API client.
  *
  * Same backend endpoints as before. Main changes:
- *   1. Better error messages — structured with retry hints the Report page parses.
+ *   1. Better error messages - structured with retry hints the Report page parses.
  *   2. Gemini calls get auto-retry with exponential backoff on 429/503.
  *   3. Report endpoint uses the chunked backend flow (no frontend change needed).
  */
@@ -48,7 +48,7 @@ function isGeminiOverloadedPayload(status, detailText, detailObj) {
 }
 
 function friendlyGeminiBusyMessage() {
-  return "Gemini is busy right now — we'll try again in 30-60 seconds. Your place in line is held.";
+  return "Gemini is busy right now - we'll try again in 30-60 seconds. Your place in line is held.";
 }
 
 function friendlyGeminiQuotaMessage(retryAfterSeconds) {
@@ -119,10 +119,10 @@ export async function analyzeDataset(file) {
       isMock: false,
     };
   } catch (err) {
-    // Rate-limit errors propagate — the user needs to know
+    // Rate-limit errors propagate - the user needs to know
     if (err?.retryable || err?.code === 'AUTH_REQUIRED' || err?.status === 401) throw err;
     if (USE_MOCK_FALLBACK) {
-      console.warn('[api] Backend unreachable — using mock data:', err.message);
+      console.warn('[api] Backend unreachable - using mock data:', err.message);
       return {
         schemaMap: mockSchemaMap,
         proxyFlags: { proxy_columns: [] },
@@ -130,7 +130,7 @@ export async function analyzeDataset(file) {
         datasetName: file.name,
         rowCount: 48842,
         columnCount: 15,
-        warnings: ['⚠ Backend offline — showing pre-computed demo results for UCI Adult.'],
+        warnings: ['⚠ Backend offline - showing pre-computed demo results for UCI Adult.'],
         isMock: true,
       };
     }
@@ -165,7 +165,7 @@ export async function analyzeModel(datasetFile, schemaMap, proxyFlags, modelFile
   } catch (err) {
     if (err?.retryable || err?.code === 'AUTH_REQUIRED' || err?.status === 401) throw err;
     if (USE_MOCK_FALLBACK) {
-      console.warn('[api] Backend unreachable — using mock model data:', err.message);
+      console.warn('[api] Backend unreachable - using mock model data:', err.message);
       return {
         attributeResults: mockModelBiasReport.attribute_results,
         shapSummary: mockModelBiasReport.shap_summary,
@@ -194,7 +194,7 @@ export async function generateGeminiReport(biasReport, modelBiasReport, { forceR
         force_refresh: forceRefresh,
         dataset_name: datasetName,
       }),
-      signal: AbortSignal.timeout(90000),  // 90s — chunked generation takes longer
+      signal: AbortSignal.timeout(90000),  // 90s - chunked generation takes longer
     });
 
     if (res.ok) {
@@ -218,3 +218,4 @@ export async function generateGeminiReport(biasReport, modelBiasReport, { forceR
     }
   }
 }
+

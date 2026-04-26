@@ -1,5 +1,5 @@
-"""
-Unveil — stats.py  (REVAMPED)
+﻿"""
+Unveil - stats.py  (REVAMPED)
 
 Key change: we now also produce a column_result for AMBIGUOUS (proxy-candidate)
 columns so the UI stops showing "No bias metrics for this column".
@@ -8,7 +8,7 @@ For AMBIGUOUS columns we compute:
   - proxy_strength: how much this column encodes the protected attribute it's
     suspected of proxying for (Cramér's V, 0-1)
   - slice stats (positive_rate, fpr, fnr) grouped by the binned values of this
-    column — same as for PROTECTED columns
+    column - same as for PROTECTED columns
   - a verdict: BIASED if proxy_strength > 0.5 AND outcome gap > 10pp,
                AMBIGUOUS if one of those,
                CLEAN otherwise
@@ -144,7 +144,7 @@ def summarize_column_metrics(slice_result: dict, *, role: str = "PROTECTED", pro
 
     out = {
         "name": slice_result.get("group_column"),
-        "role": role,                              # NEW — 'PROTECTED' or 'PROXY'
+        "role": role,                              # NEW - 'PROTECTED' or 'PROXY'
         "disparate_impact": round(float(di), 6),
         "parity_gap": round(float(gap), 6),
         "p_value": round(float(p), 6),
@@ -219,14 +219,14 @@ def build_bias_report(
 
     column_results: list[dict] = []
 
-    # Protected columns — the primary audit target
+    # Protected columns - the primary audit target
     for col in protected:
         if col not in working.columns:
             continue
         sr = evaluate_slices(working, col, label_column, prediction_column, positive_label=positive_label, include_wit_payload=True)
         column_results.append(summarize_column_metrics(sr, role="PROTECTED"))
 
-    # Proxy-candidate columns — we want these on the dashboard too
+    # Proxy-candidate columns - we want these on the dashboard too
     for entry in ambiguous:
         col = entry["name"]
         proxies_for = entry.get("proxies", [])
@@ -271,3 +271,4 @@ def build_bias_report(
             json.dump(bias_report, f, indent=2)
 
     return bias_report
+
