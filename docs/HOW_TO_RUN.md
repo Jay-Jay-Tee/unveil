@@ -18,7 +18,7 @@ git clone https://github.com/Jay-Jay-Tee/unbiased-ai-decisions.git
 cd unbiased-ai-decisions
 
 npm install
-python -m pip install -r requirements.txt
+python -m pip install -r docs/requirements.txt
 ```
 
 ### 2) Create environment file
