@@ -1,6 +1,7 @@
 ﻿import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAudit } from '../lib/AuditContext';
+import logoImg from '../assets/logo.png';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -26,13 +27,7 @@ export default function Landing() {
         <nav className="flex justify-between items-center px-3 sm:px-5 py-3.5 w-full">
 
           <Link to="/" className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-md flex items-center justify-center"
-              style={{ background: 'var(--color-bg-ink)' }}>
-              <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ color: '#fff' }}>
-                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" />
-                <circle cx="12" cy="12" r="3" />
-              </svg>
-            </div>
+            <img src={logoImg} alt="Unveil logo" className="w-8 h-8 object-contain" />
             <span className="text-lg font-bold tracking-tight">Unveil</span>
           </Link>
 
@@ -228,12 +223,7 @@ export default function Landing() {
       <footer className="border-t py-10" style={{ background: 'var(--color-bg-ink)', color: '#fff', borderColor: 'var(--color-border-strong)' }}>
         <div className="px-3 sm:px-5 max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-md flex items-center justify-center" style={{ background: 'var(--color-accent)' }}>
-              <svg viewBox="0 0 24 24" className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ color: 'var(--color-bg-ink)' }}>
-                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" />
-                <circle cx="12" cy="12" r="3" />
-              </svg>
-            </div>
+            <img src={logoImg} alt="Unveil logo" className="w-6 h-6 object-contain" />
             <span className="font-bold">Unveil</span>
           </div>
           <p className="text-sm" style={{ color: 'rgba(255,255,255,0.55)' }}>

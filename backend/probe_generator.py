@@ -144,10 +144,10 @@ class ProbeGenerator:
         return results
 
 
-# ─────────────────────────────────────────────
+# ---------------------------------------------
 # Quick self-test - run directly to verify
 # Uses the live endpoint_skeleton.py stub at port 8001
-# ─────────────────────────────────────────────
+# ---------------------------------------------
 if __name__ == "__main__":
     import json
 

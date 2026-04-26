@@ -43,9 +43,9 @@ import numpy as np
 from pathlib import Path
 
 
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 # Public entry point
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 
 def ingest(file_path: str, max_rows: int = 5000) -> dict:
     """
@@ -71,7 +71,7 @@ def ingest(file_path: str, max_rows: int = 5000) -> dict:
     ext = path.suffix.lower().lstrip(".")
     warnings = []
 
-    # ── dispatch to format-specific loader ──
+    # -- dispatch to format-specific loader --
     loaders = {
         "csv":  _load_csv,
         "tsv":  _load_tsv,
@@ -90,7 +90,7 @@ def ingest(file_path: str, max_rows: int = 5000) -> dict:
     df, load_warnings = loaders[ext](path)
     warnings.extend(load_warnings)
 
-    # ── row cap ──
+    # -- row cap --
     if max_rows is not None and len(df) > max_rows:
         warnings.append(
             f"Dataset has {len(df)} rows - sampled to {max_rows} for performance. "
@@ -98,11 +98,11 @@ def ingest(file_path: str, max_rows: int = 5000) -> dict:
         )
         df = df.sample(n=max_rows, random_state=42).reset_index(drop=True)
 
-    # ── normalize column names ──
+    # -- normalize column names --
     df, rename_warnings = _normalize_columns(df)
     warnings.extend(rename_warnings)
 
-    # ── build column metadata ──
+    # -- build column metadata --
     column_meta = _build_column_meta(df)
 
     return {
@@ -117,9 +117,9 @@ def ingest(file_path: str, max_rows: int = 5000) -> dict:
     }
 
 
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 # Format-specific loaders - each returns (df, warnings)
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 
 def _load_csv(path: Path) -> tuple[pd.DataFrame, list]:
     warnings = []
@@ -227,9 +227,9 @@ def _load_xlsx(path: Path) -> tuple[pd.DataFrame, list]:
     return df, warnings
 
 
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 # Normalization helpers
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 
 def _normalize_columns(df: pd.DataFrame) -> tuple[pd.DataFrame, list]:
     """
@@ -331,9 +331,9 @@ def _build_column_meta(df: pd.DataFrame) -> list:
     return meta
 
 
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 # Utility - pretty-print a summary (useful for quick CLI checks)
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 
 def summarize(result: dict) -> None:
     """Print a human-readable summary of an ingest_result dict."""
@@ -356,9 +356,9 @@ def summarize(result: dict) -> None:
     print(f"{'=' * 55}\n")
 
 
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 # Quick self-test - run directly: python ingestor.py
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 
 if __name__ == "__main__":
     import sys
@@ -366,7 +366,7 @@ if __name__ == "__main__":
 
     print("Running ingestor self-test...\n")
 
-    # ── Build a tiny synthetic dataset matching UCI Adult column structure ──
+    # -- Build a tiny synthetic dataset matching UCI Adult column structure --
     synthetic_data = {
         "age": [39, 50, 38, 53, 28],
         "workclass": ["State-gov", "Self-emp-not-inc", "Private", "Private", "Private"],
@@ -388,7 +388,7 @@ if __name__ == "__main__":
     df_synthetic = pd.DataFrame(synthetic_data)
 
     with tempfile.TemporaryDirectory() as tmp:
-        # ── TEST CSV ──
+        # -- TEST CSV --
         csv_path = os.path.join(tmp, "uci_adult.csv")
         df_synthetic.to_csv(csv_path, index=False)
         result_csv = ingest(csv_path)
@@ -398,7 +398,7 @@ if __name__ == "__main__":
         summarize(result_csv)
         print("✅ CSV: PASS")
 
-        # ── TEST TSV ──
+        # -- TEST TSV --
         tsv_path = os.path.join(tmp, "uci_adult.tsv")
         df_synthetic.to_csv(tsv_path, sep="\t", index=False)
         result_tsv = ingest(tsv_path)
@@ -406,7 +406,7 @@ if __name__ == "__main__":
         assert result_tsv["row_count"] == 5
         print("✅ TSV: PASS")
 
-        # ── TEST JSON (array of objects) ──
+        # -- TEST JSON (array of objects) --
         json_path = os.path.join(tmp, "uci_adult.json")
         df_synthetic.to_json(json_path, orient="records", indent=2)
         result_json = ingest(json_path)
@@ -414,7 +414,7 @@ if __name__ == "__main__":
         assert result_json["row_count"] == 5
         print("✅ JSON (records array): PASS")
 
-        # ── TEST JSONL ──
+        # -- TEST JSONL --
         jsonl_path = os.path.join(tmp, "uci_adult.jsonl")
         with open(jsonl_path, "w") as f:
             for record in df_synthetic.to_dict(orient="records"):
@@ -424,7 +424,7 @@ if __name__ == "__main__":
         assert result_jsonl["row_count"] == 5
         print("✅ JSONL: PASS")
 
-        # ── TEST XLSX ──
+        # -- TEST XLSX --
         xlsx_path = os.path.join(tmp, "uci_adult.xlsx")
         df_synthetic.to_excel(xlsx_path, index=False)
         result_xlsx = ingest(xlsx_path)
@@ -432,7 +432,7 @@ if __name__ == "__main__":
         assert result_xlsx["row_count"] == 5
         print("✅ XLSX: PASS")
 
-        # ── TEST column_meta shape ──
+        # -- TEST column_meta shape --
         meta = result_csv["column_meta"]
         assert len(meta) == 15
         assert all(k in meta[0] for k in ("name", "dtype", "kind", "null_count", "unique_count", "sample_values"))
@@ -443,7 +443,7 @@ if __name__ == "__main__":
         assert age_meta["kind"] == "categorical"
         print("✅ column_meta shape and kinds: PASS")
 
-        # ── TEST unsupported format (file must exist to reach the extension check) ──
+        # -- TEST unsupported format (file must exist to reach the extension check) --
         parquet_path = os.path.join(tmp, "bad.parquet")
         with open(parquet_path, "w") as f:
             f.write("dummy")
@@ -454,7 +454,7 @@ if __name__ == "__main__":
             assert "Unsupported file type" in str(e)
         print("✅ Unsupported format error: PASS")
 
-        # ── TEST file not found ──
+        # -- TEST file not found --
         try:
             ingest("/tmp/does_not_exist.csv")
             assert False, "Should have raised FileNotFoundError"

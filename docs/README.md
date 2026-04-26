@@ -60,55 +60,55 @@ Unveil was built specifically to surface that second layer. It's not enough to r
 ```
 unveil/
 │
-├── src/                          # React frontend
-│   ├── pages/
-│   │   ├── Landing.jsx           # Homepage / marketing
-│   │   ├── Upload.jsx            # File upload + analysis orchestration
-│   │   ├── DatasetAudit.jsx      # Per-column bias results
-│   │   ├── ModelAudit.jsx        # Model fairness + SHAP chart
-│   │   ├── Report.jsx            # Gemini compliance narrative
-│   │   ├── Dashboard.jsx         # Saved audit history
-│   │   ├── Glossary.jsx          # Plain-English term definitions
-│   │   ├── Login.jsx
-│   │   └── SignUp.jsx
+├-- src/                          # React frontend
+│   ├-- pages/
+│   │   ├-- Landing.jsx           # Homepage / marketing
+│   │   ├-- Upload.jsx            # File upload + analysis orchestration
+│   │   ├-- DatasetAudit.jsx      # Per-column bias results
+│   │   ├-- ModelAudit.jsx        # Model fairness + SHAP chart
+│   │   ├-- Report.jsx            # Gemini compliance narrative
+│   │   ├-- Dashboard.jsx         # Saved audit history
+│   │   ├-- Glossary.jsx          # Plain-English term definitions
+│   │   ├-- Login.jsx
+│   │   └-- SignUp.jsx
 │   │
-│   ├── components/
-│   │   ├── Navbar.jsx
-│   │   ├── ColumnCard.jsx        # Per-column bias breakdown card
-│   │   ├── BiasGauge.jsx         # Visual fairness ratio indicator
-│   │   ├── SliceChart.jsx        # Per-group approval rate bar chart
-│   │   ├── ShapChart.jsx         # SHAP feature importance chart
-│   │   ├── ProxyAlert.jsx        # Proxy column warning banner
-│   │   └── GeminiReport.jsx      # Report renderer
+│   ├-- components/
+│   │   ├-- Navbar.jsx
+│   │   ├-- ColumnCard.jsx        # Per-column bias breakdown card
+│   │   ├-- BiasGauge.jsx         # Visual fairness ratio indicator
+│   │   ├-- SliceChart.jsx        # Per-group approval rate bar chart
+│   │   ├-- ShapChart.jsx         # SHAP feature importance chart
+│   │   ├-- ProxyAlert.jsx        # Proxy column warning banner
+│   │   └-- GeminiReport.jsx      # Report renderer
 │   │
-│   └── lib/
-│       ├── api.js                # Frontend → backend HTTP client
-│       ├── gemini.js             # Direct Gemini API fallback (browser-side)
-│       ├── auth.js               # Firebase Auth + local account mode
-│       ├── storage.js            # Firestore + localStorage audit persistence
-│       ├── AuditContext.jsx      # Global audit state (React context)
-│       └── fileParser.js         # Client-side CSV/XLSX preview
+│   └-- lib/
+│       ├-- api.js                # Frontend → backend HTTP client
+│       ├-- gemini.js             # Direct Gemini API fallback (browser-side)
+│       ├-- auth.js               # Firebase Auth + local account mode
+│       ├-- storage.js            # Firestore + localStorage audit persistence
+│       ├-- AuditContext.jsx      # Global audit state (React context)
+│       └-- fileParser.js         # Client-side CSV/XLSX preview
 │
-├── backend/
-│   ├── api.py                    # FastAPI routes (HTTP only - no business logic)
-│   ├── pipeline.py               # Analysis orchestration (Part A + Part B)
-│   ├── ingestor.py               # File ingestion → normalized DataFrame
-│   ├── gemini_classifier.py      # Column classification via Gemini + rules fallback
-│   ├── proxy_detection.py        # Cramér's V + mutual information proxy detection
-│   ├── stats.py                  # Disparate impact, p-values, per-group stats
-│   ├── slice_eval.py             # Per-group approval rate / FPR / FNR calculation
-│   ├── counterfactual_engine.py  # Row cloning + attribute flipping for model probing
-│   ├── probe_generator.py        # Black-box model probing (100+ probes / attribute)
-│   ├── shap_explainer.py         # TreeExplainer / KernelExplainer wrapper
-│   ├── train_demo_model.py       # Script to (re)train the bundled demo model
-│   └── demo_model.pkl            # Pre-trained sklearn model on UCI Adult
+├-- backend/
+│   ├-- api.py                    # FastAPI routes (HTTP only - no business logic)
+│   ├-- pipeline.py               # Analysis orchestration (Part A + Part B)
+│   ├-- ingestor.py               # File ingestion → normalized DataFrame
+│   ├-- gemini_classifier.py      # Column classification via Gemini + rules fallback
+│   ├-- proxy_detection.py        # Cramér's V + mutual information proxy detection
+│   ├-- stats.py                  # Disparate impact, p-values, per-group stats
+│   ├-- slice_eval.py             # Per-group approval rate / FPR / FNR calculation
+│   ├-- counterfactual_engine.py  # Row cloning + attribute flipping for model probing
+│   ├-- probe_generator.py        # Black-box model probing (100+ probes / attribute)
+│   ├-- shap_explainer.py         # TreeExplainer / KernelExplainer wrapper
+│   ├-- train_demo_model.py       # Script to (re)train the bundled demo model
+│   └-- demo_model.pkl            # Pre-trained sklearn model on UCI Adult
 │
-├── start.sh                      # macOS / Linux startup script
-├── start.bat                     # Windows CMD startup script
-├── start.ps1                     # Windows PowerShell startup script
-├── requirements.txt              # Python dependencies
-├── package.json                  # Node dependencies
-└── adult.csv                     # UCI Adult Income dataset (sample)
+├-- start.sh                      # macOS / Linux startup script
+├-- start.bat                     # Windows CMD startup script
+├-- start.ps1                     # Windows PowerShell startup script
+├-- requirements.txt              # Python dependencies
+├-- package.json                  # Node dependencies
+└-- adult.csv                     # UCI Adult Income dataset (sample)
 ```
 
 ---

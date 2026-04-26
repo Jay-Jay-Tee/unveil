@@ -264,7 +264,7 @@ function AuditCard({ audit, onOpen, onDelete }) {
       <div className="mt-3 pt-3 border-t" style={{ borderColor: 'var(--color-border)' }} onClick={(e) => e.stopPropagation()}>
         <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--color-text-mid)' }}>Downloads</p>
         <div className="flex flex-col gap-1.5">
-          {/* Dataset audit — always present */}
+          {/* Dataset audit - always present */}
           <button
             onClick={() => {
               const stamp = new Date(audit.createdAt || Date.now()).toISOString().slice(0, 10);
@@ -279,7 +279,7 @@ function AuditCard({ audit, onOpen, onDelete }) {
             Dataset audit (.json)
           </button>
 
-          {/* Model audit — only if model data exists */}
+          {/* Model audit - only if model data exists */}
           <button
             onClick={() => {
               if (!audit.modelBiasReport) return;
@@ -295,13 +295,13 @@ function AuditCard({ audit, onOpen, onDelete }) {
               cursor: audit.modelBiasReport ? 'pointer' : 'not-allowed',
               opacity: audit.modelBiasReport ? 1 : 0.5,
             }}
-            title={audit.modelBiasReport ? 'Download model bias audit as JSON' : 'No model audit — upload a model file to generate one'}
+            title={audit.modelBiasReport ? 'Download model bias audit as JSON' : 'No model audit - upload a model file to generate one'}
           >
             <svg className="w-3 h-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-            Model audit (.json){!audit.modelBiasReport && <span className="ml-auto opacity-60">— no model</span>}
+            Model audit (.json){!audit.modelBiasReport && <span className="ml-auto opacity-60">- no model</span>}
           </button>
 
-          {/* Report — only if report has been generated */}
+          {/* Report - only if report has been generated */}
           <button
             onClick={() => {
               if (!audit.reportText) return;
@@ -322,10 +322,10 @@ function AuditCard({ audit, onOpen, onDelete }) {
               cursor: audit.reportText ? 'pointer' : 'not-allowed',
               opacity: audit.reportText ? 1 : 0.5,
             }}
-            title={audit.reportText ? 'Download compliance report as Markdown' : 'No report yet — generate one from the audit page'}
+            title={audit.reportText ? 'Download compliance report as Markdown' : 'No report yet - generate one from the audit page'}
           >
             <svg className="w-3 h-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-            Compliance report (.md){!audit.reportText && <span className="ml-auto opacity-60">— not generated</span>}
+            Compliance report (.md){!audit.reportText && <span className="ml-auto opacity-60">- not generated</span>}
           </button>
         </div>
       </div>

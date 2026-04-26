@@ -46,7 +46,7 @@ def get_cached_model():
     return _cached_model
 
 
-# ─── helpers (unchanged from old pipeline.py) ──────────────────────────────
+# --- helpers (unchanged from old pipeline.py) ------------------------------
 
 def safe_json(obj):
     if isinstance(obj, dict):
@@ -132,7 +132,7 @@ def stub_predict(features: dict) -> float:
     return float(np.random.default_rng(seed).uniform(0.2, 0.85))
 
 
-# ─── Part A - dataset pipeline (unchanged in shape) ────────────────────────
+# --- Part A - dataset pipeline (unchanged in shape) ------------------------
 
 def run_dataset_pipeline(file_path: str, original_filename: str | None = None) -> dict:
     ingest_result = ingest(file_path, max_rows=5000)
@@ -196,7 +196,7 @@ def _attach_counterfactuals(df, schema_map, proxy_flags, label_col, positive_lab
         print(f"  [counterfactual] Failed: {e} - skipping")
 
 
-# ─── Part B - model pipeline (unchanged) ───────────────────────────────────
+# --- Part B - model pipeline (unchanged) -----------------------------------
 
 def run_model_pipeline(dataset_path, schema_map, proxy_flags, model_path=None, n_probes=100):
     global _cached_model
@@ -273,7 +273,7 @@ def _run_shap(model, feature_df, encoded_sample, protected_cols, proxy_col_names
         return [], {}
 
 
-# ─── Gemini report - NOW CHUNKED SO IT DOESN'T GET CUT OFF ─────────────────
+# --- Gemini report - NOW CHUNKED SO IT DOESN'T GET CUT OFF -----------------
 
 def _report_cache_key(bias_report: dict, model_bias_report: dict) -> str:
     payload = json.dumps({"b": bias_report, "m": model_bias_report}, sort_keys=True, default=str)

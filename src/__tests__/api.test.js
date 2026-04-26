@@ -1,7 +1,7 @@
 ﻿import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// ── Inline helpers mirrored from api.js so we can unit-test error logic
-// without triggering ESM / Firebase / fetch side-effects. ─────────────────
+// -- Inline helpers mirrored from api.js so we can unit-test error logic
+// without triggering ESM / Firebase / fetch side-effects. -----------------
 
 function isGeminiQuotaPayload(status, detailText, detailObj) {
   if (detailObj?.code === 'GEMINI_QUOTA_EXCEEDED') return true;
@@ -28,7 +28,7 @@ function friendlyGeminiBusyMessage() {
   return "Gemini is busy right now - we'll try again in 30-60 seconds. Your place in line is held.";
 }
 
-// ── Tests ──────────────────────────────────────────────────────────────────
+// -- Tests ------------------------------------------------------------------
 
 describe('isGeminiQuotaPayload', () => {
   it('detects GEMINI_QUOTA_EXCEEDED by code regardless of status', () => {

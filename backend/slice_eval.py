@@ -34,9 +34,9 @@ MAX_CATEGORICAL_GROUPS = 6  # above this, we collapse into top-5 + Other
 MIN_BIN_SIZE = 20  # don't keep groups with fewer than this many rows
 
 
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 # Binning - this is the part that fixes "every age shown as a bar"
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 
 def _col_is_age_like(name: str) -> bool:
     n = re.sub(r"[\s_\-\.]+", "_", name.strip().lower())
@@ -95,9 +95,9 @@ def _apply_binning(df: pd.DataFrame, column: str) -> pd.Series:
     return series.astype(str)
 
 
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 # Helpers for positive-label inference
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 
 def _is_missing(value: Any) -> bool:
     try:
@@ -142,9 +142,9 @@ def _confusion(y_true: pd.Series, y_pred: pd.Series) -> dict[str, int]:
             "positives": tp + fp, "negatives": tn + fn}
 
 
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 # Main entry point
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 
 def evaluate_slices(
     df: pd.DataFrame,

@@ -12,10 +12,10 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 import shap
 
-# ─────────────────────────────────────────────
+# ---------------------------------------------
 # TEST 1: TreeExplainer (for sklearn tree models)
 # This is what you'll use on Day 5 for white-box analysis
-# ─────────────────────────────────────────────
+# ---------------------------------------------
 print("=" * 50)
 print("TEST 1: shap.TreeExplainer (sklearn RandomForest)")
 print("=" * 50)
@@ -52,10 +52,10 @@ print(shap_ranking.head(5).to_string())
 print(f"\nshap_values shape: {shap_class1.shape}")
 
 
-# ─────────────────────────────────────────────
+# ---------------------------------------------
 # TEST 2: KernelExplainer (model-agnostic, black-box)
 # This is what you'll use when you only have an HTTP endpoint
-# ─────────────────────────────────────────────
+# ---------------------------------------------
 print("\n" + "=" * 50)
 print("TEST 2: shap.KernelExplainer (LogisticRegression - black-box mode)")
 print("=" * 50)
@@ -84,10 +84,10 @@ for feat, val in zip(data2.feature_names, shap_values_kernel[0][0]):
     print(f"  {feat}: {val:.4f}")
 
 
-# ─────────────────────────────────────────────
+# ---------------------------------------------
 # TEST 3: Verify output schema matches model_bias_report.json
 # This is the contract M4 expects from you
-# ─────────────────────────────────────────────
+# ---------------------------------------------
 print("\n" + "=" * 50)
 print("TEST 3: model_bias_report.json schema preview")
 print("=" * 50)

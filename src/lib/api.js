@@ -31,7 +31,7 @@ async function buildAuthHeaders({ required = false } = {}) {
   return { Authorization: `Bearer ${token}` };
 }
 
-// ── Error classification ────────────────────────────────────────────────
+// -- Error classification ------------------------------------------------
 
 function isGeminiQuotaPayload(status, detailText, detailObj) {
   if (detailObj?.code === 'GEMINI_QUOTA_EXCEEDED') return true;
@@ -82,7 +82,7 @@ async function toApiError(res) {
   throw new Error(detailText || `HTTP ${res.status}`);
 }
 
-// ── Health check ────────────────────────────────────────────────────────
+// -- Health check --------------------------------------------------------
 
 export async function checkBackendHealth() {
   try {
@@ -93,7 +93,7 @@ export async function checkBackendHealth() {
   }
 }
 
-// ── Dataset analysis ────────────────────────────────────────────────────
+// -- Dataset analysis ----------------------------------------------------
 
 export async function analyzeDataset(file) {
   const formData = new FormData();
@@ -138,7 +138,7 @@ export async function analyzeDataset(file) {
   }
 }
 
-// ── Model analysis ──────────────────────────────────────────────────────
+// -- Model analysis ------------------------------------------------------
 
 export async function analyzeModel(datasetFile, schemaMap, proxyFlags, modelFile = null, nProbes = 100) {
   const formData = new FormData();
@@ -176,7 +176,7 @@ export async function analyzeModel(datasetFile, schemaMap, proxyFlags, modelFile
   }
 }
 
-// ── Gemini report ───────────────────────────────────────────────────────
+// -- Gemini report -------------------------------------------------------
 
 export async function generateGeminiReport(biasReport, modelBiasReport, { forceRefresh = false, datasetName = null } = {}) {
   // 1. Try backend proxy first

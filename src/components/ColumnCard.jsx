@@ -197,7 +197,7 @@ export default function ColumnCard(props) {
   );
 }
 
-// ── sub-components ─────────────────────────────────────────────────────
+// -- sub-components -----------------------------------------------------
 
 function RolePill({ type }) {
   const info = COLUMN_ROLE[type];

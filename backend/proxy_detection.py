@@ -52,9 +52,9 @@ from sklearn.metrics import mutual_info_score
 from sklearn.preprocessing import LabelEncoder
 
 
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 # Thresholds
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 
 PROXY_CV_THRESHOLD      = 0.30   # Cramér's V - strong association
 PROXY_MI_THRESHOLD      = 0.10   # mutual information - strong
@@ -64,9 +64,9 @@ WEAK_PROXY_MI_THRESHOLD = 0.05   # mutual information - moderate
 SCHEMA_VERSION = "1.0.0"
 
 
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 # Public entry point
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 
 def detect(ingest_result: dict, schema_map: dict, output_path: str | None = None) -> dict:
     """
@@ -93,7 +93,7 @@ def detect(ingest_result: dict, schema_map: dict, output_path: str | None = None
         print("  [WARN] No PROTECTED columns found in schema_map - proxy detection skipped.")
         return _empty_result(ingest_result["dataset_name"])
 
-    # ── encode all categorical columns to integers for MI computation ──
+    # -- encode all categorical columns to integers for MI computation --
     encoded = _encode_categoricals(df, categorical_cols)
 
     proxy_entries = []
@@ -135,7 +135,7 @@ def detect(ingest_result: dict, schema_map: dict, output_path: str | None = None
         "proxy_columns":  proxy_entries,
     }
 
-    # ── write to disk ──
+    # -- write to disk --
     out_path = _resolve_output_path(output_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     with open(out_path, "w", encoding="utf-8") as f:
@@ -145,9 +145,9 @@ def detect(ingest_result: dict, schema_map: dict, output_path: str | None = None
     return proxy_flags
 
 
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 # Cramér's V
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 
 def _cramers_v(df: pd.DataFrame, col_a: str, col_b: str) -> float:
     """
@@ -197,9 +197,9 @@ def _cramers_v(df: pd.DataFrame, col_a: str, col_b: str) -> float:
     return float(np.sqrt(phi2_corr / denom))
 
 
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 # Mutual Information
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 
 def _mutual_information(encoded: dict, col_a: str, col_b: str) -> float:
     """
@@ -224,9 +224,9 @@ def _mutual_information(encoded: dict, col_a: str, col_b: str) -> float:
     return float(mutual_info_score(encoded[col_a], encoded[col_b]))
 
 
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 # Verdict
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 
 def _verdict(cv: float, mi: float) -> str:
     """
@@ -243,9 +243,9 @@ def _verdict(cv: float, mi: float) -> str:
     return "NONE"
 
 
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 # Helpers
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 
 def _get_protected_columns(schema_map: dict) -> list[str]:
     return [c["name"] for c in schema_map["columns"].get("protected", [])]
@@ -325,10 +325,10 @@ def summarize(proxy_flags: dict) -> None:
     print(f"{'=' * 60}\n")
 
 
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 # Self-test - run directly: python proxy_detection.py
 # Does NOT require GEMINI_API_KEY - uses a hardcoded mock schema_map.
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 
 if __name__ == "__main__":
     import sys
@@ -339,7 +339,7 @@ if __name__ == "__main__":
 
     print("Running proxy_detection self-test...\n")
 
-    # ── Build UCI Adult synthetic data with known proxy relationships ──
+    # -- Build UCI Adult synthetic data with known proxy relationships --
     # relationship and marital-status are known proxies for gender in UCI Adult.
     np.random.seed(42)
     n = 200
@@ -415,7 +415,7 @@ if __name__ == "__main__":
 
         summarize(proxy_flags)
 
-        # ── Assertions ──
+        # -- Assertions --
         assert proxy_flags["dataset"] == "uci_adult_test"
         assert isinstance(proxy_flags["proxy_columns"], list)
 

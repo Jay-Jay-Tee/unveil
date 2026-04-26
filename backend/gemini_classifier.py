@@ -38,9 +38,9 @@ _CACHE_DIR = Path(__file__).resolve().parent / "_cache" / "classifier"
 _CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
 
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 # Rules-based pass - runs FIRST, catches the obvious cases
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 
 # Order matters - PROTECTED patterns check first, OUTCOME next, then proxies.
 # We match on normalized names (lowercase, underscores/hyphens stripped).
@@ -167,9 +167,9 @@ def _rules_classify(column_meta: list[dict]) -> tuple[dict[str, dict], list[str]
     return classified, unresolved
 
 
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 # Disk cache
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 
 def _cache_key(ingest_result: dict) -> str:
     """Stable hash of column-meta so identical datasets reuse classifications."""
@@ -203,9 +203,9 @@ def _cache_put(key: str, value: dict) -> None:
         print(f"  [cache] write failed: {e}")
 
 
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 # Gemini call (only for unresolved columns)
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 
 def _call_gemini_for_unresolved(
     unresolved_cols: list[dict],
@@ -288,9 +288,9 @@ Return ONLY this JSON - no markdown, no prose:
     raise last_err
 
 
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 # Public entry point
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 
 def classify(ingest_result: dict, output_path: Optional[str] = None) -> dict:
     """

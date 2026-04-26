@@ -2,9 +2,9 @@
 import { useState } from 'react';
 import { useAudit } from '../lib/AuditContext';
 import { signOutUser } from '../lib/auth';
+import logoImg from '../assets/logo.png';
 
 export default function Navbar() {
-  const AUTH_TRANSITION_MS = 260;
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { user, setUser } = useAudit();
@@ -17,10 +17,11 @@ export default function Navbar() {
   async function handleSignOut() {
     setSigningOut(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, AUTH_TRANSITION_MS));
       await signOutUser();
       setUser(null);
       navigate('/', { replace: true });
+    } catch (err) {
+      console.error('[auth] sign-out error:', err);
     } finally {
       setSigningOut(false);
     }
@@ -33,13 +34,7 @@ export default function Navbar() {
 
         {/* Brand */}
         <Link to="/" className="flex items-center gap-2 group">
-          <div className="w-7 h-7 rounded-md flex items-center justify-center"
-            style={{ background: 'var(--color-bg-ink)' }}>
-            <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ color: '#fff' }}>
-              <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" />
-              <circle cx="12" cy="12" r="3" />
-            </svg>
-          </div>
+          <img src={logoImg} alt="Unveil logo" className="w-8 h-8 object-contain" />
           <span className="text-lg font-bold tracking-tight" style={{ fontFamily: 'var(--font-sans)' }}>
             Unveil
           </span>

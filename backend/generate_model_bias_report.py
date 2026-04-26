@@ -86,7 +86,7 @@ def run(args):
     sample_data = build_sample_data(feature_df, n=args.sample_size)
     print(f"Sample rows       : {len(sample_data)}")
 
-    # ── Step 1: Probe Generator ────────────────────────────
+    # -- Step 1: Probe Generator ----------------------------
     print(f"\n[1/2] Running ProbeGenerator ({args.n_probes} probes per attribute) ...")
 
     if args.endpoint:
@@ -115,7 +115,7 @@ def run(args):
         n_probes=args.n_probes,
     )
 
-    # ── Step 2: SHAP Explainer ─────────────────────────────
+    # -- Step 2: SHAP Explainer -----------------------------
     shap_summary = []
     shap_rank_lookup = {}
 
@@ -138,7 +138,7 @@ def run(args):
     else:
         print("\n[2/2] SHAP skipped (no model pickle - HTTP endpoint mode)")
 
-    # ── Step 3: Merge → model_bias_report.json ────────────
+    # -- Step 3: Merge → model_bias_report.json ------------
     attribute_results = []
     for probe in probe_results:
         col = probe["name"]

@@ -67,7 +67,7 @@ async function callClaude(prompt, { maxTokens = 3000, retries = 2 } = {}) {
   throw lastErr || new Error('Request failed after retries.');
 }
 
-// ── Compact payloads to save input tokens ──────────────────────────────
+// -- Compact payloads to save input tokens ------------------------------
 
 function compactBiasReport(br) {
   if (!br) return {};
@@ -99,7 +99,7 @@ function pickWorstGroup(slices) {
   return { group: worst.group, approval_rate: worst.positive_rate, n: worst.count };
 }
 
-// ── Single unified prompt ───────────────────────────────────────────────
+// -- Single unified prompt -----------------------------------------------
 
 function buildFullReportPrompt(biasCompact, modelCompact, datasetName) {
   return `You are a bias compliance officer writing a full audit report for a non-technical reader.
@@ -132,7 +132,7 @@ Model findings:
 ${JSON.stringify(modelCompact, null, 2)}`;
 }
 
-// ── Public API ──────────────────────────────────────────────────────────
+// -- Public API ----------------------------------------------------------
 
 export async function generateAuditReport(biasReport, modelBiasReport, { forceRefresh = false, datasetName = null } = {}) {
   const biasCompact = compactBiasReport(biasReport);

@@ -2,57 +2,57 @@
 
 ```
 unbiased-ai/
-├── README.md
-├── .gitignore
+├-- README.md
+├-- .gitignore
 │
-├── data/                          # Sample & demo datasets (not committed if large)
-│   ├── uci_adult.csv
-│   ├── compas.csv
-│   └── german_credit.csv
+├-- data/                          # Sample & demo datasets (not committed if large)
+│   ├-- uci_adult.csv
+│   ├-- compas.csv
+│   └-- german_credit.csv
 │
-├── schemas/                       # Agreed inter-module JSON contracts (Day 1 lockdown)
-│   ├── schema_map.json            # M1 → M2: column classifications + proxy refs
-│   ├── proxy_flags.json           # M1 → M2: proxy detection scores
-│   ├── bias_report.json           # M2 → M4: disparate impact, parity gaps, slices
-│   └── model_bias_report.json     # M3 → M4: probe scores, SHAP rankings, p-values
+├-- schemas/                       # Agreed inter-module JSON contracts (Day 1 lockdown)
+│   ├-- schema_map.json            # M1 → M2: column classifications + proxy refs
+│   ├-- proxy_flags.json           # M1 → M2: proxy detection scores
+│   ├-- bias_report.json           # M2 → M4: disparate impact, parity gaps, slices
+│   └-- model_bias_report.json     # M3 → M4: probe scores, SHAP rankings, p-values
 │
-├── backend/ 
-│   ├── ingestor.py            # M1: CSV/JSON/XLSX → pandas DataFrame
-│   ├── gemini_classifier.py   # M1: Gemini column classification prompt
-│   ├── proxy_detection.py     # M1: Cramér's V + mutual information
-│   ├── counterfactual_engine.py  # M2: row cloning + outcome shift measurement
-│   ├── slice_eval.py          # M2: FPR/FNR/positive rate per protected group
-│   ├── stats.py               # M2: disparate impact ratio, parity gap, chi-squared
-│   ├── probe_generator.py     # M3: synthetic persona pairs + black-box probing
-│   ├── shap_explainer.py      # M3: TreeExplainer + KernelExplainer + cross-ref
-│   └── model_loader.py        # M3: pickle / ONNX loader + HTTP endpoint adapter
+├-- backend/ 
+│   ├-- ingestor.py            # M1: CSV/JSON/XLSX → pandas DataFrame
+│   ├-- gemini_classifier.py   # M1: Gemini column classification prompt
+│   ├-- proxy_detection.py     # M1: Cramér's V + mutual information
+│   ├-- counterfactual_engine.py  # M2: row cloning + outcome shift measurement
+│   ├-- slice_eval.py          # M2: FPR/FNR/positive rate per protected group
+│   ├-- stats.py               # M2: disparate impact ratio, parity gap, chi-squared
+│   ├-- probe_generator.py     # M3: synthetic persona pairs + black-box probing
+│   ├-- shap_explainer.py      # M3: TreeExplainer + KernelExplainer + cross-ref
+│   └-- model_loader.py        # M3: pickle / ONNX loader + HTTP endpoint adapter
 │
-├── frontend/                      # React app (Member 4)
-│   ├── public/
-│   │   └── index.html
-│   ├── src/
-│   │   ├── App.jsx
-│   │   ├── components/
-│   │   │   ├── UploadPanel.jsx         # Drag-and-drop for dataset + model endpoint
-│   │   │   ├── AuditDashboard.jsx      # Unified Part A + Part B results view
-│   │   │   ├── BiasScoreCard.jsx       # Severity color-coding per column
-│   │   │   ├── ShapSummaryPlot.jsx     # SHAP bar chart
-│   │   │   ├── WhatIfWidget.jsx        # Google What-If Tool embed
-│   │   │   └── GeminiReport.jsx        # Plain-English narrative render
-│   │   └── utils/
-│   │       └── api.js                  # Calls to backend + Gemini API
-│   ├── package.json
-│   └── firebase.json
+├-- frontend/                      # React app (Member 4)
+│   ├-- public/
+│   │   └-- index.html
+│   ├-- src/
+│   │   ├-- App.jsx
+│   │   ├-- components/
+│   │   │   ├-- UploadPanel.jsx         # Drag-and-drop for dataset + model endpoint
+│   │   │   ├-- AuditDashboard.jsx      # Unified Part A + Part B results view
+│   │   │   ├-- BiasScoreCard.jsx       # Severity color-coding per column
+│   │   │   ├-- ShapSummaryPlot.jsx     # SHAP bar chart
+│   │   │   ├-- WhatIfWidget.jsx        # Google What-If Tool embed
+│   │   │   └-- GeminiReport.jsx        # Plain-English narrative render
+│   │   └-- utils/
+│   │       └-- api.js                  # Calls to backend + Gemini API
+│   ├-- package.json
+│   └-- firebase.json
 │
-├── docs/
-│   ├── architecture.md            # System design notes
-│   └── demo_script.md             # Rehearsal script (from spec)
+├-- docs/
+│   ├-- architecture.md            # System design notes
+│   └-- demo_script.md             # Rehearsal script (from spec)
 │
-└── tests/
-    ├── test_ingestor.py
-    ├── test_proxy_detection.py
-    ├── test_counterfactual.py
-    └── test_shap_explainer.py
+└-- tests/
+    ├-- test_ingestor.py
+    ├-- test_proxy_detection.py
+    ├-- test_counterfactual.py
+    └-- test_shap_explainer.py
 ```
 
 ## Where the generated schema files go

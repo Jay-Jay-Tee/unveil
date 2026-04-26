@@ -10,7 +10,7 @@
  * these helpers.
  */
 
-// ── Column role (from schema_map) ───────────────────────────────────────
+// -- Column role (from schema_map) ---------------------------------------
 
 export const COLUMN_ROLE = {
   PROTECTED: {
@@ -47,7 +47,7 @@ export function roleDescription(type) {
   return COLUMN_ROLE[type]?.description || '';
 }
 
-// ── Verdicts (from bias_report) ─────────────────────────────────────────
+// -- Verdicts (from bias_report) -----------------------------------------
 
 export const VERDICT = {
   BIASED: {
@@ -104,7 +104,7 @@ export function verdictBg(v) {
   return VERDICT[v]?.bgColor || 'var(--color-surface-container)';
 }
 
-// ── Metric explanations - what each number actually means ───────────────
+// -- Metric explanations - what each number actually means ---------------
 
 export const METRIC = {
   disparate_impact: {
@@ -149,7 +149,7 @@ export const METRIC = {
   },
 };
 
-// ── Plain-English findings - lightweight templates for inline explanation ──
+// -- Plain-English findings - lightweight templates for inline explanation --
 
 export function summarizeColumnFinding({ name, role, verdict, disparate_impact, parity_gap, slices, proxy_strength, proxy_targets }) {
   const v = VERDICT[verdict];
@@ -188,7 +188,7 @@ export function summarizeColumnFinding({ name, role, verdict, disparate_impact, 
   return v.description;
 }
 
-// ── Summary overall verdict ─────────────────────────────────────────────
+// -- Summary overall verdict ---------------------------------------------
 
 export function overallDatasetVerdict(biasReport) {
   if (!biasReport?.column_results?.length) return 'SKIPPED';

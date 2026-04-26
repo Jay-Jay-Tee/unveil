@@ -33,16 +33,16 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# ─────────────────────────────────────────────
+# ---------------------------------------------
 # Global model store (loaded once, reused across requests)
-# ─────────────────────────────────────────────
+# ---------------------------------------------
 _loaded_model = None
 _loaded_X_background = None
 
 
-# ─────────────────────────────────────────────
+# ---------------------------------------------
 # Request / Response schemas
-# ─────────────────────────────────────────────
+# ---------------------------------------------
 
 class PredictRequest(BaseModel):
     features: dict[str, Any]
@@ -79,9 +79,9 @@ class AnalyzeResponse(BaseModel):
     shap_summary: list[dict]        # [{feature, mean_abs_shap, shap_rank, is_proxy, is_protected}]
 
 
-# ─────────────────────────────────────────────
+# ---------------------------------------------
 # Routes
-# ─────────────────────────────────────────────
+# ---------------------------------------------
 
 @app.get("/health")
 def health_check():
@@ -158,7 +158,7 @@ def analyze(request: AnalyzeRequest):
     """
     global _loaded_model, _loaded_X_background
 
-    # ── Step 1: ProbeGenerator ────────────────────────────
+    # -- Step 1: ProbeGenerator ----------------------------
     if request.mode == "http_endpoint" and request.model_endpoint:
         generator = ProbeGenerator(model_endpoint=request.model_endpoint)
     else:
@@ -172,7 +172,7 @@ def analyze(request: AnalyzeRequest):
         n_probes=request.n_probes,
     )
 
-    # ── Step 2: SHAP (optional, requires loaded model) ────
+    # -- Step 2: SHAP (optional, requires loaded model) ----
     shap_summary = []
     shap_rank_lookup = {}  # column_name -> rank
 
@@ -196,7 +196,7 @@ def analyze(request: AnalyzeRequest):
     elif request.run_shap and _loaded_model is None:
         print("  [analyze] No model loaded - skipping SHAP. Upload a model via POST /upload-model")
 
-    # ── Step 3: Merge shap_rank into probe results ────────
+    # -- Step 3: Merge shap_rank into probe results --------
     attribute_results = []
     for probe in probe_results:
         col_name = probe["name"]

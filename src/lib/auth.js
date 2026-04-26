@@ -10,7 +10,7 @@ import { getFirebase, isFirebaseConfigured } from './firebase';
 
 const LOCAL_GUEST_KEY = 'unveil.guest.user';
 
-// ── local guest user for demo / offline mode ────────────────────────────
+// -- local guest user for demo / offline mode ----------------------------
 
 function getOrCreateGuest() {
   try {
@@ -29,7 +29,7 @@ function getOrCreateGuest() {
   return guest;
 }
 
-// ── public API ──────────────────────────────────────────────────────────
+// -- public API ----------------------------------------------------------
 
 export async function signUp({ email, password, displayName }) {
   if (!isFirebaseConfigured()) {

@@ -9,7 +9,7 @@ import { getFirebase, isFirebaseConfigured } from './firebase';
 
 const LOCAL_AUDITS_KEY = (uid) => `unveil.audits.${uid}`;
 
-// ── localStorage fallback ────────────────────────────────────────────────
+// -- localStorage fallback ------------------------------------------------
 
 function localList(uid) {
   try {
@@ -28,7 +28,7 @@ function localWrite(uid, audits) {
   }
 }
 
-// ── public API ───────────────────────────────────────────────────────────
+// -- public API -----------------------------------------------------------
 
 export async function saveAudit(user, audit) {
   if (!user?.uid) throw new Error('Must be signed in to save audits.');
@@ -106,7 +106,7 @@ export async function deleteAudit(user, auditId) {
   localWrite(user.uid, filtered);
 }
 
-// ── helpers ──────────────────────────────────────────────────────────────
+// -- helpers --------------------------------------------------------------
 
 function derivedSummary(biasReport) {
   if (!biasReport?.column_results) return { unfair: 0, borderline: 0, fair: 0 };

@@ -19,10 +19,10 @@ import traceback
 from pathlib import Path
 from typing import Optional
 
-# ── resolve repo root early so env loading is cwd-independent ─────────────
+# -- resolve repo root early so env loading is cwd-independent -------------
 ROOT = Path(__file__).resolve().parent.parent
 
-# ── stdout encoding fix for Windows ───────────────────────────────────────
+# -- stdout encoding fix for Windows ---------------------------------------
 if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 
@@ -37,7 +37,7 @@ from fastapi import status
 from firebase_admin import auth as firebase_auth
 from firebase_admin import credentials, get_app, initialize_app
 
-# ── ensure repo root is on sys.path ───────────────────────────────────────
+# -- ensure repo root is on sys.path ---------------------------------------
 sys.path.insert(0, str(ROOT))
 
 from backend.pipeline import (
@@ -50,7 +50,7 @@ from backend.pipeline import (
     safe_json,
 )
 
-# ── app ────────────────────────────────────────────────────────────────────
+# -- app --------------------------------------------------------------------
 app = FastAPI(
     title="Unveil API",
     description="Bias detection API - Part A (dataset) + Part B (model)",
@@ -99,7 +99,7 @@ app.add_middleware(
 )
 
 
-# ── helpers ────────────────────────────────────────────────────────────────
+# -- helpers ----------------------------------------------------------------
 
 def _tmp_file(upload: UploadFile, contents: bytes) -> str:
     """Write upload bytes to a named temp file and return its path."""
@@ -241,7 +241,7 @@ def require_authenticated_user(
         )
 
 
-# ── routes ─────────────────────────────────────────────────────────────────
+# -- routes -----------------------------------------------------------------
 
 @app.get("/health")
 def health():

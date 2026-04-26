@@ -5,7 +5,7 @@ import { useAudit } from '../lib/AuditContext';
 import { analyzeDataset, analyzeModel, checkBackendHealth } from '../lib/api';
 import { signIn } from '../lib/auth';
 
-// ─── helpers ──────────────────────────────────────────────────────────────
+// --- helpers --------------------------------------------------------------
 
 function getErrorText(err, fallback = 'Analysis failed.') {
   if (typeof err === 'string') return err;
@@ -29,7 +29,7 @@ const RUN_BUTTON_LABEL = {
   none:      'Upload a dataset to start',
 };
 
-// ─── sub-components ───────────────────────────────────────────────────────
+// --- sub-components -------------------------------------------------------
 
 function FileSlot({ label, sublabel, accept, file, onFile, onClear, disabled }) {
   const [drag, setDrag] = useState(false);
@@ -200,7 +200,7 @@ function SuccessBanner({ mode, hasModel, onNavigate }) {
   );
 }
 
-// ─── icon atoms ───────────────────────────────────────────────────────────
+// --- icon atoms -----------------------------------------------------------
 
 function CheckIcon({ className }) {
   return (
@@ -218,7 +218,7 @@ function PlusIcon({ className }) {
   );
 }
 
-// ─── orchestration ────────────────────────────────────────────────────────
+// --- orchestration --------------------------------------------------------
 
 /**
  * Run the dataset leg of the analysis.
@@ -268,7 +268,7 @@ async function runModelLeg(datasetFile, modelFile, schemaMap, proxyFlags, audit,
   return { modelBiasReport };
 }
 
-// ─── main component ───────────────────────────────────────────────────────
+// --- main component -------------------------------------------------------
 
 export default function Upload() {
   const AUTH_TRANSITION_MS_SIGNUP_SIGNIN = 220; // a little less than sign out
@@ -288,7 +288,7 @@ export default function Upload() {
 
   const setStep = (key, val) => setSteps(prev => ({ ...prev, [key]: val }));
 
-  // ── Auth gate ─────────────────────────────────────────────────────────
+  // -- Auth gate ---------------------------------------------------------
   if (!audit.authReady) {
     return (
       <motion.div
