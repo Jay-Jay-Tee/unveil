@@ -453,14 +453,14 @@ export default function Upload() {
       // Auto-save - pass fresh data DIRECTLY so we don't read stale React state
       if (!audit.user?.isGuest && datasetResult) {
         try {
-          await audit.saveCurrentAudit('', {
+          audit.saveCurrentAudit('', {
             datasetName:    datasetResult.datasetName,
             rowCount:       datasetResult.rowCount,
             columnCount:    datasetResult.columnCount,
             schemaMap:      datasetResult.schemaMap,
             biasReport:     datasetResult.biasReport,
             modelBiasReport: modelBiasReport ?? null,
-          });
+          }).catch(console.warn);
         } catch (saveErr) {
           console.warn('[upload] auto-save failed:', saveErr?.message);
         }
