@@ -7,6 +7,16 @@ Built for the **Google AI Solution Challenge** using Gemini 2.5 Flash.
 
 ---
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-unveil--201cc.web.app-blue?style=for-the-badge&logo=firebase)](https://unveil-201cc.web.app/)
+[![API Docs](https://img.shields.io/badge/API%20Docs-FastAPI%20Swagger-green?style=for-the-badge&logo=fastapi)](https://unveil-ee2v.onrender.com/docs)
+
+| | |
+|---|---|
+| 🌐 **Frontend** | https://unveil-201cc.web.app/ |
+| 📡 **Backend API** | https://unveil-ee2v.onrender.com/docs |
+
+---
+
 ## What is this?
 
 Unveil is a full-stack web app that audits datasets and machine learning models for algorithmic bias. It's aimed at developers, data scientists, and compliance teams who need to know whether their data or model is treating different demographic groups unfairly - without needing a PhD in fairness research to interpret the results.
