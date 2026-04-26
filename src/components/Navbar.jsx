@@ -50,6 +50,9 @@ export default function Navbar() {
           <Link to="/glossary" className="btn btn-ghost text-sm">
             Glossary
           </Link>
+          <Link to="/sample" className="btn btn-ghost text-sm hidden sm:inline-flex">
+            Sample audit
+          </Link>
 
           {user ? (
             <div className="relative">

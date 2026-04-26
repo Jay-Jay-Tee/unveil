@@ -40,6 +40,9 @@ export default function Landing() {
             <Link to="/glossary" className="btn btn-ghost text-sm hidden sm:inline-flex">
               Glossary
             </Link>
+            <Link to="/sample" className="btn btn-ghost text-sm hidden sm:inline-flex">
+              Sample audit
+            </Link>
             {user ? (
               <Link to="/dashboard" className="btn btn-primary text-sm">
                 Dashboard →
@@ -85,9 +88,9 @@ export default function Landing() {
               <Link to="/upload" className="btn btn-primary text-base px-7 py-3.5">
                 Upload a dataset
               </Link>
-              <a href="#how" className="btn btn-secondary text-base px-7 py-3.5">
-                How it works
-              </a>
+              <Link to="/sample" className="btn btn-secondary text-base px-7 py-3.5">
+                View sample audit
+              </Link>
             </div>
 
             <p className="text-xs mt-6" style={{ color: 'var(--color-text-mid)' }}>
@@ -213,6 +216,9 @@ export default function Landing() {
             </p>
             <Link to="/upload" className="btn btn-primary text-base px-8 py-3.5">
               Sign up →
+            </Link>
+            <Link to="/sample" className="btn btn-secondary text-base px-8 py-3.5">
+              View sample audit
             </Link>
           </motion.div>
         </section>

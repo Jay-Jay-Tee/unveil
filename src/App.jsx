@@ -11,6 +11,7 @@ import Glossary from './pages/Glossary';
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
 import Dashboard from './pages/Dashboard';
+import SampleAudit from './pages/SampleAudit';
 
 export default function App() {
   const location = useLocation();
@@ -20,6 +21,7 @@ export default function App() {
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
           <Route path="/"              element={<Landing />} />
+          <Route path="/sample"        element={<SampleAudit />} />
           <Route path="/upload"        element={<Upload />} />
           <Route path="/audit/dataset" element={<DatasetAudit />} />
           <Route path="/audit/model"   element={<ModelAudit />} />
