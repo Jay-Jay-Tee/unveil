@@ -31,10 +31,9 @@ function buildColumns(schemaMap, biasReport) {
 
 export default function DatasetAudit() {
   const navigate = useNavigate();
-  const { schemaMap, biasReport, isMock, modelBiasReport, modelFile, user, saveCurrentAudit, datasetMeta } = useAudit();
+  const { schemaMap, biasReport, isMock, modelBiasReport, modelFile, datasetMeta } = useAudit();
   const [activeTab, setActiveTab] = useState('all');
   const [sortBy, setSortBy] = useState('severity');
-  const [saveState, setSaveState] = useState('idle'); // idle | saving | saved | error
 
   if (!schemaMap || !biasReport) {
     return (
@@ -78,22 +77,6 @@ export default function DatasetAudit() {
     SKIPPED: 'var(--color-surface-container)',
   }[overall];
 
-  async function handleSave() {
-    if (!user) {
-      navigate('/login');
-      return;
-    }
-    setSaveState('saving');
-    try {
-      await saveCurrentAudit();
-      setSaveState('saved');
-      setTimeout(() => setSaveState('idle'), 2500);
-    } catch (e) {
-      console.error('[audit] save failed:', e);
-      setSaveState('error');
-    }
-  }
-
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-h-screen pt-20 pb-20 px-3 sm:px-5">
       <div className="max-w-7xl mx-auto">
@@ -113,12 +96,6 @@ export default function DatasetAudit() {
               </p>
             </div>
             <div className="flex gap-2">
-              <button onClick={handleSave} className="btn btn-secondary text-sm" disabled={saveState === 'saving'}>
-                {saveState === 'saving' && <><span className="unveil-spinner" /> Saving…</>}
-                {saveState === 'saved' && '✓ Saved to dashboard'}
-                {saveState === 'idle' && '💾 Save to dashboard'}
-                {saveState === 'error' && 'Retry save'}
-              </button>
               <button onClick={() => navigate('/report')} className="btn btn-primary text-sm">
                 Generate report →
               </button>
