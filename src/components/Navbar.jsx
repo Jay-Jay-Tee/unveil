@@ -50,7 +50,11 @@ export default function Navbar() {
           </Link>
 
           {user ? (
-            <div className="relative">
+            <>
+              <Link to="/dashboard" className="btn btn-primary text-sm hidden sm:inline-flex">
+                Dashboard →
+              </Link>
+              <div className="relative">
               <button
                 onClick={() => { if (!signingOut) setMenuOpen((v) => !v); }}
                 disabled={signingOut}
@@ -120,7 +124,8 @@ export default function Navbar() {
                   </div>
                 </>
               )}
-            </div>
+              </div>
+            </>
           ) : (
             <>
               <Link to="/login" className="btn btn-ghost text-sm">Sign in</Link>

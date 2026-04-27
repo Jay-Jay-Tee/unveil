@@ -79,7 +79,7 @@ export default function Landing() {
               explains what's driving them in plain English, and tells you what to do next.
             </p>
 
-            <div className="flex gap-3 justify-center flex-wrap">
+            <div className="flex gap-8 sm:gap-10 justify-center flex-wrap">
               <Link to="/upload" className="btn btn-primary text-base px-7 py-3.5">
                 Upload a dataset
               </Link>
@@ -209,12 +209,20 @@ export default function Landing() {
               Audit a dataset you already have. Or try our included UCI Adult Income sample - a
               textbook example of gender and racial bias in income prediction.
             </p>
-            <Link to="/upload" className="btn btn-primary text-base px-8 py-3.5">
-              Sign up →
-            </Link>
-            <Link to="/sample" className="btn btn-secondary text-base px-8 py-3.5">
-              View sample audit
-            </Link>
+            <div className="mt-8 flex justify-center gap-5 sm:gap-6 flex-wrap">
+              {user ? (
+                <Link to="/dashboard" className="btn btn-primary text-base px-8 py-3.5">
+                  Dashboard →
+                </Link>
+              ) : (
+                <Link to="/upload" className="btn btn-primary text-base px-8 py-3.5">
+                  Sign up →
+                </Link>
+              )}
+              <Link to="/sample" className="btn btn-secondary text-base px-8 py-3.5">
+                View sample audit
+              </Link>
+            </div>
           </motion.div>
         </section>
       </main>
