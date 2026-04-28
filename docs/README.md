@@ -13,7 +13,7 @@ Built for the **Google AI Solution Challenge** using Gemini 2.5 Flash.
 | | |
 |---|---|
 | 🌐 **Frontend** | https://unveil-201cc.web.app/ |
-| 📡 **Backend API** | https://unveil-ee2v.onrender.com/docs |
+| 📡 **Backend API** | https://unveil-899475904423.europe-west1.run.app/docs |
 
 ---
 
