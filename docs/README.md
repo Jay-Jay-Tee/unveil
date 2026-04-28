@@ -8,7 +8,7 @@ Built for the **Google AI Solution Challenge** using Gemini 2.5 Flash.
 ---
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-unveil--201cc.web.app-blue?style=for-the-badge&logo=firebase)](https://unveil-201cc.web.app/)
-[![API Docs](https://img.shields.io/badge/API%20Docs-FastAPI%20Swagger-green?style=for-the-badge&logo=fastapi)](https://unveil-ee2v.onrender.com/docs)
+[![API Docs](https://img.shields.io/badge/API%20Docs-Google%20Cloud-green?style=for-the-badge&logo=googlecloud)](https://unveil-899475904423.europe-west1.run.app/docs)
 
 | | |
 |---|---|
