@@ -167,7 +167,7 @@ export default function Report() {
       setErrorMsg(msg);
       // Parse retry hint from the backend's message
       const match = msg.match(/retry in about (\d+)\s*seconds?/i);
-      if (match) setRetryIn(parseInt(match[1], 10));
+      if (match) setRetryIn(Number.parseInt(match[1], 10));
       setStatus('error');
     }
   }
@@ -258,7 +258,7 @@ export default function Report() {
               <div>
                 <p className="text-sm font-semibold">Writing your compliance narrative…</p>
                 <p className="text-xs mt-0.5 opacity-80">
-                  Unveil generates the report in 4 sections so a single rate-limit won't kill the whole thing.
+                  Unveil is generating the report professionally and concisely...
                 </p>
               </div>
             </motion.div>

@@ -29,8 +29,6 @@ if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
 import dotenv
 dotenv.load_dotenv(dotenv_path=ROOT / ".env")
 
-import numpy as np
-import pandas as pd
 from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import status
@@ -120,7 +118,7 @@ def _http_error(exc: Exception, status: int = 500) -> HTTPException:
 
 def _extract_retry_after_seconds(exc: Exception) -> Optional[int]:
     text = f"{type(exc).__name__}: {exc}".lower()
-    match = re.search(r"retry(?:\s+in|delay)?[^0-9]*(\d+(?:\.\d+)?)\s*s", text)
+    match = re.search(r"retry(?:\s+in|delay)?[\D]*(\d+(?:\.\d+)?)\s*s", text)
     if not match:
         return None
     try:

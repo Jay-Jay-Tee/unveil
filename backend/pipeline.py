@@ -1,15 +1,14 @@
 ﻿"""
-Unveil - pipeline.py (REVAMPED)
+Unveil - pipeline.py (REVAMPED v2)
 
-Changes from the old version:
-  1. run_gemini_report now generates the report in SECTIONS, each with its
-     own max_output_tokens budget. The old single-call 2048-token cap was
-     exactly why reports got truncated mid-sentence.
-  2. Each section is requested separately - if one fails (rate limit), we
-     return what we have so far instead of nothing.
-  3. Reports are cached by hash of the input - regenerating the same audit
-     doesn't burn fresh Gemini quota.
-  4. All other functions unchanged in behavior - schema/JSON shapes stable.
+Changes from previous version:
+  1. _gemini_call_raw now retries on 503/429 with exponential backoff (8s, 16s)
+     so transient Gemini overload doesn't surface as an immediate failure.
+  2. run_gemini_report now makes ONE single Gemini call for the full report
+     instead of 4 separate section calls. This reduces rate-limit exposure
+     by 4x and eliminates the partial-stub problem where one 503 would leave
+     sections silently empty.
+  3. All other functions unchanged in behavior - schema/JSON shapes stable.
 """
 
 import hashlib
@@ -17,7 +16,7 @@ import json
 import os
 import pickle
 import tempfile
-import traceback
+import time
 from pathlib import Path
 from typing import Optional
 
@@ -273,7 +272,181 @@ def _run_shap(model, feature_df, encoded_sample, protected_cols, proxy_col_names
         return [], {}
 
 
-# --- Gemini report - NOW CHUNKED SO IT DOESN'T GET CUT OFF -----------------
+# --- Gemini report ---------------------------------------------------------
+#
+# FIX 1: _gemini_call_raw now retries on 503/429 with exponential backoff.
+#         Retry schedule: wait 8s before attempt 2, 16s before attempt 3.
+#         Hard non-retryable errors (4xx except 429, env errors) propagate
+#         immediately so the caller's error handling still works correctly.
+#
+# FIX 3: run_gemini_report now issues ONE unified Gemini call for the full
+#         report instead of four separate section calls. This cuts rate-limit
+#         exposure by 4x and eliminates the partial-stub failure mode where
+#         one 503 would silently hollow out individual sections.
+
+# HTTP status codes that Gemini uses for transient overload / quota.
+_GEMINI_RETRYABLE_STATUSES = {429, 503}
+
+# Backoff delays in seconds between successive retry attempts (attempt index 1, 2, ...).
+_GEMINI_BACKOFF_SECONDS = [8, 16]
+
+
+def _gemini_call_raw(prompt: str, max_tokens: int = 4096, retries: int = 2) -> str:
+    """
+    Single Gemini HTTP call with exponential-backoff retry on 503/429.
+
+    Args:
+        prompt:    The full prompt text to send.
+        max_tokens: Maximum output tokens for generationConfig.
+        retries:   Number of additional attempts after the first failure
+                   (total attempts = retries + 1). Defaults to 2, giving
+                   a schedule of: try → 8s → try → 16s → try → raise.
+
+    Raises:
+        EnvironmentError: GEMINI_API_KEY not set (never retried).
+        RuntimeError:     Malformed Gemini response body.
+        Exception:        Final error after all retries exhausted.
+    """
+    import urllib.request
+    import urllib.error
+
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if not api_key:
+        raise EnvironmentError("GEMINI_API_KEY is not set on the server.")
+
+    model_name = os.environ.get("GEMINI_REPORT_MODEL", "gemini-2.5-flash")
+    url = (
+        f"https://generativelanguage.googleapis.com/v1beta/models/"
+        f"{model_name}:generateContent?key={api_key}"
+    )
+    body = json.dumps({
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {"temperature": 0.3, "maxOutputTokens": max_tokens},
+    }).encode()
+
+    last_err: Exception = RuntimeError("No attempts made.")
+
+    for attempt in range(retries + 1):
+        # Backoff before every retry (not before the first attempt).
+        if attempt > 0:
+            wait_sec = _GEMINI_BACKOFF_SECONDS[min(attempt - 1, len(_GEMINI_BACKOFF_SECONDS) - 1)]
+            print(f"  [gemini] attempt {attempt + 1}/{retries + 1} - waiting {wait_sec}s after transient error")
+            time.sleep(wait_sec)
+
+        req = urllib.request.Request(url, data=body,
+                                     headers={"Content-Type": "application/json"},
+                                     method="POST")
+        try:
+            with urllib.request.urlopen(req, timeout=60) as resp:
+                data = json.loads(resp.read())
+        except urllib.error.HTTPError as http_err:
+            status = http_err.code
+            if status in _GEMINI_RETRYABLE_STATUSES and attempt < retries:
+                last_err = http_err
+                print(f"  [gemini] HTTP {status} (transient) on attempt {attempt + 1} - will retry")
+                continue
+            # Non-retryable HTTP error or retries exhausted - re-raise immediately.
+            raise
+        except Exception as conn_err:
+            # Network-level errors (timeout, DNS) are also retryable.
+            if attempt < retries:
+                last_err = conn_err
+                print(f"  [gemini] Connection error on attempt {attempt + 1}: {conn_err} - will retry")
+                continue
+            raise
+
+        # Successful HTTP response - parse the body.
+        try:
+            text = data["candidates"][0]["content"]["parts"][0]["text"]
+            finish_reason = data["candidates"][0].get("finishReason", "STOP")
+            if finish_reason == "MAX_TOKENS":
+                text += "\n\n*(section truncated due to length - see dashboard for full detail)*"
+            return text
+        except (KeyError, IndexError) as e:
+            raise RuntimeError(f"Gemini returned malformed response: {e}\nBody: {data}")
+
+    # All retries exhausted.
+    raise last_err
+
+
+# Unified single-call prompt.  All four sections are requested in one shot so
+# the total number of Gemini API calls drops from 4 → 1 per report generation.
+_FULL_REPORT_PROMPT = """\
+You are a bias compliance officer writing a full audit report for a non-technical reader.
+
+Write a complete compliance report for the dataset "{dataset}" with exactly these four sections.
+Use markdown headings (## Section Name) for each. Be thorough and specific.
+
+## Executive Summary
+3-4 sentences. Plain English, no jargon. State what dataset was analyzed, what was found overall,
+and the most urgent issue.
+
+## Critical Findings
+One short paragraph (2-3 sentences) per column with verdict "BIASED" or "AMBIGUOUS". State the
+column name, worst-affected group, fairness ratio, and why it matters. If no issues, say so clearly.
+
+## Proxy Risk
+3-4 sentences. Identify columns with high proxy_strength or role=PROXY. Explain which sensitive
+attribute they encode and why removing the obvious column is not enough.
+
+## Recommendations
+Exactly 3 bullet points starting with "* ". One sentence each, action-oriented and specific to
+what is in this dataset.
+
+Rules:
+- A fairness ratio below 0.80 fails the legal 80% rule
+- Say "sensitive attributes" instead of "PROTECTED"
+- Reference the dataset as "{dataset}"
+- Do NOT add any preamble, intro, or closing remarks outside the four sections
+- Write ALL four sections even if data is sparse
+
+Dataset findings:
+{bias}
+
+Model findings:
+{model}"""
+
+
+def run_gemini_report(
+    bias_report: dict,
+    model_bias_report: dict,
+    force_refresh: bool = False,
+    dataset_name: Optional[str] = None,
+) -> str:
+    """
+    Generate the compliance narrative in a single Gemini call.
+
+    Cached by content hash so regenerating the same audit is free.
+    Retries on transient 503/429 are handled inside _gemini_call_raw.
+    """
+    if not dataset_name:
+        dataset_name = "the dataset"
+
+    cache_key = _report_cache_key(bias_report, model_bias_report)
+    if not force_refresh:
+        cached = _report_cache_get(cache_key)
+        if cached:
+            return cached
+
+    bias_compact = _compact_bias_report(bias_report)
+    model_compact = _compact_model_report(model_bias_report)
+
+    prompt = _FULL_REPORT_PROMPT.format(
+        dataset=dataset_name,
+        bias=json.dumps(bias_compact, indent=2),
+        model=json.dumps(model_compact, indent=2),
+    )
+
+    # Single call - retries are handled inside _gemini_call_raw.
+    # max_tokens is set to cover all four sections comfortably (512 + 2048 + 1024 + 768 = 4352,
+    # rounded up with headings/whitespace overhead).
+    full_report = _gemini_call_raw(prompt, max_tokens=4352, retries=2)
+
+    _report_cache_put(cache_key, full_report)
+    return full_report
+
+
+# --- Cache helpers ---------------------------------------------------------
 
 def _report_cache_key(bias_report: dict, model_bias_report: dict) -> str:
     payload = json.dumps({"b": bias_report, "m": model_bias_report}, sort_keys=True, default=str)
@@ -300,137 +473,7 @@ def _report_cache_put(key: str, value: str) -> None:
         print(f"  [report cache] write failed: {e}")
 
 
-def _gemini_call_raw(prompt: str, max_tokens: int = 4096) -> str:
-    """Single Gemini call. No retries here - the caller handles failures."""
-    import urllib.request
-
-    api_key = os.environ.get("GEMINI_API_KEY")
-    if not api_key:
-        raise EnvironmentError("GEMINI_API_KEY is not set on the server.")
-
-    model_name = os.environ.get("GEMINI_REPORT_MODEL", "gemini-2.5-flash")
-    body = json.dumps({
-        "contents": [{"parts": [{"text": prompt}]}],
-        "generationConfig": {"temperature": 0.3, "maxOutputTokens": max_tokens},
-    }).encode()
-
-    req = urllib.request.Request(
-        f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}",
-        data=body,
-        headers={"Content-Type": "application/json"},
-        method="POST",
-    )
-    with urllib.request.urlopen(req, timeout=45) as resp:
-        data = json.loads(resp.read())
-
-    try:
-        text = data["candidates"][0]["content"]["parts"][0]["text"]
-        finish_reason = data["candidates"][0].get("finishReason", "STOP")
-        if finish_reason == "MAX_TOKENS":
-            # Token cap hit - the text is real but truncated. Caller should
-            # handle this (e.g. continue) rather than treating it as an error.
-            text += "\n\n*(section truncated due to length - see dashboard for full detail)*"
-        return text
-    except (KeyError, IndexError) as e:
-        raise RuntimeError(f"Gemini returned malformed response: {e}\nBody: {data}")
-
-
-# Section prompts - each runs independently so a single quota blip doesn't kill
-# the whole report.
-
-_EXEC_SUMMARY_PROMPT = """You are a bias compliance officer. Write ONLY the EXECUTIVE SUMMARY section
-of an audit report for a non-technical reader. 3-4 sentences MAX. No headings, no bullet points.
-Reference "{dataset}" when relevant.
-
-Here is the data:
-
-Dataset findings:
-{bias}
-
-Model findings:
-{model}
-
-The legal threshold for the fairness ratio (disparate impact) is 0.80. Below that fails the legal 80% rule.
-Just write the 3-4 sentence summary. Don't add any section heading - the caller will add that."""
-
-_FINDINGS_PROMPT = """You are a bias compliance officer. Write ONLY the CRITICAL FINDINGS section.
-For each unfair or borderline column in the data below, write ONE short paragraph (2-3 sentences)
-in plain English. State the column name, the worst-off group, the fairness ratio, and why it matters.
-Reference "{dataset}" when relevant. Do NOT include a heading - the caller will add that.
-
-Dataset findings:
-{bias}
-
-Model findings:
-{model}"""
-
-_PROXY_PROMPT = """You are a bias compliance officer. Write ONLY the PROXY RISK section.
-Look for columns where proxy_strength is high or role is PROXY. In 3-4 sentences plain English,
-explain which features act as stand-ins for sensitive attributes and why removing the sensitive
-column alone doesn't fix bias. Reference "{dataset}" when relevant. No heading.
-
-Dataset findings:
-{bias}"""
-
-_RECS_PROMPT = """You are a bias compliance officer. Write ONLY the RECOMMENDATIONS section as
-3 bullet points. Each bullet is one sentence, action-oriented, specific to "{dataset}" below.
-Start each bullet with "* ".
-
-Dataset findings:
-{bias}
-
-Model findings:
-{model}"""
-
-
-def run_gemini_report(bias_report: dict, model_bias_report: dict, force_refresh: bool = False, dataset_name: Optional[str] = None) -> str:
-    """
-    Generate the compliance narrative in 4 chunks so we don't hit the
-    max_output_tokens ceiling and get cut off mid-sentence.
-    Cached by content hash - regenerating the same audit is free.
-    """
-    if not dataset_name:
-        dataset_name = "the dataset"
-    cache_key = _report_cache_key(bias_report, model_bias_report)
-    cached = _report_cache_get(cache_key)
-    if not force_refresh:
-        cached = _report_cache_get(cache_key)
-        if cached:
-            return cached
-    # Compact the inputs a bit so we don't blow the input token budget
-    bias_compact = _compact_bias_report(bias_report)
-    model_compact = _compact_model_report(model_bias_report)
-
-    # Shared template fill
-    fmt = {
-        "bias": json.dumps(bias_compact, indent=2),
-        "model": json.dumps(model_compact, indent=2),
-        "dataset": dataset_name,
-    }
-
-    sections = []
-    failed_sections = 0
-
-    def _try_section(heading: str, prompt_template: str, max_tokens: int) -> None:
-        nonlocal failed_sections
-        try:
-            text = _gemini_call_raw(prompt_template.format(**fmt), max_tokens=max_tokens)
-            sections.append(f"## {heading}\n\n{text.strip()}")
-        except Exception as e:
-            failed_sections += 1
-            print(f"  [report] Section '{heading}' failed: {e}")
-            sections.append(f"## {heading}\n\n*(Couldn't generate this section - {e})*")
-
-    _try_section("Executive Summary", _EXEC_SUMMARY_PROMPT, max_tokens=512)
-    _try_section("Critical Findings", _FINDINGS_PROMPT, max_tokens=2048)
-    _try_section("Proxy Risk", _PROXY_PROMPT, max_tokens=1024)
-    _try_section("Recommendations", _RECS_PROMPT, max_tokens=768)
-
-    full = "\n\n".join(sections)
-    if failed_sections < 4:
-        _report_cache_put(cache_key, full)
-    return full
-
+# --- Compact helpers -------------------------------------------------------
 
 def _compact_bias_report(br: dict) -> dict:
     """Strip slice payloads etc. down to what the LLM needs - saves input tokens."""
@@ -466,4 +509,3 @@ def _pick_worst_group(slices: list[dict]) -> Optional[dict]:
         return None
     worst = min(slices, key=lambda s: s.get("positive_rate", 1.0))
     return {"group": worst.get("group"), "positive_rate": worst.get("positive_rate"), "count": worst.get("count")}
-

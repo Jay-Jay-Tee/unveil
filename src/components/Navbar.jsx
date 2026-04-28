@@ -1,8 +1,10 @@
 ﻿import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAudit } from '../lib/AuditContext';
 import { signOutUser } from '../lib/auth';
 import logoImg from '../assets/logo.png';
+
+const MENU_AUTO_CLOSE_MS = 10_000;
 
 export default function Navbar() {
   const { pathname } = useLocation();
@@ -10,6 +12,50 @@ export default function Navbar() {
   const { user, setUser } = useAudit();
   const [menuOpen, setMenuOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+  const autoCloseTimer = useRef(null);
+  const menuRef = useRef(null);
+
+  // Clear the auto-close timer
+  const clearAutoClose = useCallback(() => {
+    if (autoCloseTimer.current) {
+      clearTimeout(autoCloseTimer.current);
+      autoCloseTimer.current = null;
+    }
+  }, []);
+
+  // Start (or restart) the 10-second auto-close timer
+  const startAutoClose = useCallback(() => {
+    clearAutoClose();
+    autoCloseTimer.current = setTimeout(() => {
+      setMenuOpen(false);
+    }, MENU_AUTO_CLOSE_MS);
+  }, [clearAutoClose]);
+
+  // When menu opens, kick off the auto-close timer.
+  // When it closes, cancel any pending timer.
+  useEffect(() => {
+    if (menuOpen) {
+      startAutoClose();
+    } else {
+      clearAutoClose();
+    }
+    return clearAutoClose;
+  }, [menuOpen, startAutoClose, clearAutoClose]);
+
+  // Close on outside click (handles cases where the overlay div may not catch
+  // clicks on other focusable elements outside the menu).
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    function handlePointerDown(e) {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setMenuOpen(false);
+      }
+    }
+
+    document.addEventListener('pointerdown', handlePointerDown, true);
+    return () => document.removeEventListener('pointerdown', handlePointerDown, true);
+  }, [menuOpen]);
 
   // On home, the Landing page provides its own navbar
   if (pathname === '/') return null;
@@ -54,29 +100,33 @@ export default function Navbar() {
               <Link to="/dashboard" className="btn btn-primary text-sm hidden sm:inline-flex">
                 Dashboard →
               </Link>
-              <div className="relative">
-              <button
-                onClick={() => { if (!signingOut) setMenuOpen((v) => !v); }}
-                disabled={signingOut}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg transition-colors hover:bg-surface-container"
-              >
-                <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold"
-                  style={{ background: 'var(--color-bg-ink)', color: '#fff' }}>
-                  {(user.displayName || user.email || '?')[0].toUpperCase()}
-                </div>
-                <span className="text-sm font-medium hidden sm:inline">
-                  {user.displayName || user.email?.split('@')[0] || 'Guest'}
-                </span>
-                <svg className="w-3 h-3" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M3 5l3 3 3-3" />
-                </svg>
-              </button>
+              {/* ref wraps both the trigger button and the dropdown */}
+              <div className="relative" ref={menuRef}>
+                <button
+                  onClick={() => { if (!signingOut) setMenuOpen((v) => !v); }}
+                  disabled={signingOut}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg transition-colors hover:bg-surface-container"
+                >
+                  <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold"
+                    style={{ background: 'var(--color-bg-ink)', color: '#fff' }}>
+                    {(user.displayName || user.email || '?')[0].toUpperCase()}
+                  </div>
+                  <span className="text-sm font-medium hidden sm:inline">
+                    {user.displayName || user.email?.split('@')[0] || 'Guest'}
+                  </span>
+                  <svg className="w-3 h-3" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M3 5l3 3 3-3" />
+                  </svg>
+                </button>
 
-              {menuOpen && (
-                <>
-                  <div className="fixed inset-0 z-10" onClick={() => { if (!signingOut) setMenuOpen(false); }} />
-                  <div className="absolute right-0 top-full mt-2 w-56 rounded-xl border overflow-hidden card-shadow-lg z-20"
-                    style={{ background: 'var(--color-surface-container-lowest)', borderColor: 'var(--color-border)' }}>
+                {menuOpen && (
+                  <div
+                    className="absolute right-0 top-full mt-2 w-56 rounded-xl border overflow-hidden card-shadow-lg z-20"
+                    style={{ background: 'var(--color-surface-container-lowest)', borderColor: 'var(--color-border)' }}
+                    // Hovering inside the menu pauses the timer; leaving restarts it
+                    onMouseEnter={clearAutoClose}
+                    onMouseLeave={startAutoClose}
+                  >
                     <div className="px-4 py-3 border-b" style={{ borderColor: 'var(--color-border)' }}>
                       <p className="text-xs font-semibold" style={{ color: 'var(--color-text-mid)' }}>Signed in as</p>
                       <p className="text-sm font-bold truncate">{user.email || user.displayName || 'Guest'}</p>
@@ -122,8 +172,7 @@ export default function Navbar() {
                       ) : 'Sign out'}
                     </button>
                   </div>
-                </>
-              )}
+                )}
               </div>
             </>
           ) : (
@@ -137,4 +186,3 @@ export default function Navbar() {
     </nav>
   );
 }
-
